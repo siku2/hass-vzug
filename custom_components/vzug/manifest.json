@@ -12,6 +12,6 @@
   "issue_tracker": "https://github.com/siku2/hass-vzug/issues",
   "requirements": [],
   "ssdp": [],
-  "zeroconf": [],
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "zeroconf": []
 }

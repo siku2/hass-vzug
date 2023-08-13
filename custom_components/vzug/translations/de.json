@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Geraet ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "cannot_connect": "Verbindung Fehlgeschlagen",
+            "unknown": "Unbekannter Fehler"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Hostname (oder IP)"
                 }
             }
         }
@@ -18,34 +18,34 @@
     "entity": {
         "sensor": {
             "energy_program": {
-                "name": "Energy Last Program"
+                "name": "Energie Letztes Programm"
             },
             "energy_avg": {
-                "name": "Energy Average"
+                "name": "Energie Durchschnitt"
             },
             "energy_total": {
-                "name": "Energy Total"
+                "name": "Energie Gesamt"
             },
             "water_program": {
-                "name": "Water Last Program"
+                "name": "Wasser Letztes Programm"
             },
             "water_avg": {
-                "name": "Water Average"
+                "name": "Wasser Durchschnitt"
             },
             "water_total": {
-                "name": "Water Total"
+                "name": "Wasser Gesamt"
             },
             "last_notification": {
-                "name": "Last Notification"
+                "name": "Letzte Benachrichtigung"
             },
             "program": {
-                "name": "Program"
+                "name": "Programm"
             },
             "program_end": {
-                "name": "Program End"
+                "name": "Programm Ende"
             },
             "status": {
-                "name": "Status"
+                "name": "Zustand"
             }
         },
         "update": {
