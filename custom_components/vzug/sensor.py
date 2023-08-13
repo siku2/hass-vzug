@@ -1,5 +1,5 @@
 import re
-from collections.abc import Callable, Mapping, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -11,13 +11,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, api
+from . import Coordinator, DeviceCategory, api
 from .const import DOMAIN
 
 
@@ -27,33 +26,145 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            Program(coordinator),
-            ProgramEnd(coordinator),
-            Status(coordinator),
-            LastNotification(coordinator),
-            UserSettingsSensor(
-                coordinator,
-                SensorEntityDescription(
-                    key="energy_total",
-                    device_class=SensorDeviceClass.ENERGY,
-                    translation_key="energy_total",
-                    native_unit_of_measurement="kWh",
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                ),
-                command="ecomXstatXtotal",
-                extractor=lambda value: _extract_nth_number(value["value"], 0),
+
+    entities: list[SensorEntity] = [
+        Program(coordinator),
+        ProgramEnd(coordinator),
+        Status(coordinator),
+        LastNotification(coordinator),
+    ]
+
+    if coordinator.category == DeviceCategory.ADORA_DISH:
+        entities.extend(_adoradish_entities(coordinator))
+    if coordinator.category == DeviceCategory.ADORA_WASH:
+        entities.extend(_adorawash_entities(coordinator))
+
+    async_add_entities(entities)
+
+
+def _adoradish_entities(coordinator: Coordinator) -> Iterator[SensorEntity]:
+    for key, state_class in (
+        ("PROGRAM", SensorStateClass.MEASUREMENT),
+        ("AVG", SensorStateClass.MEASUREMENT),
+        ("TOTAL", SensorStateClass.TOTAL_INCREASING),
+    ):
+        lower_key = key.lower()
+        device_class = (
+            None
+            if state_class == SensorStateClass.MEASUREMENT
+            else SensorDeviceClass.ENERGY
+        )
+        yield UserSettingsSensor(
+            coordinator,
+            SensorEntityDescription(
+                key=f"energy_{lower_key}",
+                device_class=device_class,
+                translation_key=f"energy_{lower_key}",
+                native_unit_of_measurement="kWh",
+                state_class=state_class,
             ),
-        ]
+            command=f"ECO_MGMT_ENERGY_{key}",
+            extractor=lambda value: _extract_nth_number(value["value"], 0),
+        )
+
+    for key, state_class in (
+        ("PROGRAM", SensorStateClass.MEASUREMENT),
+        ("AVG", SensorStateClass.MEASUREMENT),
+        ("TOTAL", SensorStateClass.TOTAL_INCREASING),
+    ):
+        lower_key = key.lower()
+        device_class = (
+            None
+            if state_class == SensorStateClass.MEASUREMENT
+            else SensorDeviceClass.WATER
+        )
+        yield UserSettingsSensor(
+            coordinator,
+            SensorEntityDescription(
+                key=f"water_{lower_key}",
+                device_class=device_class,
+                translation_key=f"water_{lower_key}",
+                native_unit_of_measurement="L",
+                state_class=state_class,
+            ),
+            command=f"ECO_MGMT_WATER_{key}",
+            extractor=lambda value: _extract_nth_number(value["value"], 0),
+        )
+
+
+def _adorawash_entities(coordinator: Coordinator) -> Iterator[SensorEntity]:
+    def extract_energy(value: api.CommandValue) -> float | None:
+        energy = _extract_nth_number(value["value"], 0)
+        if energy == 0.1:
+            # the API sometimes returns <0,1
+            raise NoUpdate()
+        return energy
+
+    yield UserSettingsSensor(
+        coordinator,
+        SensorEntityDescription(
+            key="energy_total",
+            device_class=SensorDeviceClass.ENERGY,
+            translation_key="energy_total",
+            native_unit_of_measurement="kWh",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        command="ecomXstatXtotal",
+        extractor=extract_energy,
+    )
+
+    yield UserSettingsSensor(
+        coordinator,
+        SensorEntityDescription(
+            key="energy_avg",
+            device_class=None,  # can't use ENERGY because it doesn't support MEASUREMENT
+            translation_key="energy_avg",
+            native_unit_of_measurement="kWh",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        command="ecomXstatXavarage",
+        extractor=extract_energy,
+    )
+
+    def extract_water(value: api.CommandValue) -> float | None:
+        water = _extract_nth_number(value["value"], 1)
+        if water == 0:
+            # the API sometimes returns <0,
+            raise NoUpdate()
+        return water
+
+    yield UserSettingsSensor(
+        coordinator,
+        SensorEntityDescription(
+            key="water_total",
+            device_class=SensorDeviceClass.WATER,
+            translation_key="water_total",
+            native_unit_of_measurement="L",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        command="ecomXstatXtotal",
+        extractor=extract_water,
+    )
+
+    yield UserSettingsSensor(
+        coordinator,
+        SensorEntityDescription(
+            key="water_avg",
+            device_class=None,  # can't use WATER because it doesn't support MEASUREMENT
+            translation_key="water_avg",
+            native_unit_of_measurement="L",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        command="ecomXstatXavarage",
+        extractor=extract_water,
     )
 
 
 _RE_NUMBER = re.compile(r"\d[\d,.]*")
 
 
-def _extract_numbers(s: str) -> Iterator[float]:
-    for match in _RE_NUMBER.finditer(s):
+def _extract_numbers(text: str) -> Iterator[float]:
+    for match in _RE_NUMBER.finditer(text):
         raw = match.group(0)
         raw = raw.replace(",", ".")
         try:
@@ -62,14 +173,14 @@ def _extract_numbers(s: str) -> Iterator[float]:
             continue
 
 
-def _extract_nth_number(s: str, n: int) -> float | None:
-    it = _extract_numbers(s)
+def _extract_nth_number(text: str, index: int) -> float:
+    num_it = _extract_numbers(text)
     try:
-        for _ in range(n):
-            next(it)
-        return next(it)
+        for _ in range(index):
+            next(num_it)
+        return next(num_it)
     except StopIteration:
-        return None
+        raise NoUpdate() from None
 
 
 class Base(SensorEntity, CoordinatorEntity[Coordinator]):
@@ -150,6 +261,15 @@ class LastNotification(Base):
         except (IndexError, KeyError):
             return None
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        try:
+            last_notification_date = self.coordinator.data.notifications[0]["date"]
+        except (IndexError, KeyError):
+            last_notification_date = None
+
+        return {"timestamp": last_notification_date}
+
 
 ValueExtractorFn = Callable[[api.CommandValue], StateType | date | datetime | Decimal]
 
@@ -186,8 +306,17 @@ class UserSettingsSensor(SensorEntity):
 
     async def async_update(self) -> None:
         command_value = await self.coordinator.api.get_command(self.command)
-        self.__value = self.extractor(command_value)
+        try:
+            new_value = self.extractor(command_value)
+        except NoUpdate:
+            return
+
+        self.__value = new_value
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self.__value
+
+
+class NoUpdate(Exception):
+    ...

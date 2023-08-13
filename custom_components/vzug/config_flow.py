@@ -5,7 +5,6 @@ from typing import Any
 
 import voluptuous as vol
 import yarl
-
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult

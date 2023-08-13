@@ -20,8 +20,23 @@
     },
     "entity": {
         "sensor": {
+            "energy_program": {
+                "name": "Energy Last Program"
+            },
+            "energy_avg": {
+                "name": "Energy Average"
+            },
             "energy_total": {
                 "name": "Energy Total"
+            },
+            "water_program": {
+                "name": "Water Last Program"
+            },
+            "water_avg": {
+                "name": "Water Average"
+            },
+            "water_total": {
+                "name": "Water Total"
             },
             "last_notification": {
                 "name": "Last Notification"

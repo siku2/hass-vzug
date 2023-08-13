@@ -1,20 +1,17 @@
 """The V-ZUG integration."""
 
 import dataclasses
+import enum
 import logging
 import typing
-from collections.abc import Awaitable, Coroutine
-from datetime import timedelta
-from typing import Any
+from collections.abc import Awaitable
 
 import yarl
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -59,14 +56,17 @@ class Data:
     notifications: list[api.PushNotification]
 
 
-_T = typing.TypeVar("_T")
+class DeviceCategory(enum.StrEnum):
+    ADORA_DISH = enum.auto()
+    ADORA_WASH = enum.auto()
 
-
-async def _wait_or_none(awaitable: Awaitable[_T], *, msg: str) -> _T | None:
-    try:
-        return await awaitable
-    except Exception:
-        _LOGGER.exception(msg)
+    @classmethod
+    def from_model_description(cls, desc: str):
+        desc = desc.lower()
+        if "adorawash" in desc:
+            return cls.ADORA_WASH
+        if "adoradish" in desc:
+            return cls.ADORA_DISH
         return None
 
 
@@ -74,33 +74,26 @@ class Coordinator(DataUpdateCoordinator[Data]):
     api: "api.VZugApi"
     device_info: DeviceInfo
     unique_id_prefix: str
-    _mac_addr: str | None
-    _model_description: str | None
+    category: DeviceCategory | None
 
     def __init__(
         self,
         hass: HomeAssistant,
         base_url: yarl.URL,
-        *,
-        update_interval: timedelta | None = None,
-        request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
-        always_update: bool = True,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=update_interval,
-            request_refresh_debouncer=request_refresh_debouncer,
-            always_update=always_update,
         )
 
         self.api = api.VZugApi(async_get_clientsession(hass), base_url)
         self.device_info = DeviceInfo(manufacturer="V-ZUG")
         self.unique_id_prefix = ""
+        self.category = None
 
-        self._mac_addr = None
-        self._model_description = None
+        self._mac_addr: str | None = None
+        self._model_description: str | None = None
 
     async def _async_update_data(self) -> Data:
         try:
@@ -128,6 +121,11 @@ class Coordinator(DataUpdateCoordinator[Data]):
         if self._model_description is None:
             self._model_description = await _wait_or_none(
                 self.api.get_model_description(), msg="model description"
+            )
+
+        if self.category is None and self._model_description is not None:
+            self.category = DeviceCategory.from_model_description(
+                self._model_description
             )
 
         if self.unique_id_prefix == "":
@@ -161,3 +159,14 @@ class Coordinator(DataUpdateCoordinator[Data]):
             hh_fw_version=hh_fw_version,
             notifications=notifications,
         )
+
+
+_T = typing.TypeVar("_T")
+
+
+async def _wait_or_none(awaitable: Awaitable[_T], *, msg: str) -> _T | None:
+    try:
+        return await awaitable
+    except Exception:
+        _LOGGER.exception(msg)
+        return None

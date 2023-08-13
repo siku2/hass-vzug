@@ -1,3 +1,4 @@
+import asyncio
 import time
 import typing
 
@@ -122,7 +123,8 @@ class VZugApi:
         params: dict[str, str] | None = None,
         raw: bool = False,
         expected_type: typing.Any = None,
-        attempts: int = 3,
+        attempts: int = 5,
+        retry_delay: float = 1.0
     ) -> typing.Any:
         if params is None:
             params = {}
@@ -149,6 +151,8 @@ class VZugApi:
                 return await once()
             except aiohttp.ClientResponseError as exc:
                 last_exc = exc
+            await asyncio.sleep(retry_delay)
+
         raise last_exc
 
     async def get_mac_address(self) -> str:
