@@ -84,19 +84,14 @@ HhFwVersion = typing.TypedDict(
 )
 
 
-AiFwVersion = typing.TypedDict(
-    "AiFwVersion",
-    {
-        "fn": str,
-        "SW": str,
-        "SD": str,
-        "HW": str,
-        "apiVersion": str,
-        "phy": str,
-        "deviceUuid": str,
-    },
-    total=False,
-)
+class AiFwVersion(typing.TypedDict, total=False):
+    fn: str
+    SW: str
+    SD: str
+    HW: str
+    apiVersion: str
+    phy: str
+    deviceUuid: str
 
 
 class VZugApi:
