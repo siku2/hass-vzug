@@ -1,0 +1,17 @@
+{
+  "domain": "vzug",
+  "name": "V-ZUG",
+  "codeowners": [
+    "@siku2"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/siku2/hass-vzug",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/siku2/hass-vzug/issues",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": "0.0.0"
+}

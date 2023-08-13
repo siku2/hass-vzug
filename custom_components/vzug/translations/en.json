@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "energy_total": {
+                "name": "Energy Total"
+            },
+            "last_notification": {
+                "name": "Last Notification"
+            },
+            "program": {
+                "name": "Program"
+            },
+            "program_end": {
+                "name": "Program End"
+            },
+            "status": {
+                "name": "Status"
+            },
+            "update": {
+                "name": "Update"
+            }
+        },
+        "update": {
+            "update": {
+                "name": "Update"
+            }
+        }
+    }
+}
