@@ -5,6 +5,7 @@ import enum
 import logging
 import typing
 from collections.abc import Awaitable
+from datetime import timedelta
 
 import yarl
 from homeassistant.config_entries import ConfigEntry
@@ -82,9 +83,7 @@ class Coordinator(DataUpdateCoordinator[Data]):
         base_url: yarl.URL,
     ) -> None:
         super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
         )
 
         self.api = api.VZugApi(async_get_clientsession(hass), base_url)
