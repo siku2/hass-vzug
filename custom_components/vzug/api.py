@@ -126,19 +126,21 @@ class VZugApi:
     ) -> typing.Any:
         if params is None:
             params = {}
-        params["command"] = command
-        params["_"] = str(int(time.time()))
+        final_params = params.copy()
+        final_params["command"] = command
+        final_params["_"] = str(int(time.time()))
 
         url = self._base_url / component
 
         async def once() -> typing.Any:
             _LOGGER.debug(
-                "running command %s on component %s on %s",
+                "running command %s %s on component %s on %s",
                 command,
+                params,
                 component,
                 self._base_url,
             )
-            async with self._session.get(url, params=params) as resp:
+            async with self._session.get(url, params=final_params) as resp:
                 resp.raise_for_status()
 
                 if raw:
