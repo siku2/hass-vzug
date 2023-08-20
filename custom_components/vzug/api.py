@@ -1,9 +1,12 @@
 import asyncio
+import logging
 import time
 import typing
 
 import aiohttp
 import yarl
+
+_LOGGER = logging.getLogger(__name__)
 
 DeviceStatusInactiveT = typing.Literal["true"] | typing.Literal["false"]
 
@@ -119,7 +122,7 @@ class VZugApi:
         raw: bool = False,
         expected_type: typing.Any = None,
         attempts: int = 5,
-        retry_delay: float = 3.0
+        retry_delay: float = 3.0,
     ) -> typing.Any:
         if params is None:
             params = {}
@@ -129,6 +132,12 @@ class VZugApi:
         url = self._base_url / component
 
         async def once() -> typing.Any:
+            _LOGGER.debug(
+                "running command %s on component %s on %s",
+                command,
+                component,
+                self._base_url,
+            )
             async with self._session.get(url, params=params) as resp:
                 resp.raise_for_status()
 
@@ -145,6 +154,7 @@ class VZugApi:
             try:
                 return await once()
             except aiohttp.ClientError as exc:
+                _LOGGER.debug(f"client error: {exc}")
                 last_exc = exc
             await asyncio.sleep(retry_delay)
 
