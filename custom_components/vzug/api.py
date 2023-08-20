@@ -119,7 +119,7 @@ class VZugApi:
         raw: bool = False,
         expected_type: typing.Any = None,
         attempts: int = 5,
-        retry_delay: float = 1.0
+        retry_delay: float = 2.0
     ) -> typing.Any:
         if params is None:
             params = {}
@@ -144,7 +144,7 @@ class VZugApi:
         for _ in range(attempts):
             try:
                 return await once()
-            except aiohttp.ClientResponseError as exc:
+            except aiohttp.ClientError as exc:
                 last_exc = exc
             await asyncio.sleep(retry_delay)
 
