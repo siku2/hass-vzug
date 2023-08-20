@@ -39,10 +39,16 @@
                 "name": "Letzte Benachrichtigung"
             },
             "program": {
-                "name": "Programm"
+                "name": "Programm",
+                "state": {
+                    "standby": "Standby"
+                }
             },
             "program_end": {
                 "name": "Programm Ende"
+            },
+            "program_end_raw": {
+                "name": "Program Ende Rohwert"
             },
             "status": {
                 "name": "Zustand"

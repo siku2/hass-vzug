@@ -5,7 +5,7 @@ import enum
 import logging
 import typing
 from collections.abc import Awaitable
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import yarl
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +15,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt
 
 from . import api
 from .const import DOMAIN
@@ -50,6 +51,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclasses.dataclass(kw_only=True)
 class Data:
+    fetched_at: datetime
     device: api.DeviceStatus | None
     update: api.UpdateStatus | None
     ai_fw_version: api.AiFwVersion | None
@@ -152,6 +154,7 @@ class Coordinator(DataUpdateCoordinator[Data]):
             self.device_info["model"] = model
 
         return Data(
+            fetched_at=dt.now(),
             device=device,
             update=update,
             ai_fw_version=ai_fw_version,

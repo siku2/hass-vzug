@@ -1,6 +1,6 @@
 import re
 from collections.abc import Callable, Iterator, Mapping
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -11,7 +11,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -30,6 +31,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = [
         Program(coordinator),
         ProgramEnd(coordinator),
+        ProgramEndRaw(coordinator),
         Status(coordinator),
         LastNotification(coordinator),
     ]
@@ -203,16 +205,16 @@ class Program(Base):
         if device is None:
             return None
         if device["Inactive"] == "true":
-            return "inactive"
+            return "standby"
         return device["Program"]
 
 
-class ProgramEnd(Base):
-    _attr_translation_key = "program_end"
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
+class ProgramEndRaw(Base):
+    _attr_translation_key = "program_end_raw"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def program_end(self) -> api.DeviceStatusProgramEnd | None:
+    def vzug_program_end(self) -> api.DeviceStatusProgramEnd | None:
         device = self.coordinator.data.device
         if device is None:
             return None
@@ -224,18 +226,75 @@ class ProgramEnd(Base):
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        if program_end := self.program_end:
-            end_ts = program_end["End"]
-            if end_ts:
-                return datetime.fromisoformat(end_ts)
+        if program_end := self.vzug_program_end:
+            return program_end["End"]
         return None
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         end_type = None
-        if program_end := self.program_end:
+        if program_end := self.vzug_program_end:
             end_type = program_end["EndType"]
         return {"type": end_type}
+
+
+_RE_END_DURATON = re.compile(r"(?P<hours>\d+)[h](?P<minutes>\d+)", re.IGNORECASE)
+
+
+class ProgramEnd(ProgramEndRaw):
+    _attr_translation_key = "program_end"
+    _attr_entity_category = None
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator: Coordinator, context: Any = None) -> None:
+        super().__init__(coordinator, context)
+        self.__end_at = None
+
+    @property
+    def vzug_program_duration_left(self) -> timedelta | None:
+        end = None
+        if program_end := self.vzug_program_end:
+            end = program_end["End"]
+        if not end:
+            return None
+
+        re_match = _RE_END_DURATON.match(end)
+        if not re_match:
+            return None
+
+        return timedelta(
+            hours=int(re_match.group("hours")),
+            minutes=int(re_match.group("minutes")),
+        )
+
+    @property
+    def vzug_program_end_at(self) -> datetime | None:
+        remaining = self.vzug_program_duration_left
+        if not remaining:
+            return None
+        end_at = self.coordinator.data.fetched_at + remaining
+        # subtract sub-minute because we don't have it anyways
+        return end_at - timedelta(
+            seconds=end_at.second, microseconds=end_at.microsecond
+        )
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        return self.__end_at
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        end_at = self.vzug_program_end_at
+        if end_at is None:
+            self.__end_at = None
+        elif self.__end_at is None:
+            self.__end_at = end_at
+        else:
+            # neiter is None, only update if more than 10 minutes apart
+            if abs(end_at - self.__end_at) > timedelta(minutes=10):
+                self.__end_at = end_at
+
+        self.async_write_ha_state()
 
 
 class Status(Base):
