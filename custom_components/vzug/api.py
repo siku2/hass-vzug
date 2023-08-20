@@ -119,7 +119,7 @@ class VZugApi:
         raw: bool = False,
         expected_type: typing.Any = None,
         attempts: int = 5,
-        retry_delay: float = 2.0
+        retry_delay: float = 3.0
     ) -> typing.Any:
         if params is None:
             params = {}
