@@ -8,13 +8,6 @@
 
 _Integration to integrate with [V-ZUG](https://www.vzug.com) devices._
 
-**This integration will set up the following platforms.**
-
-Platform | Description
--- | --
-`sensor` | Eco management (water and energy usage) as well as the current program.
-`update` | Allows you to update the firmware.
-
 The following devices are fully supported:
 
 - AdoraDish V6000
@@ -22,7 +15,7 @@ The following devices are fully supported:
 
 ## Installation
 
-1. Add this repository as a custom repository to HACS: <https://hacs.xyz/docs/faq/custom_repositories>
+1. Add this repository as a custom repository to HACS: [![Add Repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=siku2&repository=hass-vzug&category=integration)
 2. Use HACS to install the integration.
 3. Restart Home Assistant.
 4. Set up the integration using the UI: [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vzug)

@@ -1,5 +1,5 @@
 {
-    "name": "ludeeus/integration_blueprint",
+    "name": "custom integration",
     "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.11-bullseye",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
@@ -14,31 +14,31 @@
     "customizations": {
         "vscode": {
             "extensions": [
-				"ms-python.python",
-				"github.vscode-pull-request-github",
-				"ryanluker.vscode-coverage-gutters",
-				"ms-python.vscode-pylance",
-				"ms-python.black-formatter",
-				"ms-python.isort"
-			],
+                "github.vscode-pull-request-github",
+                "ms-python.black-formatter",
+                "ms-python.isort",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ryanluker.vscode-coverage-gutters",
+            ],
             "settings": {
                 "files.eol": "\n",
                 "editor.tabSize": 4,
                 "python.pythonPath": "/usr/bin/python3",
                 "python.analysis.autoSearchPaths": false,
-                "python.linting.pylintEnabled": true,
-                "python.linting.enabled": true,
-                "python.formatting.provider": "black",
-                "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
                 "editor.formatOnPaste": false,
                 "editor.formatOnSave": true,
                 "editor.formatOnType": true,
-                "files.trimTrailingWhitespace": true
+                "files.trimTrailingWhitespace": true,
+                "[python]": {
+                    "editor.defaultFormatter": "ms-python.black-formatter"
+                },
+                "python.analysis.diagnosticSeverityOverrides": {
+                    "reportMissingTypeStubs": "none"
+                }
             }
         }
     },
     "remoteUser": "vscode",
-    "features": {
-        "ghcr.io/devcontainers/features/rust:1": {}
-    }
+    "features": {}
 }
