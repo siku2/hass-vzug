@@ -2,9 +2,14 @@ import re
 from collections.abc import Mapping
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -16,6 +21,51 @@ from . import api
 from .const import DOMAIN
 from .helpers import UserConfigEntity
 from .shared import Shared, StateCoordinator
+
+_ECO_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        "water.total",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement="L",
+        state_class=SensorStateClass.TOTAL,
+        translation_key="water_total",
+    ),
+    SensorEntityDescription(
+        "water.program",
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement="L",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="water_program",
+    ),
+    SensorEntityDescription(
+        "energy.total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement="kWh",
+        state_class=SensorStateClass.TOTAL,
+        translation_key="energy_total",
+    ),
+    SensorEntityDescription(
+        "energy.program",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement="kWh",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="energy_program",
+    ),
+    SensorEntityDescription(
+        "water.average",
+        icon="mdi:water",
+        native_unit_of_measurement="L",
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="water_average",
+    ),
+    SensorEntityDescription(
+        "energy.average",
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement="kWh",
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="energy_average",
+    ),
+]
 
 
 async def async_setup_entry(
@@ -43,6 +93,12 @@ async def async_setup_entry(
                         command_key=command.get("command", ""),
                     )
                 )
+
+    for desc in _ECO_SENSORS:
+        category, _, field = desc.key.partition(".")
+        if category not in shared.state_coord.data.eco_info:
+            continue
+        entities.append(Eco(shared, desc, category=category, field=field))
 
     async_add_entities(entities)
 
@@ -154,6 +210,32 @@ class Status(StateBase):
     def native_value(self) -> StateType | date | datetime | Decimal:
         # 'or None' so we don't display empty strings
         return self.coordinator.data.device.get("Status") or None
+
+
+class Eco(StateBase):
+    def __init__(
+        self,
+        shared: Shared,
+        desc: SensorEntityDescription,
+        *,
+        category: str,
+        field: str,
+    ) -> None:
+        # needs to be set before StateBase.__init__ so it can access 'translation_key'
+        self.entity_description = desc
+
+        super().__init__(shared)
+        self.vzug_category = category
+        self.vzug_field = field
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        try:
+            return self.coordinator.data.eco_info[cast(Any, self.vzug_category)][
+                self.vzug_field
+            ]
+        except LookupError:
+            return None
 
 
 class LastNotification(StateBase):

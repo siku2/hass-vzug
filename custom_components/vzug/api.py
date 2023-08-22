@@ -108,6 +108,7 @@ class EcoInfoMetric(TypedDict, total=False):
     total: float
     average: float
     program: float
+    option: float  # sent by adorawash for water, no idea what it is
 
 
 class EcoInfo(TypedDict, total=False):

@@ -23,18 +23,18 @@
         },
         "sensor": {
             "energy_program": {
-                "name": "Energie Letztes Programm"
+                "name": "Energie Programm"
             },
-            "energy_avg": {
+            "energy_average": {
                 "name": "Energie Durchschnitt"
             },
             "energy_total": {
                 "name": "Energie Gesamt"
             },
             "water_program": {
-                "name": "Wasser Letztes Programm"
+                "name": "Wasser Programm"
             },
-            "water_avg": {
+            "water_average": {
                 "name": "Wasser Durchschnitt"
             },
             "water_total": {
