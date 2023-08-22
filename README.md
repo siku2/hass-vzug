@@ -13,12 +13,22 @@ The following devices are fully supported:
 - AdoraDish V6000
 - AdoraWash V6000
 
+I would love to add more devices to this list. Don't hesitate to open a new issue or a discussion if you have a V-ZUG device you would like to add.
+
 ## Installation
 
 1. Add this repository as a custom repository to HACS: [![Add Repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=siku2&repository=hass-vzug&category=integration)
 2. Use HACS to install the integration.
 3. Restart Home Assistant.
 4. Set up the integration using the UI: [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vzug)
+
+
+## Features
+
+- Firmware updates and notifications.
+- All user settings are exposed as entites so you can modify the device settings on the fly.
+- Program and program end sensors.
+- Eco status.
 
 ## Contributions are welcome!
 
