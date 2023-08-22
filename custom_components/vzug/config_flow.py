@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import api
 from .const import DOMAIN
-from .helpers import get_device_name
+from .shared import get_device_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +45,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except Exception:
         model_name = None
 
-    return {"title": get_device_name(device, model_name)}
+    return {
+        "title": get_device_name(device, model_name),
+        "data": {"base_url": str(base_url)},
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for V-ZUG."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -67,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=info["title"], data=info["data"])
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

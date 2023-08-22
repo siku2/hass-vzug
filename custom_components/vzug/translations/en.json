@@ -16,6 +16,11 @@
         }
     },
     "entity": {
+        "button": {
+            "check_update": {
+                "name": "Check for Updates"
+            }
+        },
         "sensor": {
             "energy_program": {
                 "name": "Energy Last Program"

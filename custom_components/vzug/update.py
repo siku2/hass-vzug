@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Coordinator, api
+from . import api
 from .const import DOMAIN
+from .shared import Shared, UpdateCoordinator
 
 
 async def async_setup_entry(
@@ -19,11 +20,11 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([VZugUpdate(coordinator)])
+    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([VZugUpdate(shared)])
 
 
-class VZugUpdate(UpdateEntity, CoordinatorEntity[Coordinator]):
+class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
     _attr_translation_key = "update"
     _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -32,60 +33,63 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[Coordinator]):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    def __init__(self, coordinator: Coordinator) -> None:
-        super().__init__(coordinator)
+    shared: Shared
 
-        self._attr_unique_id = f"{coordinator.unique_id_prefix}-update"
-        self._attr_device_info = coordinator.device_info
+    def __init__(self, shared: Shared) -> None:
+        super().__init__(shared.update_coord)
+        self.shared = shared
+
+        self._attr_unique_id = f"{shared.unique_id_prefix}-update"
+        self._attr_device_info = shared.device_info
         self._attr_latest_version = None
 
-    def get_update_component(self) -> api.UpdateComponent | None:
-        update = self.coordinator.data.update
-        if update is None:
-            return None
-        components = update["components"]
+    def get_update_component(self) -> api.UpdateComponent:
+        try:
+            components = self.coordinator.data.update["components"]
+        except LookupError:
+            components = []
+
         for component in components:
-            if component["available"]:
+            if component.get("available", False):
                 return component
-        return None
+        return api.UpdateComponent()
 
     @property
     def in_progress(self) -> bool | int | None:
-        if component := self.get_update_component():
-            if component["running"]:
-                progress = component["progress"]
-                return (
-                    progress.get("download", 0) + progress.get("installation", 0)
-                ) // 2
-        return False
+        component = self.get_update_component()
+        if not component.get("running", False):
+            return False
+
+        try:
+            progress = component["progress"]
+        except LookupError:
+            progress = api.UpdateProgress()
+
+        return (progress.get("download", 0) + progress.get("installation", 0)) // 2
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         component = self.get_update_component()
-        if not component:
-            return
         name = component.get("name")
         if not name:
             return
 
         if name == "AI":
-            await self.coordinator.api.do_ai_update()
+            await self.shared.client.do_ai_update()
         elif name == "HHG":
-            await self.coordinator.api.do_hhg_update()
+            await self.shared.client.do_hhg_update()
+        else:
+            raise ValueError("unknown update component", name)
+        await self.coordinator.async_request_refresh()
 
     @property
     def installed_version(self) -> str | None:
-        if data := self.coordinator.data.ai_fw_version:
-            return data.get("SW")
-        return None
+        return self.coordinator.data.ai_fw_version.get("SW")
 
     @property
     def latest_version(self) -> str | None:
         update = self.coordinator.data.update
-        if update is None:
-            return None
-
         if update.get("isAIUpdateAvailable") or update.get("isHHGUpdateAvailable"):
             # we don't have a way to get the newer version, but we know there is one
             return "new version"
@@ -94,8 +98,10 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[Coordinator]):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         attrs: dict[str, Any] = {}
-        if data := self.coordinator.data.ai_fw_version:
-            attrs.update({f"ai_{k}": v for k, v in data.items()})
-        if data := self.coordinator.data.hh_fw_version:
-            attrs.update({f"hh_{k}": v for k, v in data.items()})
+        attrs.update(
+            {f"ai_{k}": v for k, v in self.coordinator.data.ai_fw_version.items()}
+        )
+        attrs.update(
+            {f"hh_{k}": v for k, v in self.coordinator.data.hh_fw_version.items()}
+        )
         return attrs

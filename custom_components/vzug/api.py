@@ -1,22 +1,25 @@
 import asyncio
+import dataclasses
 import logging
 import time
-import typing
+from collections.abc import Callable
+from datetime import datetime, timezone
+from typing import Any, Literal, TypedDict
 
 import aiohttp
 import yarl
 
 _LOGGER = logging.getLogger(__name__)
 
-DeviceStatusInactiveT = typing.Literal["true"] | typing.Literal["false"]
+DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
 
-class DeviceStatusProgramEnd(typing.TypedDict):
+class DeviceStatusProgramEnd(TypedDict, total=False):
     EndType: str
     End: str
 
 
-class DeviceStatus(typing.TypedDict):
+class DeviceStatus(TypedDict, total=False):
     DeviceName: str
     Serial: str
     Inactive: DeviceStatusInactiveT
@@ -26,12 +29,12 @@ class DeviceStatus(typing.TypedDict):
     deviceUuid: str
 
 
-class UpdateProgress(typing.TypedDict):
+class UpdateProgress(TypedDict, total=False):
     download: int
     installation: int
 
 
-class UpdateComponent(typing.TypedDict):
+class UpdateComponent(TypedDict, total=False):
     name: str
     running: bool
     available: bool
@@ -39,28 +42,32 @@ class UpdateComponent(typing.TypedDict):
     progress: UpdateProgress
 
 
-class UpdateStatus(typing.TypedDict):
-    status: str
+class UpdateStatus(TypedDict, total=False):
+    status: Literal["idle"] | str
     isAIUpdateAvailable: bool
     isHHGUpdateAvailable: bool
     isSynced: bool
     components: list[UpdateComponent]
 
 
-class PushNotification(typing.TypedDict):
+class PushNotification(TypedDict, total=False):
     date: str
     message: str
 
 
-class CommandValue(typing.TypedDict):
-    type: str
+class Command(TypedDict, total=False):
+    type: Literal["action"] | Literal["boolean"] | Literal["selection"] | Literal[
+        "status"
+    ] | Literal["range"]
     description: str
     command: str
     value: str
     alterable: bool
+    options: list[str]
+    minMax: tuple[str, str]
 
 
-HhFwVersion = typing.TypedDict(
+HhFwVersion = TypedDict(
     "HhFwVersion",
     {
         "fn": str,
@@ -87,7 +94,7 @@ HhFwVersion = typing.TypedDict(
 )
 
 
-class AiFwVersion(typing.TypedDict, total=False):
+class AiFwVersion(TypedDict, total=False):
     fn: str
     SW: str
     SD: str
@@ -97,10 +104,54 @@ class AiFwVersion(typing.TypedDict, total=False):
     deviceUuid: str
 
 
-class VZugApi:
-    _session: aiohttp.ClientSession
-    _base_url: yarl.URL
+class EcoInfoMetric(TypedDict, total=False):
+    total: float
+    average: float
+    program: float
 
+
+class EcoInfo(TypedDict, total=False):
+    water: EcoInfoMetric
+    energy: EcoInfoMetric
+
+
+class Category(TypedDict, total=False):
+    description: str
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class AggState:
+    zh_mode: int
+    device: DeviceStatus
+    device_fetched_at: datetime
+    notifications: list[PushNotification]
+    eco_info: EcoInfo
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class AggUpdateStatus:
+    update: UpdateStatus
+    ai_fw_version: AiFwVersion
+    hh_fw_version: HhFwVersion
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class AggMeta:
+    mac_address: str
+    model_description: str
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class AggCategory:
+    key: str
+    description: str
+    commands: dict[str, Command]
+
+
+AggConfig = dict[str, AggCategory]
+
+
+class VZugApi:
     @property
     def base_url(self) -> yarl.URL:
         return self._base_url
@@ -112,6 +163,7 @@ class VZugApi:
     ) -> None:
         self._session = session
         self._base_url = yarl.URL(base_url)
+        self._sem = asyncio.Semaphore(value=3)
 
     async def _command(
         self,
@@ -120,10 +172,12 @@ class VZugApi:
         command: str,
         params: dict[str, str] | None = None,
         raw: bool = False,
-        expected_type: typing.Any = None,
+        expected_type: Any = None,
+        reject_empty: bool = False,
         attempts: int = 5,
-        retry_delay: float = 3.0,
-    ) -> typing.Any:
+        retry_delay: float = 0.5,
+        value_on_err: Callable[[], Any] | None = None,
+    ) -> Any:
         if params is None:
             params = {}
         final_params = params.copy()
@@ -132,9 +186,9 @@ class VZugApi:
 
         url = self._base_url / component
 
-        async def once() -> typing.Any:
+        async def once() -> Any:
             _LOGGER.debug(
-                "running command %s %s on component %s on %s",
+                "running command %s %s on %s @ %s",
                 command,
                 params,
                 component,
@@ -144,11 +198,16 @@ class VZugApi:
                 resp.raise_for_status()
 
                 if raw:
-                    return await resp.text()
+                    content = await resp.text()
+                    _LOGGER.debug("raw response: %s", content)
+                    return content
 
                 data = await resp.json(content_type=None)
+                _LOGGER.debug("data: %s", data)
                 if expected_type is not None:
                     assert isinstance(data, expected_type)
+                if reject_empty:
+                    assert len(data) > 0
                 return data
 
         last_exc = ValueError("no attempts made")
@@ -159,20 +218,114 @@ class VZugApi:
                 _LOGGER.debug(f"client error: {exc}")
                 last_exc = exc
             await asyncio.sleep(retry_delay)
+            retry_delay *= 2.0
+
+        if value_on_err:
+            _LOGGER.exception("command error, using default", exc_info=last_exc)
+            return value_on_err()
 
         raise last_exc
 
-    async def get_mac_address(self) -> str:
-        return await self._command("ai", command="getMacAddress", raw=True)
+    async def aggregate_state(self, *, default_on_error: bool = True) -> AggState:
+        # always start with zh_mode, that seems to do something??
+        zh_mode = await self.get_zh_mode(default_on_error=True)
 
-    async def get_model_description(self) -> str:
-        return await self._command("ai", command="getModelDescription", raw=True)
+        device = await self.get_device_status(default_on_error=default_on_error)
+        device_fetched_at = datetime.now(timezone.utc)
 
-    async def get_device_status(self) -> DeviceStatus:
-        return await self._command("ai", command="getDeviceStatus", expected_type=dict)
+        return AggState(
+            zh_mode=zh_mode,
+            device=device,
+            device_fetched_at=device_fetched_at,
+            notifications=await self.get_last_push_notifications(
+                default_on_error=default_on_error
+            ),
+            eco_info=await self.get_eco_info(default_on_error=default_on_error),
+        )
 
-    async def get_update_status(self) -> UpdateStatus:
-        return await self._command("ai", command="getUpdateStatus", expected_type=dict)
+    async def aggregate_update_status(
+        self, *, default_on_error: bool = True
+    ) -> AggUpdateStatus:
+        return AggUpdateStatus(
+            update=await self.get_update_status(default_on_error=default_on_error),
+            ai_fw_version=await self.get_ai_fw_version(
+                default_on_error=default_on_error
+            ),
+            hh_fw_version=await self.get_hh_fw_version(
+                default_on_error=default_on_error
+            ),
+        )
+
+    async def aggregate_meta(self, *, default_on_error: bool = False) -> AggMeta:
+        return AggMeta(
+            mac_address=await self.get_mac_address(default_on_error=default_on_error),
+            model_description=await self.get_model_description(
+                default_on_error=default_on_error
+            ),
+        )
+
+    async def aggregate_config(self) -> AggConfig:
+        category_keys = await self.list_categories()
+        config_tree: AggConfig = {}
+        for category_key in category_keys:
+            category_raw = await self.get_category(category_key)
+            category = AggCategory(
+                key=category_key,
+                description=category_raw.get("description", ""),
+                commands={},
+            )
+
+            command_keys = await self.list_commands(category_key)
+            for command_key in command_keys:
+                command_raw = await self.get_command(command_key)
+                category.commands[command_key] = command_raw
+
+            config_tree[category_key] = category
+        return config_tree
+
+    async def get_mac_address(self, *, default_on_error: bool = False) -> str:
+        return await self._command(
+            "ai",
+            command="getMacAddress",
+            raw=True,
+            value_on_err=(lambda: "") if default_on_error else None,
+        )
+
+    async def get_model_description(self, *, default_on_error: bool = False) -> str:
+        return await self._command(
+            "ai",
+            command="getModelDescription",
+            raw=True,
+            value_on_err=(lambda: "") if default_on_error else None,
+        )
+
+    async def get_device_status(
+        self, *, default_on_error: bool = False
+    ) -> DeviceStatus:
+        return await self._command(
+            "ai",
+            command="getDeviceStatus",
+            expected_type=dict,
+            value_on_err=(lambda: DeviceStatus()) if default_on_error else None,
+        )
+
+    async def get_update_status(
+        self, *, default_on_error: bool = False
+    ) -> UpdateStatus:
+        return await self._command(
+            "ai",
+            command="getUpdateStatus",
+            expected_type=dict,
+            value_on_err=(lambda: UpdateStatus()) if default_on_error else None,
+        )
+
+    async def check_for_updates(self) -> None:
+        await self._command(
+            "ai",
+            command="checkUpdate",
+            raw=True,
+            attempts=2,
+        )
 
     async def do_ai_update(self) -> None:
         await self._command("ai", command="doAIUpdate")
@@ -180,26 +333,82 @@ class VZugApi:
     async def do_hhg_update(self) -> None:
         await self._command("ai", command="doHHGUpdate")
 
-    async def get_last_push_notifications(self) -> list[PushNotification]:
+    async def get_last_push_notifications(
+        self, *, default_on_error: bool = False
+    ) -> list[PushNotification]:
         return await self._command(
-            "ai", command="getLastPUSHNotifications", expected_type=list
+            "ai",
+            command="getLastPUSHNotifications",
+            expected_type=list,
+            value_on_err=(lambda: []) if default_on_error else None,
         )
 
     async def list_categories(self) -> list[str]:
-        return await self._command("hh", command="getCategories", expected_type=list)
+        return await self._command(
+            "hh", command="getCategories", expected_type=list, reject_empty=True
+        )
+
+    async def get_category(self, value: str) -> Category:
+        return await self._command(
+            "hh", command="getCategory", params={"value": value}, expected_type=dict
+        )
 
     async def list_commands(self, value: str) -> list[str]:
         return await self._command(
             "hh", command="getCommands", params={"value": value}, expected_type=list
         )
 
-    async def get_command(self, value: str) -> CommandValue:
+    async def get_command(self, value: str) -> Command:
         return await self._command(
             "hh", command="getCommand", params={"value": value}, expected_type=dict
         )
 
-    async def get_hh_fw_version(self) -> HhFwVersion:
-        return await self._command("hh", command="getFWVersion", expected_type=dict)
+    async def set_command(self, command: str, value: str) -> None:
+        await self._command(
+            "hh",
+            command=f"set{command}",
+            params={"value": value},
+            raw=True,
+            attempts=2,
+        )
 
-    async def get_ai_fw_version(self) -> AiFwVersion:
-        return await self._command("ai", command="getFWVersion", expected_type=dict)
+    async def do_command_action(self, command: str) -> None:
+        await self._command(
+            "hh",
+            command=f"do{command}",
+            raw=True,
+            attempts=2,
+        )
+
+    async def get_hh_fw_version(self, *, default_on_error: bool = False) -> HhFwVersion:
+        return await self._command(
+            "hh",
+            command="getFWVersion",
+            expected_type=dict,
+            value_on_err=(lambda: HhFwVersion()) if default_on_error else None,
+        )
+
+    async def get_ai_fw_version(self, *, default_on_error: bool = False) -> AiFwVersion:
+        return await self._command(
+            "ai",
+            command="getFWVersion",
+            expected_type=dict,
+            value_on_err=(lambda: AiFwVersion()) if default_on_error else None,
+        )
+
+    async def get_zh_mode(self, *, default_on_error: bool = False) -> int:
+        data = await self._command(
+            "hh",
+            command="getZHMode",
+            expected_type=dict,
+            value_on_err=(lambda: {"value": -1}) if default_on_error else None,
+        )
+        return data["value"]
+
+    async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
+        return await self._command(
+            "hh",
+            command="getEcoInfo",
+            expected_type=dict,
+            value_on_err=(lambda: EcoInfo()) if default_on_error else None,
+        )
