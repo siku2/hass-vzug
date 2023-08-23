@@ -8,10 +8,11 @@
 
 _Integration to integrate with [V-ZUG](https://www.vzug.com) devices._
 
-The following devices are fully supported:
+The following devices are known to be supported:
 
-- AdoraDish V6000
-- AdoraWash V6000
+- AdoraDish V4000, V6000
+- AdoraDry V2000
+- AdoraWash V2000, V6000
 
 I would love to add more devices to this list. Don't hesitate to open a new issue or a discussion if you have a V-ZUG device you would like to add.
 
