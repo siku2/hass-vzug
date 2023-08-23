@@ -206,9 +206,11 @@ class VZugApi:
                 data = await resp.json(content_type=None)
                 _LOGGER.debug("data: %s", data)
                 if expected_type is not None:
-                    assert isinstance(data, expected_type)
+                    assert isinstance(
+                        data, expected_type
+                    ), f"data type mismatch ({type(data)} != {expected_type})"
                 if reject_empty:
-                    assert len(data) > 0
+                    assert len(data) > 0, "empty response rejected"
                 return data
 
         last_exc = ValueError("no attempts made")
@@ -217,6 +219,9 @@ class VZugApi:
                 return await once()
             except aiohttp.ClientError as exc:
                 _LOGGER.debug(f"client error: {exc}")
+                last_exc = exc
+            except AssertionError as exc:
+                _LOGGER.debug(f"response data assertion failed: {exc}")
                 last_exc = exc
             await asyncio.sleep(retry_delay)
             retry_delay *= 2.0
