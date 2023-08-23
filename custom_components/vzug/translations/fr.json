@@ -1,0 +1,68 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le périphérique est déjà configuré"
+        },
+        "error": {
+            "cannot_connect": "Échec de la connexion",
+            "unknown": "Erreur inconnue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nom d'hôte (ou IP)"
+                }
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "check_update": {
+                "name": "Vérifier les mises à jour"
+            }
+        },
+        "sensor": {
+            "energy_program": {
+                "name": "Consommation électrique "
+            },
+            "energy_average": {
+                "name": "Consommation moyenne électrique"
+            },
+            "energy_total": {
+                "name": "Consommation total électrique"
+            },
+            "water_program": {
+                "name": "Consommation eau"
+            },
+            "water_average": {
+                "name": "Consommation moyenne eau"
+            },
+            "water_total": {
+                "name": "Consommation total eau"
+            },
+            "last_notification": {
+                "name": "Dernière notification"
+            },
+            "program": {
+                "name": "Programme",
+                "state": {
+                    "standby": "Veille"
+                }
+            },
+            "program_end": {
+                "name": "Fin du programme"
+            },
+            "program_end_raw": {
+                "name": "Valeur estimatif de la fin lavage"
+            },
+            "status": {
+                "name": "état"
+            }
+        },
+        "update": {
+            "update": {
+                "name": "Mise à jour"
+            }
+        }
+    }
+}
