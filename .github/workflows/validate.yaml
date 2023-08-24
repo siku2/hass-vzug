@@ -1,0 +1,59 @@
+name: "Validate"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  "0 0 * * *"
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  hassfest: # https://developers.home-assistant.io/blog/2020/04/16/hassfest
+    name: "Hassfest Validation"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout the repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Run hassfest validation"
+        uses: "home-assistant/actions/hassfest@master"
+
+  hacs: # https://github.com/hacs/action
+    name: "HACS Validation"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout the repository"
+        uses: "actions/checkout@v3"
+
+      - name: "Run HACS validation"
+        uses: "hacs/action@main"
+        with:
+          category: "integration"
+          # Remove this 'ignore' key when you have added brand images for your integration to https://github.com/home-assistant/brands
+          ignore: "brands"
+
+  misc:
+    name: Misc Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check Home Assistant version consistency
+        shell: bash
+        run: |
+          hacs_req=$(yq -r -oj .homeassistant hacs.json) || exit
+          requirements_req=$(
+            content=$(<requirements.txt) || exit
+            if [[ "$content" =~ homeassistant==([0-9.]+) ]]; then
+              echo "${BASH_REMATCH[1]}"
+            fi
+          )
+
+          if [ "$hacs_req" != "$requirements_req" ]; then
+            echo "::error file=hacs.json::HACS version requirement for HA doesn't match requirement from requirements.txt"
+            exit 1
+          fi
