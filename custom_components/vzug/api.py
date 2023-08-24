@@ -350,8 +350,13 @@ class VZugApi:
         )
 
     async def list_categories(self) -> list[str]:
+        # TODO: reject empty responses if the device category is known to have some
         return await self._command(
-            "hh", command="getCategories", expected_type=list, reject_empty=True
+            "hh",
+            command="getCategories",
+            expected_type=list,
+            # the API sometimes wrongly returns an empty list, but there are apparently also appliances (AdoraWash V4000) which don't have any categories
+            reject_empty=False,
         )
 
     async def get_category(self, value: str) -> Category:
