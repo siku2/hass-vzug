@@ -1,10 +1,11 @@
 import asyncio
 import dataclasses
+import json
 import logging
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, cast
 
 import aiohttp
 import yarl
@@ -118,6 +119,61 @@ class EcoInfo(TypedDict, total=False):
 
 class Category(TypedDict, total=False):
     description: str
+
+
+class DeviceInfo(TypedDict, total=False):
+    model: str
+    description: str
+    """model description"""
+    type: Literal["WA"] | str
+    name: str
+    serialNumber: str
+    articleNumber: str
+    """the serial number starts with this"""
+    apiVersion: str  # seen: 1.7.0 / 1.8.0
+    zhMode: int
+
+
+class ProgramOptionA(TypedDict, total=False):
+    min: int
+    max: int
+    step: int
+
+
+class ProgramOptionB(TypedDict, total=False):
+    set: bool
+    options: list[Any]
+
+
+class ProgramOption(ProgramOptionA, ProgramOptionB):
+    ...
+
+
+class ProgramInfo(TypedDict, total=False):
+    id: int
+    name: str
+    status: Literal["selected"] | str
+    stepIds: list[int]
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class Program:
+    info: ProgramInfo
+    options: dict[str, ProgramOption]
+
+    @classmethod
+    def build(cls, raw: dict[str, Any]) -> "Program":
+        info = {}
+        options = raw.copy()
+        for key in ProgramInfo.__required_keys__ | ProgramInfo.__optional_keys__:
+            # extract all ProgramInfo keys from 'options' to 'info'
+            try:
+                info[key] = options[key]
+            except LookupError:
+                pass
+            else:
+                del options[key]
+        return Program(info=cast(ProgramInfo, info), options=options)
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -350,7 +406,6 @@ class VZugApi:
         )
 
     async def list_categories(self) -> list[str]:
-        # TODO: reject empty responses if the device category is known to have some
         return await self._command(
             "hh",
             command="getCategories",
@@ -423,3 +478,55 @@ class VZugApi:
             expected_type=dict,
             value_on_err=(lambda: EcoInfo()) if default_on_error else None,
         )
+
+    async def get_device_info(self) -> DeviceInfo:
+        # TODO: use this to replace a part of aggregations, display api version as a diagnostic sensor
+        # 'getAPIVersion' can be used to get only the API version
+        # 'getZHMode' gives just the zh mode
+        return await self._command(
+            "hh",
+            command="getDeviceInfo",
+            expected_type=dict,
+        )
+
+    async def get_program(self) -> list[Program]:
+        # TODO: this is interesting but what can we do with it??
+        # [{"id":52,"name":"Alltag Kurz","status":"selected","starttime":{"min":0,"max":86400,"step":600},"duration":{"set":2460}, "energySaving":{"set":false,"options":[true,false]},"optiStart":{"set":false},"steamfinish":{"set":false,"options":[true,false]},"partialload":{"set":false,"options":[true,false]},"rinsePlus":{"set":false,"options":[true,false]},"dryPlus":{"set":false,"options":[true,false]},"stepIds":[82,81,82,79,78,76,73,74,75,72,71,70]}]
+        # [{"id":50,"name":"Eco",        "status":"selected","starttime":{"min":0,"max":86400,"step":600},"duration":{"set":22440},"energySaving":{"set":false,"options":[true,false]},"optiStart":{"set":false},"steamfinish":{"set":true, "options":[true,false]},"partialload":{"set":false,"options":[true,false]},"rinsePlus":{"set":false,"options":[true,false]},"dryPlus":{"set":false,"options":[true,false]},"stepIds":[79,81,79,78,74,75,72,70]}]
+        raw_programs: list[dict[str, Any]] = await self._command(
+            "hh",
+            command="getProgram",
+            expected_type=list,
+        )
+        return [Program.build(raw) for raw in raw_programs]
+
+    async def set_program(
+        self, program_id: int, options: dict[str, Any] | None = None
+    ) -> list[Any]:
+        # example options: {"id":50,"dryPlus":false,"energySaving":false,"partialload":false,"rinsePlus":false,"steamfinish":true}
+        # also seen with just the "id" key
+        if not options:
+            options = {}
+        options["id"] = program_id
+        return await self._command(
+            "hh",
+            command="setProgram",
+            params={"value": json.dumps(options)},
+            raw=True,
+            attempts=2,
+        )
+
+    async def get_all_program_ids(self) -> list[int]:
+        # TODO: this gives us a nice list of ids that could be used with set_program, but we need a program id to name mapping
+        return await self._command(
+            "hh",
+            command="getAllProgramIds",
+            expected_type=list,
+        )
+
+
+# TODO: DISCOVER devices:
+#   broadcast b"DISCOVERY_LAN_INTERFACE_REQUEST" to 2047
+#   response: b"DISCOVERY_LAN_INTERFACE_RESPONSE" on port 2047
+
+# TODO: discover with dhcp: fc:1b:ff
