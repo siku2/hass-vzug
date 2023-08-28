@@ -8,14 +8,14 @@
 
 [![GitLocalize](https://gitlocalize.com/repo/8875/whole_project/badge.svg)](https://gitlocalize.com/repo/8875/whole_project?utm_source=badge)
 
-
 _Integration to integrate with [V-ZUG](https://www.vzug.com) devices._
 
 The following devices are known to be supported:
 
-- AdoraDish V4000, V6000
+- AdoraDish V2000 / V4000 / V6000
 - AdoraDry V2000
-- AdoraWash V2000, V4000, V6000
+- AdoraWash V2000 / V4000 / V6000
+- Combi-Steam HSL / MSLQ
 
 I would love to add more devices to this list. Don't hesitate to open a new issue or a discussion if you have a V-ZUG device you would like to add.
 
@@ -25,7 +25,6 @@ I would love to add more devices to this list. Don't hesitate to open a new issu
 2. Use HACS to install the integration.
 3. Restart Home Assistant.
 4. Set up the integration using the UI: [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vzug)
-
 
 ## Features
 
