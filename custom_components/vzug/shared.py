@@ -58,7 +58,9 @@ class Shared:
         base_url: yarl.URL,
     ) -> None:
         self.hass = hass
-        self.client = api.VZugApi(async_get_clientsession(hass), base_url)
+        self.client = api.VZugApi(
+            async_get_clientsession(hass, verify_ssl=False), base_url
+        )
 
         self.state_coord = DataUpdateCoordinator(
             hass,
@@ -135,7 +137,7 @@ class Shared:
 
     async def _fetch_update(self) -> api.AggUpdateStatus:
         data = await self.client.aggregate_update_status(
-            default_on_error=self._first_refresh_done
+            default_on_error=True,  # TODO: only allowed for testing
         )
         if data.update.get("status") in ("idle", None):
             self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL

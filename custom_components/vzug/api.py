@@ -12,6 +12,9 @@ import yarl
 
 _LOGGER = logging.getLogger(__name__)
 
+# list of status codes that we don't count as false-positives
+_TRUSTED_STATUS_CODES: set[int] = {404}
+
 DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
 
@@ -273,12 +276,17 @@ class VZugApi:
         for _ in range(attempts):
             try:
                 return await once()
+            except aiohttp.ClientResponseError as exc:
+                last_exc = exc
+                _LOGGER.debug(f"response error: {exc}")
+                if exc.status in _TRUSTED_STATUS_CODES:
+                    break
             except aiohttp.ClientError as exc:
+                last_exc = exc
                 _LOGGER.debug(f"client error: {exc}")
-                last_exc = exc
             except AssertionError as exc:
-                _LOGGER.debug(f"response data assertion failed: {exc}")
                 last_exc = exc
+                _LOGGER.debug(f"response data assertion failed: {exc}")
             await asyncio.sleep(retry_delay)
             retry_delay *= 2.0
 
@@ -410,7 +418,7 @@ class VZugApi:
             "hh",
             command="getCategories",
             expected_type=list,
-            # the API sometimes wrongly returns an empty list, but there are apparently also appliances (AdoraWash V4000) which don't have any categories
+            # the API sometimes wrongly returns an empty list, but there are also appliances (ex. AdoraWash V4000) which don't have any categories
             reject_empty=False,
         )
 
