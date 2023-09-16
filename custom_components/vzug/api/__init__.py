@@ -69,6 +69,8 @@ class Command(TypedDict, total=False):
     alterable: bool
     options: list[str]
     minMax: tuple[str, str]
+    refresh: list[str]
+    """list of commands to refresh when this command is changed"""
 
 
 HhFwVersion = TypedDict(
