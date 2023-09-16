@@ -13,7 +13,7 @@ import yarl
 _LOGGER = logging.getLogger(__name__)
 
 # list of status codes that we don't count as false-positives
-_TRUSTED_STATUS_CODES: set[int] = {404}
+_TRUSTED_STATUS_CODES: set[int] = {401, 404}
 
 DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
