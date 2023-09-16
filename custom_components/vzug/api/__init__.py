@@ -345,7 +345,7 @@ class VZugApi:
         category_keys = await self.list_categories()
         config_tree: AggConfig = {}
         for category_key in category_keys:
-            category_raw, command_keys = asyncio.gather(
+            category_raw, command_keys = await asyncio.gather(
                 self.get_category(category_key),
                 self.list_commands(category_key),
             )

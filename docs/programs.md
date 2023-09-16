@@ -1,5 +1,189 @@
 # Programs
 
+## AdoraDish V6000 (AS6TDI)
+
+- 50 - "Eco"
+
+  <details>
+    <summary>Example Response</summary>
+
+    ```json
+    {
+        "id": 52,
+        "name": "Alltag Kurz",
+        "status": "selected",
+        "starttime": {
+            "min": 0,
+            "max": 86400,
+            "step": 600
+        },
+        "duration": {
+            "set": 2460
+        },
+        "energySaving": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "optiStart": {
+            "set": false
+        },
+        "steamfinish": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "partialload": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "rinsePlus": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "dryPlus": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "stepIds": [
+            82,
+            81,
+            82,
+            79,
+            78,
+            76,
+            73,
+            74,
+            75,
+            72,
+            71,
+            70
+        ]
+    }
+    ```
+
+  </details>
+
+- 51
+- 52 - "Alltag Kurz"
+
+  <details>
+    <summary>Example Response</summary>
+
+    ```json
+    {
+        "id": 50,
+        "name": "Eco",
+        "status": "selected",
+        "starttime": {
+            "min": 0,
+            "max": 86400,
+            "step": 600
+        },
+        "duration": {
+            "set": 22440
+        },
+        "energySaving": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "optiStart": {
+            "set": false
+        },
+        "steamfinish": {
+            "set": true,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "partialload": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "rinsePlus": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "dryPlus": {
+            "set": false,
+            "options": [
+                true,
+                false
+            ]
+        },
+        "stepIds": [
+            79,
+            81,
+            79,
+            78,
+            74,
+            75,
+            72,
+            70
+        ]
+    }
+    ```
+
+  </details>
+
+- 53
+- 54
+- 55
+- 56
+- 57
+- 58
+- 59
+- 60
+- 61
+
+## AdoraWash V6000 (AW6T)
+
+- 3000
+- 3001
+- 3002
+- 3003
+- 3004
+- 3005
+- 3006
+- 3007
+- 3008
+- 3009
+- 3010
+- 3011
+- 3012
+- 3013
+- 3014
+- 3015
+- 3016
+- 3017
+- 3018
+- 3019
+- 3020
+- 3021
+
 ## Combi-Steam XSL (CSTXSLF)
 
 - 4
