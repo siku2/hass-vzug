@@ -13,7 +13,7 @@ TO_REDACT: set[str] = set()
 
 def _serialize_exception(exc: Exception) -> dict[str, Any]:
     return {
-        "type": type(exc).__repr__,
+        "type": type(exc).__qualname__,
         "message": str(exc),
         "args": exc.args,
     }

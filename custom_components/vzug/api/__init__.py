@@ -264,6 +264,10 @@ class VZugApi:
 
                 data = await resp.json(content_type=None)
                 _LOGGER.debug("data: %s", data)
+                if expected_type is list and data is None:
+                    # if we want a list and the response is null, we just treat that as an empty list
+                    data: Any = []
+
                 if expected_type is not None:
                     assert isinstance(
                         data, expected_type
@@ -273,22 +277,23 @@ class VZugApi:
                 return data
 
         last_exc = ValueError("no attempts made")
-        for _ in range(attempts):
-            try:
-                return await once()
-            except aiohttp.ClientResponseError as exc:
-                last_exc = exc
-                _LOGGER.debug(f"response error: {exc}")
-                if exc.status in _TRUSTED_STATUS_CODES:
-                    break
-            except aiohttp.ClientError as exc:
-                last_exc = exc
-                _LOGGER.debug(f"client error: {exc}")
-            except AssertionError as exc:
-                last_exc = exc
-                _LOGGER.debug(f"response data assertion failed: {exc}")
-            await asyncio.sleep(retry_delay)
-            retry_delay *= 2.0
+        async with self._sem:
+            for _ in range(attempts):
+                try:
+                    return await once()
+                except aiohttp.ClientResponseError as exc:
+                    last_exc = exc
+                    _LOGGER.debug(f"response error: {exc}")
+                    if exc.status in _TRUSTED_STATUS_CODES:
+                        break
+                except aiohttp.ClientError as exc:
+                    last_exc = exc
+                    _LOGGER.debug(f"client error: {exc}")
+                except AssertionError as exc:
+                    last_exc = exc
+                    _LOGGER.debug(f"response data assertion failed: {exc}")
+                await asyncio.sleep(retry_delay)
+                retry_delay *= 2.0
 
         if value_on_err:
             _LOGGER.exception("command error, using default", exc_info=last_exc)
@@ -338,18 +343,23 @@ class VZugApi:
         category_keys = await self.list_categories()
         config_tree: AggConfig = {}
         for category_key in category_keys:
-            category_raw = await self.get_category(category_key)
+            category_raw, command_keys = asyncio.gather(
+                self.get_category(category_key),
+                self.list_commands(category_key),
+            )
             category = AggCategory(
                 key=category_key,
                 description=category_raw.get("description", ""),
                 commands={},
             )
 
-            command_keys = await self.list_commands(category_key)
-            for command_key in command_keys:
+            async def handle_command_key(command_key: str) -> None:
                 command_raw = await self.get_command(command_key)
                 category.commands[command_key] = command_raw
 
+            await asyncio.gather(
+                *(handle_command_key(command_key) for command_key in command_keys)
+            )
             config_tree[category_key] = category
         return config_tree
 

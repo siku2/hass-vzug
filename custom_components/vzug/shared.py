@@ -110,14 +110,20 @@ class Shared:
         meta = await self.client.aggregate_meta()
         device = self.state_coord.data.device
 
-        self.unique_id_prefix = device.get("deviceUuid", "")
+        device_uuid = device.get("deviceUuid", "")
+        device_serial = device.get("Serial", "")
+
+        self.unique_id_prefix = device_uuid or device_serial
+        if not self.unique_id_prefix:
+            _LOGGER.warn("unable to determine unique id from device data: %s", device)
+
         self.appliance_kind = ApplianceKind.from_model_description(
             meta.model_description
         )
         self.device_info.update(
             DeviceInfo(
                 configuration_url=str(self.client.base_url),
-                identifiers={(DOMAIN, device.get("Serial", ""))},
+                identifiers={(DOMAIN, device_serial)},
                 name=get_device_name(device, meta.model_description),
                 hw_version=self.update_coord.data.ai_fw_version.get("HW"),
                 sw_version=self.update_coord.data.ai_fw_version.get("SW"),
