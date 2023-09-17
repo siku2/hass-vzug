@@ -1,68 +1,92 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Geraet ist bereits konfiguriert"
-        },
-        "error": {
-            "cannot_connect": "Verbindung Fehlgeschlagen",
-            "unknown": "Unbekannter Fehler"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Hostname (oder IP)"
-                }
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "update_success": "Update Erfolgreich",
+      "false_discovery": "Falsch positive Entdeckung",
+      "discovery_finished": "{count} Gerät(e) entdeckt"
     },
-    "entity": {
-        "button": {
-            "check_update": {
-                "name": "Nach Updates Suchen"
-            }
-        },
-        "sensor": {
-            "energy_program": {
-                "name": "Energie Programm"
-            },
-            "energy_average": {
-                "name": "Energie Durchschnitt"
-            },
-            "energy_total": {
-                "name": "Energie Gesamt"
-            },
-            "water_program": {
-                "name": "Wasser Programm"
-            },
-            "water_average": {
-                "name": "Wasser Durchschnitt"
-            },
-            "water_total": {
-                "name": "Wasser Gesamt"
-            },
-            "last_notification": {
-                "name": "Letzte Benachrichtigung"
-            },
-            "program": {
-                "name": "Programm",
-                "state": {
-                    "standby": "Standby"
-                }
-            },
-            "program_end": {
-                "name": "Programm Ende"
-            },
-            "program_end_raw": {
-                "name": "Program Ende Rohwert"
-            },
-            "status": {
-                "name": "Zustand"
-            }
-        },
-        "update": {
-            "update": {
-                "name": "Update"
-            }
+    "error": {
+      "auth_failed": "Authentifizierung fehlgeschlagen",
+      "cannot_connect": "Verbindung Fehlgeschlagen",
+      "invalid_host": "Ungültiger Host"
+    },
+    "step": {
+      "user": {
+        "menu_options": {
+          "manual": "Manuell",
+          "start_discovery": "Automatische Suche"
         }
+      },
+      "manual": {
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "Die IP-Adresse, der Host oder die Basis-URL des Geräts"
+        }
+      },
+      "auth": {
+        "title": "Authentifizierung",
+        "description": "Dein Gerät ist passwortgeschützt. Bitte gib die Anmeldedaten ein.",
+        "data": {
+          "username": "Nutzername",
+          "password": "Passwort"
+        }
+      },
+      "confirm": {
+        "title": "Konfiguration Bestätigen"
+      }
     }
+  },
+  "entity": {
+    "button": {
+      "check_update": {
+        "name": "Nach Updates Suchen"
+      }
+    },
+    "sensor": {
+      "energy_program": {
+        "name": "Energie Programm"
+      },
+      "energy_average": {
+        "name": "Energie Durchschnitt"
+      },
+      "energy_total": {
+        "name": "Energie Gesamt"
+      },
+      "water_program": {
+        "name": "Wasser Programm"
+      },
+      "water_average": {
+        "name": "Wasser Durchschnitt"
+      },
+      "water_total": {
+        "name": "Wasser Gesamt"
+      },
+      "last_notification": {
+        "name": "Letzte Benachrichtigung"
+      },
+      "program": {
+        "name": "Programm",
+        "state": {
+          "standby": "Standby"
+        }
+      },
+      "program_end": {
+        "name": "Programm Ende"
+      },
+      "program_end_raw": {
+        "name": "Program Ende Rohwert"
+      },
+      "status": {
+        "name": "Zustand"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Update"
+      }
+    }
+  }
 }
