@@ -7,10 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -20,7 +18,6 @@ from yarl import URL
 
 from . import api
 from .const import CONF_BASE_URL, DOMAIN
-from .shared import get_device_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,33 +33,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    base_url = URL(data["host"])
-    if not base_url.is_absolute():
-        base_url = URL(f"http://{base_url}")
-
-    client = api.VZugApi(async_get_clientsession(hass), base_url)
-    try:
-        device = await client.get_device_status()
-    except Exception:
-        _LOGGER.exception("failed to get device status")
-        raise CannotConnect
-
-    try:
-        model_name = await client.get_model_description()
-    except Exception:
-        model_name = None
-
-    return {
-        "title": get_device_name(device, model_name),
-        "data": {"base_url": str(base_url)},
-    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -87,7 +57,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             credentials = None
 
         self._client = api.VZugApi(
-            async_get_clientsession(self.hass, verify_ssl=False),
             self._base_url,
             credentials=credentials,
         )
@@ -189,8 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason=ABORT_UPDATE_SUCCESS)
 
-        title = self._meta.device_name or self._meta.serial_number
-        return self.async_create_entry(title=title, data=data)
+        return self.async_create_entry(title=self._meta.create_unique_name(), data=data)
 
 
 class CannotConnect(HomeAssistantError):

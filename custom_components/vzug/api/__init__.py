@@ -8,10 +8,8 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from typing import Any, Literal, TypedDict, cast
 
-import aiohttp
-import yarl
-
-from .auth import AuthHandler, DummyAuthHandler, HttpDigestAuth
+import httpx
+from yarl import URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -208,7 +206,21 @@ class AggMeta:
     model_name: str
     device_name: str
     serial_number: str
-    api_version: str
+    api_version: tuple[int, ...]
+
+    def create_name(self) -> str:
+        if name := self.device_name.strip():
+            return name
+        return self.model_name or self.model_id or self.serial_number
+
+    def create_unique_name(self) -> str:
+        name = self.create_name()
+        if self.serial_number in name:
+            return name
+        return f"{name} ({self.serial_number})"
+
+    def supports_update_status(self) -> bool:
+        return self.api_version >= (1, 7, 0)
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -229,25 +241,29 @@ class Credentials:
 
 class VZugApi:
     @property
-    def base_url(self) -> yarl.URL:
+    def base_url(self) -> URL:
         return self._base_url
 
     def __init__(
         self,
-        session: aiohttp.ClientSession,
-        base_url: yarl.URL | str,
+        base_url: URL | str,
         *,
         credentials: Credentials | None = None,
     ) -> None:
-        self._session = session
-        self._base_url = yarl.URL(base_url)
-        # if we use authentication, we can't do requests in parallel
-        self._sem = asyncio.Semaphore(value=1 if credentials else 3)
-        self._auth: AuthHandler = (
-            HttpDigestAuth(credentials.username, credentials.password)
+        auth = (
+            httpx.DigestAuth(
+                username=credentials.username, password=credentials.password
+            )
             if credentials
-            else DummyAuthHandler()
+            else None
         )
+        transport = httpx.AsyncHTTPTransport(
+            verify=False,
+            limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
+            retries=5,
+        )
+        self._client = httpx.AsyncClient(auth=auth, transport=transport)
+        self._base_url = URL(base_url)
 
     async def _command(
         self,
@@ -259,7 +275,7 @@ class VZugApi:
         expected_type: Any = None,
         reject_empty: bool = False,
         attempts: int = 5,
-        retry_delay: float = 0.5,
+        retry_delay: float = 2.0,
         value_on_err: Callable[[], Any] | None = None,
     ) -> Any:
         if params is None:
@@ -267,11 +283,8 @@ class VZugApi:
         final_params = params.copy()
         final_params["command"] = command
         final_params["_"] = str(int(time.time()))
-        headers = {}
-        allow_retry_with_auth = True
 
-        url = self._base_url / component
-        url = url.update_query(final_params)
+        url = str(self._base_url / component)
 
         async def once() -> Any:
             _LOGGER.debug(
@@ -281,67 +294,52 @@ class VZugApi:
                 component,
                 self._base_url,
             )
-            self._auth.apply_to_headers(method="GET", url=url, headers=headers)
-            async with self._session.get(url) as resp:
-                # read the response data and then close the connection immediately
-                await resp.read()
-                resp.close()
+            resp = await self._client.get(url, params=final_params)
+            resp.raise_for_status()
 
-                retry_with_auth = self._auth.handle_response(resp)
-                if resp.status in _AUTH_REQUIRED_STATUS_CODE:
-                    raise AuthenticationFailed(retry=retry_with_auth, resp=resp)
+            if raw:
+                content = resp.text
+                _LOGGER.debug("raw response: %s", content)
+                return content
 
-                resp.raise_for_status()
+            data = resp.json()
+            _LOGGER.debug("data: %s", data)
+            if expected_type is list and data is None:
+                # if we want a list and the response is null, we just treat that as an empty list
+                data: Any = []
 
-                if raw:
-                    content = await resp.text()
-                    _LOGGER.debug("raw response: %s", content)
-                    return content
-
-                data = await resp.json(content_type=None)
-                _LOGGER.debug("data: %s", data)
-                if expected_type is list and data is None:
-                    # if we want a list and the response is null, we just treat that as an empty list
-                    data: Any = []
-
-                if expected_type is not None:
-                    assert isinstance(
-                        data, expected_type
-                    ), f"data type mismatch ({type(data)} != {expected_type})"
-                if reject_empty:
-                    assert len(data) > 0, "empty response rejected"
-                return data
+            if expected_type is not None:
+                assert isinstance(
+                    data, expected_type
+                ), f"data type mismatch ({type(data)} != {expected_type})"
+            if reject_empty:
+                assert len(data) > 0, "empty response rejected"
+            return data
 
         last_exc = ValueError("no attempts made")
-        async with self._sem:
-            attempt_idx = 0
-            while attempt_idx < attempts:
-                # starts with 0s, then retry_delay
-                await asyncio.sleep(attempt_idx * retry_delay)
+        attempt_idx = 0
+        while attempt_idx < attempts:
+            # starts with 0s, then retry_delay
+            await asyncio.sleep(attempt_idx * retry_delay)
 
-                try:
-                    return await once()
-                except AuthenticationFailed as exc:
-                    if allow_retry_with_auth and exc.retry:
-                        allow_retry_with_auth = False  # only retry once
-                        _LOGGER.debug("retrying request with authentication")
-                        continue
-                    _LOGGER.debug(f"authentication failed: {exc}")
-                    last_exc = exc
-                    break
-                except aiohttp.ClientResponseError as exc:
-                    last_exc = exc
-                    _LOGGER.debug(f"response error: {exc}")
-                    if exc.status in _TRUSTED_STATUS_CODES:
-                        break
-                except aiohttp.ClientError as exc:
-                    last_exc = exc
-                    _LOGGER.debug(f"client error: {exc}")
-                except AssertionError as exc:
-                    last_exc = exc
-                    _LOGGER.debug(f"response data assertion failed: {exc}")
+            try:
+                return await once()
+            except httpx.HTTPStatusError as err:
+                if err.response.status_code == httpx.codes.UNAUTHORIZED:
+                    raise AuthenticationFailed from err
+                if not err.response.is_server_error:
+                    raise
 
-                attempt_idx += 1
+                last_exc = err
+                _LOGGER.debug("server error: %s", err.response)
+            except AssertionError as exc:
+                last_exc = exc
+                _LOGGER.debug("response data assertion failed: %s", exc)
+            except Exception as exc:
+                last_exc = exc
+                _LOGGER.debug("unknown error: %s", exc)
+
+            attempt_idx += 1
 
         if value_on_err:
             _LOGGER.exception("command error, using default", exc_info=last_exc)
@@ -353,30 +351,41 @@ class VZugApi:
         # always start with zh_mode, that seems to do something??
         zh_mode = await self.get_zh_mode(default_on_error=True)
 
-        device = await self.get_device_status(default_on_error=default_on_error)
-        device_fetched_at = datetime.now(timezone.utc)
+        async def _device() -> tuple[DeviceStatus, datetime]:
+            data = await self.get_device_status(default_on_error=default_on_error)
+            return data, datetime.now(timezone.utc)
+
+        (device, device_fetched_at), notifications, eco_info = await asyncio.gather(
+            _device(),
+            self.get_last_push_notifications(default_on_error=default_on_error),
+            self.get_eco_info(default_on_error=default_on_error),
+        )
 
         return AggState(
             zh_mode=zh_mode,
             device=device,
             device_fetched_at=device_fetched_at,
-            notifications=await self.get_last_push_notifications(
-                default_on_error=default_on_error
-            ),
-            eco_info=await self.get_eco_info(default_on_error=default_on_error),
+            notifications=notifications,
+            eco_info=eco_info,
         )
 
     async def aggregate_update_status(
-        self, *, default_on_error: bool = True
+        self, *, supports_update_status: bool, default_on_error: bool = True
     ) -> AggUpdateStatus:
+        async def _update() -> UpdateStatus:
+            if supports_update_status:
+                return await self.get_update_status(default_on_error=default_on_error)
+            return UpdateStatus()
+
+        update, ai_fw_version, hh_fw_version = await asyncio.gather(
+            _update(),
+            self.get_ai_fw_version(default_on_error=default_on_error),
+            self.get_hh_fw_version(default_on_error=default_on_error),
+        )
         return AggUpdateStatus(
-            update=await self.get_update_status(default_on_error=default_on_error),
-            ai_fw_version=await self.get_ai_fw_version(
-                default_on_error=default_on_error
-            ),
-            hh_fw_version=await self.get_hh_fw_version(
-                default_on_error=default_on_error
-            ),
+            update=update,
+            ai_fw_version=ai_fw_version,
+            hh_fw_version=hh_fw_version,
         )
 
     async def aggregate_meta(self, *, default_on_error: bool = False) -> AggMeta:
@@ -384,13 +393,16 @@ class VZugApi:
             self.get_mac_address(default_on_error=default_on_error),
             self.get_device_info(default_on_error=default_on_error),
         )
+        raw_api_version = device_info.get("apiVersion", "")
+        api_version = tuple(map(int, (raw_api_version.split("."))))
+
         return AggMeta(
             mac_address=mac_address,
             model_id=device_info.get("model", ""),
             model_name=device_info.get("description", ""),
             device_name=device_info.get("name", ""),
             serial_number=device_info.get("serialNumber", ""),
-            api_version=device_info.get("apiVersion", ""),
+            api_version=api_version,
         )
 
     async def aggregate_config(self) -> AggConfig:
@@ -599,13 +611,4 @@ class VZugApi:
 
 
 class AuthenticationFailed(Exception):
-    def __init__(
-        self, *args: object, retry: bool, resp: aiohttp.ClientResponse
-    ) -> None:
-        super().__init__(*args)
-        self.retry = retry
-        self.resp = resp
-
-    def __str__(self) -> str:
-        parent_s = super().__str__()
-        return f"authentication failed: retry={self.retry}, resp={self.resp} {parent_s}"
+    ...

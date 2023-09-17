@@ -1,5 +1,4 @@
 import contextlib
-import enum
 import logging
 from datetime import timedelta
 
@@ -7,7 +6,6 @@ import yarl
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -15,21 +13,6 @@ from . import api
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class ApplianceKind(enum.StrEnum):
-    ADORA_DISH = enum.auto()
-    ADORA_WASH = enum.auto()
-
-    @classmethod
-    def from_model_description(cls, desc: str):
-        desc = desc.lower()
-        if "adorawash" in desc:
-            return cls.ADORA_WASH
-        if "adoradish" in desc:
-            return cls.ADORA_DISH
-        return None
-
 
 StateCoordinator = DataUpdateCoordinator[api.AggState]
 UpdateCoordinator = DataUpdateCoordinator[api.AggUpdateStatus]
@@ -48,7 +31,7 @@ class Shared:
     config_coord: ConfigCoordinator
 
     unique_id_prefix: str
-    appliance_kind: ApplianceKind | None
+    meta: api.AggMeta
     device_info: DeviceInfo
 
     def __init__(
@@ -59,7 +42,6 @@ class Shared:
     ) -> None:
         self.hass = hass
         self.client = api.VZugApi(
-            async_get_clientsession(hass, verify_ssl=False),
             base_url,
             credentials=credentials,
         )
@@ -88,15 +70,16 @@ class Shared:
 
         # the rest will be set on first refresh
         self.unique_id_prefix = ""
-        self.appliance_kind = None
         self.device_info = DeviceInfo()
         self._first_refresh_done = False
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
-            await self.state_coord.async_config_entry_first_refresh()
-            await self.update_coord.async_config_entry_first_refresh()
-            await self.config_coord.async_config_entry_first_refresh()
+            self.meta = await self.client.aggregate_meta()
+
+        await self.state_coord.async_config_entry_first_refresh()
+        await self.update_coord.async_config_entry_first_refresh()
+        await self.config_coord.async_config_entry_first_refresh()
 
         try:
             await self._post_first_refresh()
@@ -110,29 +93,22 @@ class Shared:
         await self.config_coord.async_shutdown()
 
     async def _post_first_refresh(self) -> None:
-        async with detect_auth_failed():
-            meta = await self.client.aggregate_meta()
-        device = self.state_coord.data.device
-
-        device_uuid = device.get("deviceUuid", "")
-        device_serial = device.get("Serial", "")
-
-        self.unique_id_prefix = device_uuid or device_serial
+        mac_addr = dr.format_mac(self.meta.mac_address)
+        self.unique_id_prefix = mac_addr
         if not self.unique_id_prefix:
-            _LOGGER.warn("unable to determine unique id from device data: %s", device)
+            _LOGGER.warn(
+                "unable to determine unique id from device data: %s", self.meta
+            )
 
-        self.appliance_kind = ApplianceKind.from_model_description(meta.model_name)
         self.device_info.update(
             DeviceInfo(
                 configuration_url=str(self.client.base_url),
-                identifiers={(DOMAIN, device_serial)},
-                name=get_device_name(device, meta.model_name),
+                identifiers={(DOMAIN, self.meta.serial_number)},
+                name=self.meta.create_name(),
                 hw_version=self.update_coord.data.ai_fw_version.get("HW"),
                 sw_version=self.update_coord.data.ai_fw_version.get("SW"),
-                connections={
-                    (dr.CONNECTION_NETWORK_MAC, dr.format_mac(meta.mac_address))
-                },
-                model=meta.model_name,
+                connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
+                model=self.meta.model_name,
             )
         )
 
@@ -147,7 +123,8 @@ class Shared:
     async def _fetch_update(self) -> api.AggUpdateStatus:
         async with detect_auth_failed():
             data = await self.client.aggregate_update_status(
-                default_on_error=True,  # TODO: only allowed for testing
+                supports_update_status=self.meta.supports_update_status(),
+                default_on_error=True,  # we allow the update to fail because it's not essential
             )
         if data.update.get("status") in ("idle", None):
             self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL
@@ -158,15 +135,6 @@ class Shared:
     async def _fetch_config(self) -> api.AggConfig:
         async with detect_auth_failed():
             return await self.client.aggregate_config()
-
-
-def get_device_name(device: api.DeviceStatus, model_name: str | None) -> str:
-    name = device.get("DeviceName", "")
-    if not name:
-        name = model_name or ""
-    if not name:
-        name = device.get("Serial", "")
-    return name
 
 
 @contextlib.asynccontextmanager

@@ -16,7 +16,9 @@ async def async_setup_entry(
 ) -> None:
     shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ButtonEntity] = [CheckUpdate(shared)]
+    entities: list[ButtonEntity] = []
+    if shared.meta.supports_update_status():
+        entities.append(CheckUpdate(shared))
 
     for category in shared.config_coord.data.values():
         for command in category.commands.values():
