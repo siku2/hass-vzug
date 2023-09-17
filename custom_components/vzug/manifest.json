@@ -6,6 +6,11 @@
   ],
   "config_flow": true,
   "dependencies": [],
+  "dhcp": [
+    {
+      "macaddress": "FC1BFF*"
+    }
+  ],
   "documentation": "https://github.com/siku2/hass-vzug",
   "homekit": {},
   "integration_type": "device",

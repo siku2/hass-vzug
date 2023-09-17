@@ -5,15 +5,19 @@ import logging
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
+from http import HTTPStatus
 from typing import Any, Literal, TypedDict, cast
 
 import aiohttp
 import yarl
 
+from .auth import AuthHandler, DummyAuthHandler, HttpDigestAuth
+
 _LOGGER = logging.getLogger(__name__)
 
+_AUTH_REQUIRED_STATUS_CODE: set[int] = {HTTPStatus.UNAUTHORIZED}
 # list of status codes that we don't count as false-positives
-_TRUSTED_STATUS_CODES: set[int] = {401, 404}
+_TRUSTED_STATUS_CODES: set[int] = _AUTH_REQUIRED_STATUS_CODE | {HTTPStatus.NOT_FOUND}
 
 DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
@@ -135,7 +139,7 @@ class DeviceInfo(TypedDict, total=False):
     serialNumber: str
     articleNumber: str
     """the serial number starts with this"""
-    apiVersion: str  # seen: 1.7.0 / 1.8.0
+    apiVersion: str  # seen: 1.5.0 / 1.7.0 / 1.8.0
     zhMode: int
 
 
@@ -200,7 +204,11 @@ class AggUpdateStatus:
 @dataclasses.dataclass(slots=True, kw_only=True)
 class AggMeta:
     mac_address: str
-    model_description: str
+    model_id: str
+    model_name: str
+    device_name: str
+    serial_number: str
+    api_version: str
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -213,6 +221,12 @@ class AggCategory:
 AggConfig = dict[str, AggCategory]
 
 
+@dataclasses.dataclass(kw_only=True, slots=True)
+class Credentials:
+    username: str
+    password: str
+
+
 class VZugApi:
     @property
     def base_url(self) -> yarl.URL:
@@ -222,10 +236,18 @@ class VZugApi:
         self,
         session: aiohttp.ClientSession,
         base_url: yarl.URL | str,
+        *,
+        credentials: Credentials | None = None,
     ) -> None:
         self._session = session
         self._base_url = yarl.URL(base_url)
-        self._sem = asyncio.Semaphore(value=3)
+        # if we use authentication, we can't do requests in parallel
+        self._sem = asyncio.Semaphore(value=1 if credentials else 3)
+        self._auth: AuthHandler = (
+            HttpDigestAuth(credentials.username, credentials.password)
+            if credentials
+            else DummyAuthHandler()
+        )
 
     async def _command(
         self,
@@ -245,8 +267,11 @@ class VZugApi:
         final_params = params.copy()
         final_params["command"] = command
         final_params["_"] = str(int(time.time()))
+        headers = {}
+        allow_retry_with_auth = True
 
         url = self._base_url / component
+        url = url.update_query(final_params)
 
         async def once() -> Any:
             _LOGGER.debug(
@@ -256,7 +281,16 @@ class VZugApi:
                 component,
                 self._base_url,
             )
-            async with self._session.get(url, params=final_params) as resp:
+            self._auth.apply_to_headers(method="GET", url=url, headers=headers)
+            async with self._session.get(url) as resp:
+                # read the response data and then close the connection immediately
+                await resp.read()
+                resp.close()
+
+                retry_with_auth = self._auth.handle_response(resp)
+                if resp.status in _AUTH_REQUIRED_STATUS_CODE:
+                    raise AuthenticationFailed(retry=retry_with_auth, resp=resp)
+
                 resp.raise_for_status()
 
                 if raw:
@@ -280,9 +314,21 @@ class VZugApi:
 
         last_exc = ValueError("no attempts made")
         async with self._sem:
-            for _ in range(attempts):
+            attempt_idx = 0
+            while attempt_idx < attempts:
+                # starts with 0s, then retry_delay
+                await asyncio.sleep(attempt_idx * retry_delay)
+
                 try:
                     return await once()
+                except AuthenticationFailed as exc:
+                    if allow_retry_with_auth and exc.retry:
+                        allow_retry_with_auth = False  # only retry once
+                        _LOGGER.debug("retrying request with authentication")
+                        continue
+                    _LOGGER.debug(f"authentication failed: {exc}")
+                    last_exc = exc
+                    break
                 except aiohttp.ClientResponseError as exc:
                     last_exc = exc
                     _LOGGER.debug(f"response error: {exc}")
@@ -294,8 +340,8 @@ class VZugApi:
                 except AssertionError as exc:
                     last_exc = exc
                     _LOGGER.debug(f"response data assertion failed: {exc}")
-                await asyncio.sleep(retry_delay)
-                retry_delay *= 2.0
+
+                attempt_idx += 1
 
         if value_on_err:
             _LOGGER.exception("command error, using default", exc_info=last_exc)
@@ -334,11 +380,17 @@ class VZugApi:
         )
 
     async def aggregate_meta(self, *, default_on_error: bool = False) -> AggMeta:
+        mac_address, device_info = await asyncio.gather(
+            self.get_mac_address(default_on_error=default_on_error),
+            self.get_device_info(default_on_error=default_on_error),
+        )
         return AggMeta(
-            mac_address=await self.get_mac_address(default_on_error=default_on_error),
-            model_description=await self.get_model_description(
-                default_on_error=default_on_error
-            ),
+            mac_address=mac_address,
+            model_id=device_info.get("model", ""),
+            model_name=device_info.get("description", ""),
+            device_name=device_info.get("name", ""),
+            serial_number=device_info.get("serialNumber", ""),
+            api_version=device_info.get("apiVersion", ""),
         )
 
     async def aggregate_config(self) -> AggConfig:
@@ -499,7 +551,7 @@ class VZugApi:
             value_on_err=(lambda: EcoInfo()) if default_on_error else None,
         )
 
-    async def get_device_info(self) -> DeviceInfo:
+    async def get_device_info(self, *, default_on_error: bool = False) -> DeviceInfo:
         # TODO: use this to replace a part of aggregations, display api version as a diagnostic sensor
         # 'getAPIVersion' can be used to get only the API version
         # 'getZHMode' gives just the zh mode
@@ -507,6 +559,7 @@ class VZugApi:
             "hh",
             command="getDeviceInfo",
             expected_type=dict,
+            value_on_err=(lambda: DeviceInfo()) if default_on_error else None,
         )
 
     async def get_program(self) -> list[Program]:
@@ -545,8 +598,14 @@ class VZugApi:
         )
 
 
-# TODO: DISCOVER devices:
-#   broadcast b"DISCOVERY_LAN_INTERFACE_REQUEST" to 2047
-#   response: b"DISCOVERY_LAN_INTERFACE_RESPONSE" on port 2047
+class AuthenticationFailed(Exception):
+    def __init__(
+        self, *args: object, retry: bool, resp: aiohttp.ClientResponse
+    ) -> None:
+        super().__init__(*args)
+        self.retry = retry
+        self.resp = resp
 
-# TODO: discover with dhcp: fc:1b:ff
+    def __str__(self) -> str:
+        parent_s = super().__str__()
+        return f"authentication failed: retry={self.retry}, resp={self.resp} {parent_s}"

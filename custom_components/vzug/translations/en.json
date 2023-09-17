@@ -1,16 +1,28 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "update_success": "Update successful"
         },
         "error": {
+            "auth_failed": "Authentication failed",
             "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "invalid_host": "Invalid host"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host"
+                },
+                "data_description": {
+                    "host": "The IP address, host, or base url of the device"
+                }
+            },
+            "auth": {
+                "description": "Your device is password protected. Please provide the credentials here.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
                 }
             }
         }

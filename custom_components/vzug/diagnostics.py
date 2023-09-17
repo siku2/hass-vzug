@@ -4,12 +4,13 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .shared import Shared
 
-TO_REDACT: set[str] = set()
+TO_REDACT: set[str] = {CONF_PASSWORD, CONF_USERNAME}
 
 
 def _serialize_exception(exc: Exception) -> dict[str, Any]:

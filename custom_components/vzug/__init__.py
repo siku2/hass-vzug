@@ -1,11 +1,12 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from yarl import URL
 
-from .const import DOMAIN
+from . import api
+from .const import CONF_BASE_URL, DOMAIN
 from .shared import Shared
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,8 +23,14 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up V-ZUG from a config entry."""
-    base_url = URL(entry.data["base_url"])
-    shared = Shared(hass, base_url)
+    base_url = URL(entry.data[CONF_BASE_URL])
+    try:
+        credentials = api.Credentials(
+            username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
+        )
+    except KeyError:
+        credentials = None
+    shared = Shared(hass, base_url, credentials)
     await shared.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

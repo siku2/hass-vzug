@@ -1,14 +1,16 @@
 import abc
 import hashlib
+import logging
 import os
 import re
-import time
 from collections.abc import Callable, MutableMapping
 from typing import Required, TypedDict
 from urllib.request import parse_http_list
 
 from aiohttp import ClientResponse
 from yarl import URL
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Challenge(TypedDict, total=False):
@@ -27,8 +29,18 @@ class AuthHandler(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def handle_401(self, resp: ClientResponse) -> bool:
+    def handle_response(self, resp: ClientResponse) -> bool:
         ...
+
+
+class DummyAuthHandler(AuthHandler):
+    def apply_to_headers(
+        self, *, method: str, url: URL, headers: MutableMapping[str, str]
+    ) -> None:
+        return
+
+    def handle_response(self, resp: ClientResponse) -> bool:
+        return False
 
 
 # based on requests implementation: <https://github.com/psf/requests/blob/881281250f74549f560408e5546d95a8cd73ce28/src/requests/auth.py#L107>
@@ -44,93 +56,55 @@ class HttpDigestAuth(AuthHandler):
     def build_digest_header(self, method: str, url: URL) -> str | None:
         realm = self._challenge["realm"]
         nonce = self._challenge["nonce"]
+        if not (realm and nonce):
+            return None
         qop = self._challenge.get("qop")
         algorithm = self._challenge.get("algorithm")
         opaque = self._challenge.get("opaque")
-        hash_utf8: Callable[[str], str] | None = None
 
+        method = method.upper()
+
+        hash_utf8: Callable[[str], str] | None = None
         if algorithm is None:
             _algorithm = "MD5"
         else:
             _algorithm = algorithm.upper()
         # lambdas assume digest modules are imported at the top level
         if _algorithm == "MD5" or _algorithm == "MD5-SESS":
-
-            def md5_utf8(x: str) -> str:
-                return hashlib.md5(x.encode("utf-8")).hexdigest()
-
-            hash_utf8 = md5_utf8
+            hash_utf8 = lambda x: hashlib.md5(x.encode("utf-8")).hexdigest()
         elif _algorithm == "SHA":
-
-            def sha_utf8(x: str) -> str:
-                return hashlib.sha1(x.encode("utf-8")).hexdigest()
-
-            hash_utf8 = sha_utf8
+            hash_utf8 = lambda x: hashlib.sha1(x.encode("utf-8")).hexdigest()
         elif _algorithm == "SHA-256":
-
-            def sha256_utf8(x: str) -> str:
-                return hashlib.sha256(x.encode("utf-8")).hexdigest()
-
-            hash_utf8 = sha256_utf8
+            hash_utf8 = lambda x: hashlib.sha256(x.encode("utf-8")).hexdigest()
         elif _algorithm == "SHA-512":
-
-            def sha512_utf8(x: str) -> str:
-                return hashlib.sha512(x.encode("utf-8")).hexdigest()
-
-            hash_utf8 = sha512_utf8
+            hash_utf8 = lambda x: hashlib.sha512(x.encode("utf-8")).hexdigest()
 
         if hash_utf8 is None:
             return None
 
-        def kd(s: str, d: str) -> str:
-            return hash_utf8(f"{s}:{d}")
-
-        # XXX not implemented yet
-        entdig = None
-
-        a1 = f"{self._username}:{realm}:{self._password}"
-        a2 = f"{method.upper()}:{url.path_qs}"
-
-        ha1 = hash_utf8(a1)
-        ha2 = hash_utf8(a2)
-
-        if nonce == self._last_nonce:
-            self._nonce_count += 1
-        else:
+        if nonce != self._last_nonce:
             self._nonce_count = 1
+            self._last_nonce = nonce
+
         ncvalue = f"{self._nonce_count:08x}"
-        s = str(self._nonce_count).encode("utf-8")
-        s += nonce.encode("utf-8")
-        s += time.ctime().encode("utf-8")
-        s += os.urandom(8)
 
-        cnonce = hashlib.sha1(s).hexdigest()[:16]
-        if _algorithm == "MD5-SESS":
-            ha1 = hash_utf8(f"{ha1}:{nonce}:{cnonce}")
-
-        if not qop:
-            respdig = kd(ha1, f"{nonce}:{ha2}")
-        elif qop == "auth" or "auth" in qop.split(","):
-            noncebit = f"{nonce}:{ncvalue}:{cnonce}:auth:{ha2}"
-            respdig = kd(ha1, noncebit)
-        else:
-            # XXX handle auth-int.
-            return None
-
-        self._last_nonce = nonce
+        ha1 = hash_utf8(f"{self._username}:{realm}:{self._password}")
+        ha2 = hash_utf8(f"{method}:{url.path_qs}")
+        cnonce = os.urandom(4).hex()
+        response = hash_utf8(f"{ha1}:{nonce}:{ncvalue}:{cnonce}:{qop}:{ha2}")
 
         base = (
             f'username="{self._username}", realm="{realm}", nonce="{nonce}", '
-            f'uri="{url.path_qs}", response="{respdig}"'
+            f'uri="{url.path_qs}", response="{response}"'
         )
         if opaque:
             base += f', opaque="{opaque}"'
         if algorithm:
-            base += f', algorithm="{algorithm}"'
-        if entdig:
-            base += f', digest="{entdig}"'
+            base += f', algorithm="{_algorithm}"'
         if qop:
             base += f', qop="auth", nc={ncvalue}, cnonce="{cnonce}"'
+
+        _LOGGER.debug("built digest base: %s", base)
         return f"Digest {base}"
 
     def apply_to_headers(
@@ -139,7 +113,12 @@ class HttpDigestAuth(AuthHandler):
         if value := self.build_digest_header(method, url):
             headers["Authorization"] = value
 
-    def handle_401(self, resp: ClientResponse) -> bool:
+    def handle_response(self, resp: ClientResponse) -> bool:
+        self._nonce_count += 1
+
+        if not 400 <= resp.status < 500:
+            return False
+
         s_auth = resp.headers.get("www-authenticate", "")
         if "digest" not in s_auth.lower():
             return False
@@ -148,6 +127,7 @@ class HttpDigestAuth(AuthHandler):
         self._challenge = Challenge(
             **{key: value for key, value in raw_challenge.items() if value is not None}
         )
+        _LOGGER.debug("got digest challenge: %s", self._challenge)
         return True
 
 
