@@ -131,9 +131,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             return_exceptions=True,
         )
-        discoveries: set[api.discovery.DiscoveryInfo] = set(
+        discoveries: set[api.discovery.DiscoveryInfo] = {
             d for group in results if not isinstance(group, Exception) for d in group
-        )
+        }
         for discovery in discoveries:
             df.async_create_flow(
                 self.hass,

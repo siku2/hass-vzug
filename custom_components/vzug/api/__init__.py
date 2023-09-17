@@ -11,7 +11,7 @@ from typing import Any, Literal, TypedDict, cast
 import httpx
 from yarl import URL
 
-from . import discovery  # type: ignore
+from . import discovery  # noqa: F401 # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 
