@@ -5,7 +5,6 @@ import logging
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
-from http import HTTPStatus
 from typing import Any, Literal, TypedDict, cast
 
 import httpx
@@ -14,10 +13,6 @@ from yarl import URL
 from . import discovery  # noqa: F401 # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
-
-_AUTH_REQUIRED_STATUS_CODE: set[int] = {HTTPStatus.UNAUTHORIZED}
-# list of status codes that we don't count as false-positives
-_TRUSTED_STATUS_CODES: set[int] = _AUTH_REQUIRED_STATUS_CODE | {HTTPStatus.NOT_FOUND}
 
 DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
