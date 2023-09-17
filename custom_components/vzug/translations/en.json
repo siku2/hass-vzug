@@ -2,7 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "update_success": "Update successful"
+            "update_success": "Update successful",
+            "false_discovery": "False-positive Discovery",
+            "discovery_finished": "Discovered {count} device(s)"
         },
         "error": {
             "auth_failed": "Authentication failed",
@@ -11,6 +13,12 @@
         },
         "step": {
             "user": {
+                "menu_options": {
+                    "manual": "Manual",
+                    "start_discovery": "Discovery"
+                }
+            },
+            "manual": {
                 "data": {
                     "host": "Host"
                 },
@@ -19,11 +27,15 @@
                 }
             },
             "auth": {
+                "title": "Authentication",
                 "description": "Your device is password protected. Please provide the credentials here.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
                 }
+            },
+            "confirm": {
+                "title": "Confirm Config"
             }
         }
     },

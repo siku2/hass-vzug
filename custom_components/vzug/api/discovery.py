@@ -14,7 +14,7 @@ _PING = b"DISCOVERY_LAN_INTERFACE_REQUEST"
 _PONG = b"DISCOVERY_LAN_INTERFACE_RESPONSE"
 
 
-@dataclasses.dataclass(slots=True, kw_only=True)
+@dataclasses.dataclass(slots=True, kw_only=True, frozen=True)
 class DiscoveryInfo:
     host: str
 

@@ -11,6 +11,8 @@ from typing import Any, Literal, TypedDict, cast
 import httpx
 from yarl import URL
 
+from . import discovery  # type: ignore
+
 _LOGGER = logging.getLogger(__name__)
 
 _AUTH_REQUIRED_STATUS_CODE: set[int] = {HTTPStatus.UNAUTHORIZED}
@@ -332,12 +334,16 @@ class VZugApi:
 
                 last_exc = err
                 _LOGGER.debug("server error: %s", err.response)
+            except httpx.TransportError as err:
+                last_exc = err
+                _LOGGER.debug("transport error: %r", err)
+                continue
             except AssertionError as exc:
                 last_exc = exc
                 _LOGGER.debug("response data assertion failed: %s", exc)
             except Exception as exc:
                 last_exc = exc
-                _LOGGER.debug("unknown error: %s", exc)
+                _LOGGER.debug("unknown error: %r", exc)
 
             attempt_idx += 1
 
