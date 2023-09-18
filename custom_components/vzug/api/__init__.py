@@ -299,7 +299,12 @@ class VZugApi:
                 _LOGGER.debug("raw response: %s", content)
                 return content
 
-            data = resp.json()
+            try:
+                data = resp.json()
+            except ValueError:
+                _LOGGER.debug("invalid json payload: %s", resp.text)
+                raise
+
             _LOGGER.debug("data: %s", data)
             if expected_type is list and data is None:
                 # if we want a list and the response is null, we just treat that as an empty list
@@ -565,7 +570,6 @@ class VZugApi:
         )
 
     async def get_device_info(self, *, default_on_error: bool = False) -> DeviceInfo:
-        # TODO: use this to replace a part of aggregations, display api version as a diagnostic sensor
         # 'getAPIVersion' can be used to get only the API version
         # 'getZHMode' gives just the zh mode
         return await self._command(
