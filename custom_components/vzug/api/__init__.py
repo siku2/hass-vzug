@@ -302,8 +302,11 @@ class VZugApi:
             try:
                 data = resp.json()
             except ValueError:
-                _LOGGER.debug("invalid json payload: %s", resp.text)
-                raise
+                if resp.content:
+                    _LOGGER.debug("invalid json payload: %s", resp.content)
+                    raise
+                # we got an empty response, we just treat this as 'None'
+                data = None
 
             _LOGGER.debug("data: %s", data)
             if expected_type is list and data is None:
