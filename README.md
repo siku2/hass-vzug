@@ -16,6 +16,7 @@ The following devices are known to be supported:
 - AdoraDry V2000
 - AdoraWash V2000 / V4000 / V6000
 - Combi-Steam HSL / MSLQ
+- CombiCooler V4000
 
 I would love to add more devices to this list. Don't hesitate to open a new issue or a discussion if you have a V-ZUG device you would like to add.
 
