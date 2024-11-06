@@ -15,6 +15,7 @@ The following devices are known to be supported:
 - AdoraDish V2000 / V4000 / V6000
 - AdoraDry V2000
 - AdoraWash V2000 / V4000 / V6000
+- Combair V4000
 - Combi-Steam HSL / MSLQ
 - CombiCooler V4000
 
