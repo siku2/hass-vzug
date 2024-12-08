@@ -70,7 +70,8 @@
             "program": {
                 "name": "Programme",
                 "state": {
-                    "standby": "Veille"
+                    "standby": "Veille",
+                    "active": "Actif"
                 }
             },
             "program_end": {
