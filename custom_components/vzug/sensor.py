@@ -124,8 +124,8 @@ class Program(StateBase):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         device = self.coordinator.data.device
-        if device.get("Program"):
-            return device.get("Program")
+        if program := device.get("Program"):
+            return program
         elif device.get("Inactive") == "true":
             return "standby"
         else:
