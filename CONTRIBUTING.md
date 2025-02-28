@@ -66,6 +66,7 @@ By contributing, you agree that your contributions will be licensed under its MI
 ```shell
 # add the template repo as a remote
 git remote add template https://github.com/siku2/hass-integration-template.git
+git remote update
 # merge changes
 git merge --squash -e -Xtheirs --allow-unrelated-histories template/main
 ```

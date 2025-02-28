@@ -1,6 +1,6 @@
 {
     "name": "Python",
-    "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.11-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
         8123
@@ -14,11 +14,10 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "charliermarsh.ruff",
                 "DavidAnson.vscode-markdownlint",
                 "eamodio.gitlens",
                 "github.vscode-pull-request-github",
-                "ms-python.black-formatter",
-                "ms-python.isort",
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ryanluker.vscode-coverage-gutters",
@@ -29,7 +28,7 @@
                     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
                 },
                 "[python]": {
-                    "editor.defaultFormatter": "ms-python.black-formatter"
+                    "editor.defaultFormatter": "charliermarsh.ruff"
                 },
                 "files.eol": "\n",
                 "python.analysis.autoSearchPaths": false,
