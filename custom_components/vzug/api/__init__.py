@@ -4,7 +4,7 @@ import json
 import logging
 import time
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
 
 import httpx
@@ -59,9 +59,13 @@ class PushNotification(TypedDict, total=False):
 
 
 class Command(TypedDict, total=False):
-    type: Literal["action"] | Literal["boolean"] | Literal["selection"] | Literal[
-        "status"
-    ] | Literal["range"]
+    type: (
+        Literal["action"]
+        | Literal["boolean"]
+        | Literal["selection"]
+        | Literal["status"]
+        | Literal["range"]
+    )
     description: str
     command: str
     value: str
@@ -149,8 +153,7 @@ class ProgramOptionB(TypedDict, total=False):
     options: list[Any]
 
 
-class ProgramOption(ProgramOptionA, ProgramOptionB):
-    ...
+class ProgramOption(ProgramOptionA, ProgramOptionB): ...
 
 
 class ProgramInfo(TypedDict, total=False):
@@ -362,7 +365,7 @@ class VZugApi:
 
         async def _device() -> tuple[DeviceStatus, datetime]:
             data = await self.get_device_status(default_on_error=default_on_error)
-            return data, datetime.now(timezone.utc)
+            return data, datetime.now(UTC)
 
         (device, device_fetched_at), notifications, eco_info = await asyncio.gather(
             _device(),
@@ -618,5 +621,4 @@ class VZugApi:
         )
 
 
-class AuthenticationFailed(Exception):
-    ...
+class AuthenticationFailed(Exception): ...
