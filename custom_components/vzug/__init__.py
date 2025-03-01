@@ -55,17 +55,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     _LOGGER.debug("migrating from version %s.%s", config_entry.version, config_entry.minor_version)
 
+    if config_entry.version == 2 and config_entry.minor_version == 2:
+        return False
+
+    new_data = config_entry.data.copy()
+
     if config_entry.version == 1:
+        # migrate base_url
+        base_url = URL(config_entry.data["host"])
+        if not base_url.is_absolute():
+            base_url = URL(f"http://{base_url}")
+        new_data[CONF_BASE_URL] = str(base_url)
+
+    if config_entry.minor_version == 1:
         # migrate old entity unique id
         entity_reg = er.async_get(hass)
         entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
             entity_reg, config_entry.entry_id
         )
-
-        # migrate base_url
-        base_url = URL(config_entry.data["host"])
-        if not base_url.is_absolute():
-            base_url = URL(f"http://{base_url}")
 
         # setup coordinator to get required data for unique_id
         try:
@@ -74,13 +81,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
         except KeyError:
             credentials = None
+        base_url = URL(new_data[CONF_BASE_URL])
         shared = Shared(hass, base_url, credentials)
         await shared.async_config_entry_first_refresh()
         old_prefix = shared.state_coord.data.device.get("deviceUuid", "") or shared.state_coord.data.device.get("Serial", "")
         mac_addr = dr.format_mac(shared.meta.mac_address)
 
         for entity in entities:
-            #migrate unique_id_prefix from 'device_uuid' or 'device_serial' to 'mac_addr'
+            # migrate unique_id_prefix from 'device_uuid' or 'device_serial' to 'mac_addr'
+
+            if old_prefix not in entity.unique_id:
+                continue
+
             new_uid = entity.unique_id.replace(old_prefix, mac_addr)
             _LOGGER.debug(
                 "migrate unique id '%s' to '%s'", entity.unique_id, new_uid
