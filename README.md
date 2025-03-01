@@ -12,16 +12,20 @@ _Integration to integrate with [V-ZUG](https://www.vzug.com) devices._
 
 The following devices are known to be supported:
 
-- [AdoraDish V2000 / V4000 / V6000[^1]](https://github.com/siku2/hass-vzug/discussions/categories/adoradish)
-- [AdoraDry V2000 / V4000 / V6000](https://github.com/siku2/hass-vzug/discussions/categories/adoradry)
-- [AdoraWash V2000 / V4000 / V6000[^1]](https://github.com/siku2/hass-vzug/discussions/categories/adorawash)
-- [Combair V4000](https://github.com/siku2/hass-vzug/discussions/categories/combair)
-- [CombairSteamer V6000[^1]](https://github.com/siku2/hass-vzug/discussions/categories/combairsteamer)
-- [CombiSteam HSL / MSLQ](https://github.com/siku2/hass-vzug/discussions/categories/combisteam)
-- [CombiCooler V4000](https://github.com/siku2/hass-vzug/discussions/categories/combicooler)
-- [Cooler V2000](https://github.com/siku2/hass-vzug/discussions/categories/cooler)
+- AdoraDish V2000 / V4000 / V6000[^1]
+- AdoraDry V2000 / V4000 / V6000
+- AdoraWash V2000 / V4000 / V6000[^1]
+- Combair V4000 / V6000
+- CombairSteamer V6000[^1]
+- CombiCooler V4000
+- CombiSteam HSL / MSLQ / XSL
+- CombiSteamer V6000
+- CookTop V6000
+- Cooler V2000
+- WineCooler V4000
 
-I would love to add more devices to this list. Don't hesitate to open a new issue or a discussion if you have a V-ZUG device you would like to add.
+[Check out the discussions](https://github.com/siku2/hass-vzug/discussions) for more info.
+Don't hesitate to open a new issue or a discussion if you have a V-ZUG device you would like to add.
 
 [^1]: Owned and tested by me. These are pretty much guaranteed to work.
 
