@@ -62,7 +62,20 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             entity_reg, config_entry.entry_id
         )
 
-        shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+        # migrate base_url
+        base_url = URL(config_entry.data["host"])
+        if not base_url.is_absolute():
+            base_url = URL(f"http://{base_url}")
+
+        # setup coordinator to get required data for unique_id
+        try:
+            credentials = api.Credentials(
+                username=config_entry.data[CONF_USERNAME], password=config_entry.data[CONF_PASSWORD]
+            )
+        except KeyError:
+            credentials = None
+        shared = Shared(hass, base_url, credentials)
+        await shared.async_config_entry_first_refresh()
         old_prefix = shared.state_coord.data.device.get("deviceUuid", "") or shared.state_coord.data.device.get("Serial", "")
         mac_addr = dr.format_mac(shared.meta.mac_address)
 
@@ -75,11 +88,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             entity_reg.async_update_entity(
                 entity.entity_id, new_unique_id=new_uid
             )
-
-        # migrate base_url
-        base_url = URL(config_entry.data["host"])
-        if not base_url.is_absolute():
-            base_url = URL(f"http://{base_url}")
 
         hass.config_entries.async_update_entry(
             config_entry, data={"base_url": str(base_url)}, version = 2, minor_version = 2
