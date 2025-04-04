@@ -42,6 +42,13 @@ Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
 
 People *love* thorough bug reports. I'm not even kidding.
 
+## Debugging using VSCode
+
+- After cloning the repo, VScode will detect the devcontainer setup and start to build one
+- Once finished open a terminal and start `./script/develop`
+- This will start HomeAssistant and initalize during the first run. Configuration.yaml contains debugpy to enable remote debugging
+- Once up and running: You can switch to 'Run and Debug' and select 'Python: Remote Attach'
+
 ## Use a Consistent Coding Style
 
 Use [black](https://github.com/ambv/black) to make sure the code follows the style.
