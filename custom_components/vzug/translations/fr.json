@@ -1,67 +1,92 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le périphérique est déjà configuré"
+            "already_configured": "Le périphérique est déjà configuré",
+            "update_success": "Mise à jour réussie",
+            "false_discovery": "Découverte fausse positive",
+            "discovery_finished": "{count} appareil(s) découvert(s)"
         },
         "error": {
+            "auth_failed": "Échec de l'authentification",
             "cannot_connect": "Échec de la connexion",
-            "unknown": "Erreur inconnue"
+            "invalid_host": "Hôte invalide"
         },
         "step": {
             "user": {
-                "data": {
-                    "host": "Nom d'hôte (ou IP)"
+                "menu_options": {
+                    "manual": "Manuel",
+                    "start_discovery": "Découvrir"
                 }
+            },
+            "manual": {
+                "data": {
+                    "host": "Nom d'hôte"
+                },
+                "data_description": {
+                    "host": "L'adresse IP, l'hôte ou l'URL de base de l'appareil"
+                }
+            },
+            "auth": {
+                "title": "Authentification",
+                "description": "Ton appareil est protégé par un mot de passe. Mets les infos d'identification ici.",
+                "data": {
+                    "username": "Nom d'utilisateur",
+                    "password": "Mot de passe"
+                }
+            },
+            "confirm": {
+                "title": "Confirmer la Configuration"
             }
         }
     },
     "entity": {
         "button": {
             "check_update": {
-                "name": "Vérifier les mises à jour"
+                "name": "Vérifier les Mises à Jour"
             }
         },
         "sensor": {
             "energy_program": {
-                "name": "Consommation électrique "
+                "name": "Consommation électrique"
             },
             "energy_average": {
-                "name": "Consommation moyenne électrique"
+                "name": "Moyenne électrique"
             },
             "energy_total": {
-                "name": "Consommation total électrique"
+                "name": "Total électrique"
             },
             "water_program": {
                 "name": "Consommation eau"
             },
             "water_average": {
-                "name": "Consommation moyenne eau"
+                "name": "Moyenne Eau"
             },
             "water_total": {
-                "name": "Consommation total eau"
+                "name": "Total Eau"
             },
             "last_notification": {
-                "name": "Dernière notification"
+                "name": "Dernière Notification"
             },
             "program": {
                 "name": "Programme",
                 "state": {
-                    "standby": "Veille"
+                    "standby": "Veille",
+                    "active": "Actif"
                 }
             },
             "program_end": {
-                "name": "Fin du programme"
+                "name": "Fin du Programme"
             },
             "program_end_raw": {
                 "name": "Valeur estimatif de la fin lavage"
             },
             "status": {
-                "name": "état"
+                "name": "État"
             }
         },
         "update": {
             "update": {
-                "name": "Mise à jour"
+                "name": "Mise à Jour"
             }
         }
     }

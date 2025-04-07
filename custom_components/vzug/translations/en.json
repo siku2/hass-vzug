@@ -1,17 +1,41 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "update_success": "Update successful",
+            "false_discovery": "False-positive Discovery",
+            "discovery_finished": "Discovered {count} device(s)"
         },
         "error": {
+            "auth_failed": "Authentication failed",
             "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
+            "invalid_host": "Invalid host"
         },
         "step": {
             "user": {
+                "menu_options": {
+                    "manual": "Manual",
+                    "start_discovery": "Discovery"
+                }
+            },
+            "manual": {
                 "data": {
                     "host": "Host"
+                },
+                "data_description": {
+                    "host": "The IP address, host, or base url of the device"
                 }
+            },
+            "auth": {
+                "title": "Authentication",
+                "description": "Your device is password protected. Please provide the credentials here.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                }
+            },
+            "confirm": {
+                "title": "Confirm Config"
             }
         }
     },
@@ -46,7 +70,8 @@
             "program": {
                 "name": "Program",
                 "state": {
-                    "standby": "Standby"
+                    "standby": "Standby",
+                    "active": "Active"
                 }
             },
             "program_end": {
