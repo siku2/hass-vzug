@@ -45,6 +45,6 @@ class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
     def entity_category(self) -> EntityCategory | None:
         return (
             EntityCategory.CONFIG
-            if self.vzug_command.get("alterable", False)
+            if self.vzug_command.get("alterable", True)
             else EntityCategory.DIAGNOSTIC
         )

@@ -1,17 +1,30 @@
 {
   "domain": "vzug",
   "name": "V-ZUG",
+  "after_dependencies": [
+    "network"
+  ],
+  "bluetooth": [],
   "codeowners": [
     "@siku2"
   ],
   "config_flow": true,
   "dependencies": [],
+  "dhcp": [
+    {
+      "macaddress": "FC1BFF*"
+    }
+  ],
   "documentation": "https://github.com/siku2/hass-vzug",
   "homekit": {},
+  "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/siku2/hass-vzug/issues",
+  "loggers": [],
+  "mqtt": [],
   "requirements": [],
   "ssdp": [],
+  "usb": [],
   "version": "0.0.0",
   "zeroconf": []
 }

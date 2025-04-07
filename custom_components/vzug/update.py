@@ -21,7 +21,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([VZugUpdate(shared)])
+
+    if shared.meta.supports_update_status():
+        async_add_entities([VZugUpdate(shared)])
 
 
 class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):

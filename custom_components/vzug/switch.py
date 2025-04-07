@@ -21,7 +21,7 @@ async def async_setup_entry(
 
     for category in shared.config_coord.data.values():
         for command in category.commands.values():
-            if command.get("type") == "boolean" and command.get("alterable", False):
+            if command.get("type") == "boolean" and command.get("alterable", True):
                 entities.append(
                     UserConfig(
                         shared,
