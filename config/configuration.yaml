@@ -7,3 +7,9 @@ logger:
   logs:
     httpx: debug
     custom_components.vzug: debug
+
+debugpy:
+   start: true
+   wait: false
+   port: 5678
+   

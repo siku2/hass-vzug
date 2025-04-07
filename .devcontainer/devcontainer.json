@@ -1,14 +1,24 @@
 {
     "name": "Python",
     "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+
     "postCreateCommand": "scripts/setup",
+
+    //Aparently we don't need to manually forward 5678
+    //It is usally detected when launching ./scripts/develop
+    //Declaring manually gives it a name in VScode
     "forwardPorts": [
+        5678,
         8123
     ],
     "portsAttributes": {
+        "5678": {
+            "label": "Python Debug",
+            "onAutoForward":"silent" 
+        },
         "8123": {
             "label": "Home Assistant",
-            "onAutoForward": "notify"
+            "onAutoForward": "openBrowserOnce"
         }
     },
     "customizations": {

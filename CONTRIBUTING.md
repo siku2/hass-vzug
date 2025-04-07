@@ -42,6 +42,15 @@ Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
 
 People *love* thorough bug reports. I'm not even kidding.
 
+## Debugging using VSCode
+
+- After cloning the repo, VScode will detect the devcontainer setup and start to build one with docker desktop. Wait for completion. It may take a few minutes.
+- Open a terminal and start `./script/develop`. This will start HomeAssistant. At first run it will also initialize. Configuration.yaml contains debugpy to enable remote debugging
+- Once HomeAssistant is up and running, select 'Python: Remote Attach'. You should see a stack trace.
+- First useful breakpoints:
+  - `api.py` -> `VZugApi.__init__`
+  - `config_flow.py` -> `validate_input` (called during add device)
+  
 ## Use a Consistent Coding Style
 
 Use [black](https://github.com/ambv/black) to make sure the code follows the style.
