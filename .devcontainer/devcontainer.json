@@ -4,9 +4,15 @@
 
     "postCreateCommand": "scripts/setup",
 
-    //Aparently we don't need to manually forward 5678
-    //It is usally detected when launching ./scripts/develop
-    //Declaring manually gives it a name in VScode
+    // Make sure we always use the same root folder, no matter what a fork is called
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/v-zug,type=bind",
+    "workspaceFolder": "/workspaces/v-zug",
+    "remoteEnv": {
+        "PROJECT_ROOT": "/workspaces/v-zug"
+    },
+
+    // We don't need to manually forward 5678. It is usually detected when launching ./scripts/develop. 
+    // But declaring manually will assign a name in VScode
     "forwardPorts": [
         5678,
         8123
@@ -21,6 +27,7 @@
             "onAutoForward": "openBrowserOnce"
         }
     },
+
     "customizations": {
         "vscode": {
             "extensions": [
