@@ -1,7 +1,9 @@
 
 import custom_components.vzug.api as api
 
-### This file contains expected decoded results
+### This file contains expected decoded results 
+
+ai_model_description = "Adora TSLQ WP"
 
 ai_device_status = api.DeviceStatus(
     DeviceName="",
@@ -13,9 +15,7 @@ ai_device_status = api.DeviceStatus(
     deviceUuid="1122334455"
 )
 
-ai_model_description = "Adora TSLQ WP"
-
-ai_firmware_version = api.AiFwVersion(   
+ai_firmware_version = api.AiFwVersion(
     fn = "98765 012345",
     SW = "1052633-R20",
     SD = "1052633-R20",
@@ -31,7 +31,7 @@ ai_update_status = api.UpdateStatus(
     isAIUpdateAvailable = False,
     isHHGUpdateAvailable = False,
     isSynced = True,
-    components = 
+    components =
     [
         api.UpdateComponent(
             name = "AI",
@@ -53,7 +53,7 @@ ai_update_status = api.UpdateStatus(
                 installation = 0
             )
         )
-    ]    
+    ]
 )
 
 ai_last_push_notifications: list[api.PushNotification] = [
@@ -83,7 +83,7 @@ hh_eco_info = api.EcoInfo(
     )
 )
 
-hh_firmware_version = api.HhFwVersion(   
+hh_firmware_version = api.HhFwVersion(
     fn = "98765 012345",
     an = "9876500000",
     v = "W5640910",

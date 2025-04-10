@@ -1,6 +1,7 @@
 # Avoid "pytest_socket.SocketBlockedError: A test tried to use socket.socket." errors during tests
-from pytest_socket import enable_socket, disable_socket, socket_allow_hosts
 import pytest
+from pytest_socket import enable_socket, socket_allow_hosts
+
 
 @pytest.hookimpl(trylast=True)
 def pytest_runtest_setup():

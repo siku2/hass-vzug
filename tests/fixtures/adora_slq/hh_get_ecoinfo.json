@@ -1,0 +1,12 @@
+{
+  "water": {
+    "total": 6466.5,
+    "average": 35.2,
+    "program": 42.7
+  },
+  "energy": {
+    "total": 90.4,
+    "average": 0.5,
+    "program": 0.5
+  }
+}
