@@ -33,7 +33,7 @@ async def assert_ai_get_last_push_notifications(vzug_client, expected_result):
 
 async def assert_ai_get_model_description(vzug_client, expected_result):
     model_description = await vzug_client.get_model_description()
-    assert model_description == expected_result.ai_model_description
+    assert model_description.replace(" Emulator", "") == expected_result.ai_model_description
 
 async def assert_ai_get_mac_address(vzug_client):
     mac_info = await vzug_client.get_mac_address()
@@ -55,14 +55,27 @@ async def assert_ai_get_update_status(vzug_client, expected_result):
         assert update_status["components"][i]["progress"]["download"] == expected_result.ai_update_status["components"][i]["progress"]["download"]
         assert update_status["components"][i]["progress"]["installation"] == expected_result.ai_update_status["components"][i]["progress"]["installation"]
 
-async def assert_hh_get_categories_and_hh_get_category(vzug_client, expected_result):
+async def assert_hh_get_categories_and_commands(vzug_client, expected_result):
     categories = await vzug_client.list_categories()
 
-    assert len(categories) > 0
+    assert len(categories) == len(expected_result.hh_categories)
+    total_commands = 0
+
     for i in range(len(expected_result.hh_categories)):
+        assert categories[i] == expected_result.hh_categories[i].id
+
         category = await vzug_client.get_category(categories[i])
-        assert categories[i] == expected_result.hh_categories[i][0]
-        assert category == expected_result.hh_categories[i][1]
+        assert len(category) == expected_result.hh_categories[i].count_description
+
+        commands = await vzug_client.list_commands(categories[i])
+        assert len(commands) == expected_result.hh_categories[i].count_commands
+
+        for curr_command in commands:
+            details = await vzug_client.get_command(curr_command)
+            total_commands = total_commands + len(details)
+
+    # Rather artifical number. But still a good inidcator whether we got all the details
+    assert total_commands == expected_result.hh_total_commands
 
 async def assert_hh_get_eco_info(vzug_client, expected_result):
     eco_info = await vzug_client.get_eco_info()

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "settings",
+    "category": {
+      "description": "Einstellungen"
+    },
+    "commands": [
+      "spinningXat",
+      "startXdelay",
+      "aquaplus",
+      "soiling",
+      "ecom",
+      "ecomXstatXtotal",
+      "ecomXstatXtotalXclear",
+      "ecomXstatXavarage",
+      "ecomXstatXavarageXclear",
+      "hygieneXinformation",
+      "childproofXlock",
+      "autoXdoorXopener",
+      "softXwater",
+      "multiXcompXdetergent",
+      "silent",
+      "backgroundXimage",
+      "buttonXtone",
+      "loosenXup",
+      "brightness"
+    ]
+  }
+]

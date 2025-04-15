@@ -24,10 +24,10 @@
             ]
         },
         {
-            "name": "Python: File",
+            "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}"
+            "program": "${file}",
         }
     ]
 }

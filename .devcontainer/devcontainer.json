@@ -2,13 +2,15 @@
     "name": "Python",
     "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
 
-    "postCreateCommand": "scripts/setup",
+    "postCreateCommand": "scripts/setup.sh",
 
     // Make sure we always use the same root folder, no matter what a fork is called
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/v-zug,type=bind",
     "workspaceFolder": "/workspaces/v-zug",
     "remoteEnv": {
-        "PROJECT_ROOT": "/workspaces/v-zug"
+        "PROJECT_ROOT": "/workspaces/v-zug",
+        "PYTHONPATH": "/workspaces/v-zug",
+        "PATH": "${containerEnv:PATH}:/workspaces/v-zug/scripts"
     },
 
     // We don't need to manually forward 5678. It is usually detected when launching ./scripts/develop. 
@@ -38,6 +40,7 @@
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ryanluker.vscode-coverage-gutters",
+                "streetsidesoftware.code-spell-checker",
                 "yzhang.markdown-all-in-one"
             ],
             "settings": {
