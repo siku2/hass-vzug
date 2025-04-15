@@ -8,9 +8,9 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/v-zug,type=bind",
     "workspaceFolder": "/workspaces/v-zug",
     "remoteEnv": {
-        "PROJECT_ROOT": "/workspaces/v-zug",
-        "PYTHONPATH": "/workspaces/v-zug",
-        "PATH": "${containerEnv:PATH}:/workspaces/v-zug/scripts"
+        "PROJECT_ROOT": "${containerWorkspaceFolder}",
+        "PYTHONPATH": "${containerWorkspaceFolder}",
+        "PATH": "${containerEnv:PATH}:${containerWorkspaceFolder}/scripts"
     },
 
     // We don't need to manually forward 5678. It is usually detected when launching ./scripts/develop. 

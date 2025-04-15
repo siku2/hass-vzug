@@ -1,4 +1,4 @@
-coloredlogs=15.0.1
+coloredlogs==15.0.1
 homeassistant==2025.1.0
 ruff==0.9.9
 flask==3.1.0
