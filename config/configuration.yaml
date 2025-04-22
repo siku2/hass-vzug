@@ -6,3 +6,9 @@ logger:
   default: info
   logs:
     custom_components.vzug: debug
+
+debugpy:
+   start: true
+   wait: false
+   port: 5678
+   
