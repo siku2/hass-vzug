@@ -1,7 +1,7 @@
 
 import custom_components.vzug.api as api
 
-### This file contains expected decoded results 
+### This file contains expected decoded results
 
 ai_model_description = "Adora TSLQ WP"
 
