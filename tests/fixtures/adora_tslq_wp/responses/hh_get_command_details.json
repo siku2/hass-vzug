@@ -1,0 +1,137 @@
+[
+  {
+    "id": "LevelXofXdryness",
+    "details": {
+      "type": "range",
+      "description": "Trockengrad",
+      "command": "LevelXofXdryness",
+      "value": "3",
+      "minMax": [
+        "1",
+        "5"
+      ]
+    }
+  },
+  {
+    "id": "ReversePlus",
+    "details": {
+      "type": "boolean",
+      "description": "ReversierenPlus",
+      "command": "ReversePlus",
+      "value": "false"
+    }
+  },
+  {
+    "id": "ChildproofXlock",
+    "details": {
+      "type": "boolean",
+      "description": "Kindersicherung",
+      "command": "ChildproofXlock",
+      "value": "false"
+    }
+  },
+  {
+    "id": "StandardXmode",
+    "details": {
+      "type": "selection",
+      "description": "Standardmodus",
+      "command": "StandardXmode",
+      "value": "keine Zusatzfunktion",
+      "options": [
+        "keine Zusatzfunktion",
+        "SilentPlus",
+        "Sprint",
+        "Eco"
+      ]
+    }
+  },
+  {
+    "id": "Brightness",
+    "details": {
+      "type": "range",
+      "description": "Helligkeit",
+      "command": "Brightness",
+      "value": "3",
+      "minMax": [
+        "1",
+        "4"
+      ]
+    }
+  },
+  {
+    "id": "Backgrounimage",
+    "details": {
+      "type": "boolean",
+      "description": "Hintergrundbild",
+      "command": "Backgrounimage",
+      "value": "true"
+    }
+  },
+  {
+    "id": "ButtonXtone",
+    "details": {
+      "type": "boolean",
+      "description": "Tastenton",
+      "command": "ButtonXtone",
+      "value": "true"
+    }
+  },
+  {
+    "id": "ViewingXangle",
+    "details": {
+      "type": "selection",
+      "description": "Blickwinkel",
+      "command": "ViewingXangle",
+      "value": "von unten auf Display",
+      "options": [
+        "von oben auf Display",
+        "von unten auf Display"
+      ]
+    }
+  },
+  {
+    "id": "EcoManagement",
+    "details": {
+      "type": "boolean",
+      "description": "EcoManagement",
+      "command": "EcoManagement",
+      "value": "true"
+    }
+  },
+  {
+    "id": "TotalXconsumption",
+    "details": {
+      "type": "status",
+      "description": "Gesamtverbrauch",
+      "command": "TotalXconsumption",
+      "value": "4 kWh"
+    }
+  },
+  {
+    "id": "TotalXconsumptionDEL",
+    "details": {
+      "type": "action",
+      "description": "",
+      "command": "TotalXconsumptionDEL",
+      "value": "Löschen"
+    }
+  },
+  {
+    "id": "AverageXperXcycle",
+    "details": {
+      "type": "status",
+      "description": "Durchschnitt pro Charge",
+      "command": "AverageXperXcycle",
+      "value": " 0,7 kWh"
+    }
+  },
+  {
+    "id": "AverageXperXcycleDEL",
+    "details": {
+      "type": "action",
+      "description": "",
+      "command": "AverageXperXcycleDEL",
+      "value": "Löschen"
+    }
+  }
+]

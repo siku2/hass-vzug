@@ -2,7 +2,6 @@
 
 set -e
 
-cd "$(dirname "$0")/.."
+cd "$PROJECT_ROOT"
 
 ruff check . --fix
-ruff format

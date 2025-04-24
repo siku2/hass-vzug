@@ -1,0 +1,31 @@
+[
+  {
+    "id": "UserXsettings",
+    "category": {
+      "description": "Benutzereinstellungen"
+    },
+    "commands": [
+      "LevelXofXdryness",
+      "ReversePlus",
+      "ChildproofXlock",
+      "StandardXmode",
+      "Brightness",
+      "Backgrounimage",
+      "ButtonXtone",
+      "ViewingXangle"
+    ]
+  },
+  {
+    "id": "EcoManagement",
+    "category": {
+      "description": "EcoManagement"
+    },
+    "commands": [
+      "EcoManagement",
+      "TotalXconsumption",
+      "TotalXconsumptionDEL",
+      "AverageXperXcycle",
+      "AverageXperXcycleDEL"
+    ]
+  }
+]

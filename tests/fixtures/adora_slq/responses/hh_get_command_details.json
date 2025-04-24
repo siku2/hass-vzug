@@ -1,0 +1,209 @@
+[
+  {
+    "id": "spinningXat",
+    "details": {
+      "type": "selection",
+      "description": "Schleudern",
+      "command": "spinningXat",
+      "value": "1200",
+      "options": [
+        "1600",
+        "1400",
+        "1200",
+        "1000",
+        "800",
+        "600",
+        "400"
+      ]
+    }
+  },
+  {
+    "id": "startXdelay",
+    "details": {
+      "type": "selection",
+      "description": "Startaufschub Uhrzeit",
+      "command": "startXdelay",
+      "value": "Programmende, OptiTime Aus",
+      "options": [
+        "Programmende, OptiTime Ein",
+        "Programmende, OptiTime Aus",
+        "Programmstart"
+      ]
+    }
+  },
+  {
+    "id": "aquaplus",
+    "details": {
+      "type": "selection",
+      "description": "AquaPlus",
+      "command": "aquaplus",
+      "value": "Standard",
+      "options": [
+        "Standard",
+        "+ Wasser",
+        "+ 1 Spülen",
+        "+ Wasser + 1 Spülen",
+        "Hautschutz"
+      ]
+    }
+  },
+  {
+    "id": "soiling",
+    "details": {
+      "type": "selection",
+      "description": "Verschmutzung",
+      "command": "soiling",
+      "value": "Leicht",
+      "options": [
+        "Leicht",
+        "Mittel",
+        "Stark"
+      ]
+    }
+  },
+  {
+    "id": "ecom",
+    "details": {
+      "type": "boolean",
+      "description": "EcoManagement",
+      "command": "ecom",
+      "value": "true"
+    }
+  },
+  {
+    "id": "ecomXstatXtotal",
+    "details": {
+      "type": "status",
+      "description": "Statistik",
+      "command": "ecomXstatXtotal",
+      "value": " 97kWh,  6950ℓ"
+    }
+  },
+  {
+    "id": "ecomXstatXtotalXclear",
+    "details": {
+      "type": "action",
+      "description": "",
+      "command": "ecomXstatXtotalXclear",
+      "value": "Total löschen"
+    }
+  },
+  {
+    "id": "ecomXstatXavarage",
+    "details": {
+      "type": "status",
+      "description": "Statistik",
+      "command": "ecomXstatXavarage",
+      "value": " 0,5kWh,  33ℓ"
+    }
+  },
+  {
+    "id": "ecomXstatXavarageXclear",
+    "details": {
+      "type": "action",
+      "description": "",
+      "command": "ecomXstatXavarageXclear",
+      "value": "Durchschnitt löschen"
+    }
+  },
+  {
+    "id": "hygieneXinformation",
+    "details": {
+      "type": "boolean",
+      "description": "Hygieneinfo",
+      "command": "hygieneXinformation",
+      "value": "true"
+    }
+  },
+  {
+    "id": "childproofXlock",
+    "details": {
+      "type": "boolean",
+      "description": "Kindersicherung",
+      "command": "childproofXlock",
+      "value": "false"
+    }
+  },
+  {
+    "id": "autoXdoorXopener",
+    "details": {
+      "type": "boolean",
+      "description": "Türöffnungsautomatik",
+      "command": "autoXdoorXopener",
+      "value": "true"
+    }
+  },
+  {
+    "id": "softXwater",
+    "details": {
+      "type": "boolean",
+      "description": "Weichwasser",
+      "command": "softXwater",
+      "value": "false"
+    }
+  },
+  {
+    "id": "multiXcompXdetergent",
+    "details": {
+      "type": "boolean",
+      "description": "Baukastenwaschmittel",
+      "command": "multiXcompXdetergent",
+      "value": "false"
+    }
+  },
+  {
+    "id": "silent",
+    "details": {
+      "type": "boolean",
+      "description": "Silent",
+      "command": "silent",
+      "value": "false"
+    }
+  },
+  {
+    "id": "backgroundXimage",
+    "details": {
+      "type": "boolean",
+      "description": "Hintergrundbild",
+      "command": "backgroundXimage",
+      "value": "true"
+    }
+  },
+  {
+    "id": "buttonXtone",
+    "details": {
+      "type": "boolean",
+      "description": "Tastenton",
+      "command": "buttonXtone",
+      "value": "true"
+    }
+  },
+  {
+    "id": "loosenXup",
+    "details": {
+      "type": "selection",
+      "description": "Auflockern",
+      "command": "loosenXup",
+      "value": "30 Sekunden",
+      "options": [
+        "30 Sekunden",
+        "10 Minuten",
+        "30 Minuten",
+        "6 Stunden"
+      ]
+    }
+  },
+  {
+    "id": "brightness",
+    "details": {
+      "type": "range",
+      "description": "Helligkeit",
+      "command": "brightness",
+      "value": "3",
+      "minMax": [
+        "1",
+        "4"
+      ]
+    }
+  }
+]
