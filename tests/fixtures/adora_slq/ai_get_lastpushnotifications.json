@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2025-04-10T18:15:27Z",
+    "message": "Programm 40°C Ecoprogramm beendet - Energie: 0,5kWh, Wasser: 42ℓ."
+  },
+  {
+    "date": "2025-04-05T20:58:43Z",
+    "message": "Programm 60°C Buntwäsche beendet - Energie: 0,9kWh, Wasser: 35ℓ."
+  },
+  {
+    "date": "2025-04-05T17:00:47Z",
+    "message": "Programm 30°C Ecoprogramm beendet - Energie: 0,4kWh, Wasser: 46ℓ."
+  },
+  {
+    "date": "2025-04-05T14:54:10Z",
+    "message": "Programm 40°C Buntwäsche beendet - Energie: 0,5kWh, Wasser: 38ℓ."
+  },
+  {
+    "date": "2025-04-05T12:47:33Z",
+    "message": "Programm 60°C Ecoprogramm beendet - Energie: 0,5kWh, Wasser: 27ℓ."
+  },
+  {
+    "date": "2025-04-05T08:54:50Z",
+    "message": "Programm 40°C Buntwäsche beendet - Energie: 0,5kWh, Wasser: 39ℓ."
+  },
+  {
+    "date": "2025-04-04T13:47:32Z",
+    "message": "Programm 30°C Buntwäsche beendet - Energie: 0,3kWh, Wasser: 35ℓ."
+  },
+  {
+    "date": "2025-04-04T10:52:08Z",
+    "message": "Programm 30°C Buntwäsche beendet - Energie: 0,3kWh, Wasser: 31ℓ."
+  },
+  {
+    "date": "2025-04-04T05:20:59Z",
+    "message": "Programm 95°C Gerätehygiene beendet - Energie: 0,9kWh, Wasser: 10ℓ."
+  },
+  {
+    "date": "2025-04-02T20:09:34Z",
+    "message": "Programm 30°C Buntwäsche beendet - Energie: 0,4kWh, Wasser: 34ℓ."
+  }
+]
