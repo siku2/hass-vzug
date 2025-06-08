@@ -1,0 +1,38 @@
+[
+  {
+    "id": "settings",
+    "category": {
+      "description": "Einstellungen"
+    },
+    "commands": [
+      "buttonXtone",
+      "backgroundXimage",
+      "brightness",
+      "spinningXat",
+      "soiling",
+      "aquaplus",
+      "autoXdoorXopener",
+      "startXdelay",
+      "hygieneXinformation",
+      "childproofXlock",
+      "trommellicht",
+      "multiXcompXdetergent",
+      "loosenXup",
+      "softXwater",
+      "ecoXhybrid"
+    ]
+  },
+  {
+    "id": "ecoManagement",
+    "category": {
+      "description": "EcoManagement"
+    },
+    "commands": [
+      "ecom",
+      "ecomXstatXtotal",
+      "ecomXstatXtotalXclear",
+      "ecomXstatXavarage",
+      "ecomXstatXavarageXclear"
+    ]
+  }
+]

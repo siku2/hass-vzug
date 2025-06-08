@@ -1,0 +1,432 @@
+[
+  {
+    "id": "PIN_ECO",
+    "details": {
+      "type": "boolean",
+      "description": "Energiesparen",
+      "command": "PIN_ECO",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "PIN_STEAM_FINISH",
+    "details": {
+      "type": "boolean",
+      "description": "SteamFinish",
+      "command": "PIN_STEAM_FINISH",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "PIN_PARTIALLOAD",
+    "details": {
+      "type": "boolean",
+      "description": "Teilbeladung",
+      "command": "PIN_PARTIALLOAD",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "PIN_STARTTIME",
+    "details": {
+      "type": "range",
+      "description": "Startaufschub [h]",
+      "command": "PIN_STARTTIME",
+      "value": "0",
+      "minMax": [
+        "0",
+        "24"
+      ],
+      "refresh": [
+        "PIN_OPTISTART"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "PIN_OPTISTART",
+    "details": {
+      "type": "boolean",
+      "description": "OptiStart",
+      "command": "PIN_OPTISTART",
+      "value": "false",
+      "alterable": false
+    }
+  },
+  {
+    "id": "PIN_RINSE_PLUS",
+    "details": {
+      "type": "boolean",
+      "description": "SpülenPlus",
+      "command": "PIN_RINSE_PLUS",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "PIN_DRY_PLUS",
+    "details": {
+      "type": "boolean",
+      "description": "TrocknenPlus",
+      "command": "PIN_DRY_PLUS",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "ECO_MGMT_INFO",
+    "details": {
+      "type": "boolean",
+      "description": "EcoManagement",
+      "command": "ECO_MGMT_INFO",
+      "value": "true",
+      "refresh": [
+        "ECO_MGMT_RESET_AVG",
+        "ECO_MGMT_RESET_TOTAL"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "ECO_MGMT_ENERGY_PROGRAM",
+    "details": {
+      "type": "status",
+      "description": "Verbrauch letztes Programm",
+      "command": "ECO_MGMT_ENERGY_PROGRAM",
+      "value": "0,8 kWh",
+      "alterable": false
+    }
+  },
+  {
+    "id": "ECO_MGMT_WATER_PROGRAM",
+    "details": {
+      "type": "status",
+      "description": "",
+      "command": "ECO_MGMT_WATER_PROGRAM",
+      "value": "14 l",
+      "alterable": false
+    }
+  },
+  {
+    "id": "ECO_MGMT_ENERGY_AVG",
+    "details": {
+      "type": "status",
+      "description": "Durchschnittsverbrauch",
+      "command": "ECO_MGMT_ENERGY_AVG",
+      "value": "1,1 kWh/Ch.",
+      "alterable": false
+    }
+  },
+  {
+    "id": "ECO_MGMT_WATER_AVG",
+    "details": {
+      "type": "status",
+      "description": "",
+      "command": "ECO_MGMT_WATER_AVG",
+      "value": "17 l/Ch.",
+      "alterable": false
+    }
+  },
+  {
+    "id": "ECO_MGMT_RESET_AVG",
+    "details": {
+      "type": "action",
+      "description": "Wollen Sie die Verbrauchsstatistiken zurücksetzen?",
+      "command": "ECO_MGMT_RESET_AVG",
+      "value": "JA",
+      "refresh": [
+        "ECO_MGMT_ENERGY_AVG",
+        "ECO_MGMT_WATER_AVG"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "ECO_MGMT_ENERGY_TOTAL",
+    "details": {
+      "type": "status",
+      "description": "Gesamtverbrauch",
+      "command": "ECO_MGMT_ENERGY_TOTAL",
+      "value": "533 kWh",
+      "alterable": false
+    }
+  },
+  {
+    "id": "ECO_MGMT_WATER_TOTAL",
+    "details": {
+      "type": "status",
+      "description": "",
+      "command": "ECO_MGMT_WATER_TOTAL",
+      "value": "10783 l",
+      "alterable": false
+    }
+  },
+  {
+    "id": "ECO_MGMT_RESET_TOTAL",
+    "details": {
+      "type": "action",
+      "description": "Wollen Sie die Verbrauchsstatistiken zurücksetzen?",
+      "command": "ECO_MGMT_RESET_TOTAL",
+      "value": "JA",
+      "refresh": [
+        "ECO_MGMT_ENERGY_TOTAL",
+        "ECO_MGMT_WATER_TOTAL"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "CHILD_PROOF_LOCK",
+    "details": {
+      "type": "boolean",
+      "description": "Kindersicherung",
+      "command": "CHILD_PROOF_LOCK",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "ALL_IN_ONE",
+    "details": {
+      "type": "boolean",
+      "description": "All in 1",
+      "command": "ALL_IN_ONE",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "DSP_ILLUMINATION",
+    "details": {
+      "type": "range",
+      "description": "Helligkeit ",
+      "command": "DSP_ILLUMINATION",
+      "value": "2",
+      "minMax": [
+        "1",
+        "5"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "DSP_BUTTON_SOUND",
+    "details": {
+      "type": "selection",
+      "description": "Tastenton",
+      "command": "DSP_BUTTON_SOUND",
+      "value": "AUS",
+      "options": [
+        "AUS",
+        "LEISE",
+        "LAUT"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "DSP_SIGNAL_SOUND",
+    "details": {
+      "type": "selection",
+      "description": "Signalton",
+      "command": "DSP_SIGNAL_SOUND",
+      "value": "AUS",
+      "options": [
+        "AUS",
+        "LEISE",
+        "LAUT"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "BRIGHTENER",
+    "details": {
+      "type": "selection",
+      "description": "Glanzmittel",
+      "command": "BRIGHTENER",
+      "value": "AUTOMATISCH",
+      "options": [
+        "AUS",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "AUTOMATISCH"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "WATER_HARDNESS_UNIT",
+    "details": {
+      "type": "selection",
+      "description": "Wasserhärteeinheit",
+      "command": "WATER_HARDNESS_UNIT",
+      "value": "°dH",
+      "options": [
+        "°fH",
+        "°dH"
+      ],
+      "refresh": [
+        "WATER_HARDNESS"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "WATER_HARDNESS",
+    "details": {
+      "type": "selection",
+      "description": "Wasserhärte",
+      "command": "WATER_HARDNESS",
+      "value": "4-6 °dH",
+      "options": [
+        "0-3 °dH",
+        "4-6 °dH",
+        "7-9 °dH",
+        "10-12 °dH",
+        "13-14 °dH",
+        "15-16 °dH",
+        "17-19 °dH",
+        "20-22 °dH",
+        "23-27 °dH",
+        "28-32 °dH",
+        "33-38 °dH",
+        "39-45 °dH",
+        "46-65 °dH"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "TEMPERATURE_UNIT",
+    "details": {
+      "type": "selection",
+      "description": "Temperatureinheit",
+      "command": "TEMPERATURE_UNIT",
+      "value": "°C",
+      "options": [
+        "°C",
+        "°F"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "INTERIOR_LIGHTING",
+    "details": {
+      "type": "selection",
+      "description": "Innenraumbeleuchtung",
+      "command": "INTERIOR_LIGHTING",
+      "value": "20 min",
+      "options": [
+        "AUS",
+        "1 min",
+        "2 min",
+        "5 min",
+        "10 min",
+        "20 min"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "FUNCTION_LIGHT",
+    "details": {
+      "type": "selection",
+      "description": "FunctionLight",
+      "command": "FUNCTION_LIGHT",
+      "value": "2",
+      "options": [
+        "AUS",
+        "1",
+        "2",
+        "3"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "AUTO_DOOR_OPENER",
+    "details": {
+      "type": "boolean",
+      "description": "Automatische Türöffnung",
+      "command": "AUTO_DOOR_OPENER",
+      "value": "true",
+      "alterable": true
+    }
+  },
+  {
+    "id": "DSP_CTRL_DOOR_ANGLE",
+    "details": {
+      "type": "boolean",
+      "description": "Bedienung Türwinkel 46-90°",
+      "command": "DSP_CTRL_DOOR_ANGLE",
+      "value": "false",
+      "alterable": true
+    }
+  },
+  {
+    "id": "STANDBY_AUTOMATIC",
+    "details": {
+      "type": "boolean",
+      "description": "Standby-Automatik",
+      "command": "STANDBY_AUTOMATIC",
+      "value": "true",
+      "alterable": true
+    }
+  },
+  {
+    "id": "TANK_STORAGE_DURATION",
+    "details": {
+      "type": "selection",
+      "description": "Speichertank",
+      "command": "TANK_STORAGE_DURATION",
+      "value": "AUS",
+      "options": [
+        "AUS",
+        "12 h",
+        "36 h",
+        "50 h"
+      ],
+      "alterable": true
+    }
+  },
+  {
+    "id": "EMPTY_TANK_ON_POWER_FAILURE",
+    "details": {
+      "type": "boolean",
+      "description": "Tank leeren bei Netzunterbruch",
+      "command": "EMPTY_TANK_ON_POWER_FAILURE",
+      "value": "true",
+      "alterable": true
+    }
+  },
+  {
+    "id": "HOT_WATER",
+    "details": {
+      "type": "selection",
+      "description": "Warmwasseranschluss",
+      "command": "HOT_WATER",
+      "value": "AUS",
+      "options": [
+        "AUS",
+        "EIN",
+        "OHNE HEIZEN"
+      ],
+      "alterable": true
+    }
+  }
+]

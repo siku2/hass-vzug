@@ -1,0 +1,13 @@
+{
+  "water": {
+    "total": 0,
+    "average": 0,
+    "program": 0,
+    "option": 0
+  },
+  "energy": {
+    "total": 0,
+    "average": 0,
+    "program": 0
+  }
+}

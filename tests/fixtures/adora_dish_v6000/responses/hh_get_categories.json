@@ -1,0 +1,59 @@
+[
+  {
+    "id": "CATEGORY_0",
+    "category": {
+      "description": "Permanente Anwahl"
+    },
+    "commands": [
+      "PIN_ECO",
+      "PIN_STEAM_FINISH",
+      "PIN_PARTIALLOAD",
+      "PIN_STARTTIME",
+      "PIN_OPTISTART",
+      "PIN_RINSE_PLUS",
+      "PIN_DRY_PLUS"
+    ]
+  },
+  {
+    "id": "CATEGORY_1",
+    "category": {
+      "description": "EcoManagement"
+    },
+    "commands": [
+      "ECO_MGMT_INFO",
+      "ECO_MGMT_ENERGY_PROGRAM",
+      "ECO_MGMT_WATER_PROGRAM",
+      "ECO_MGMT_ENERGY_AVG",
+      "ECO_MGMT_WATER_AVG",
+      "ECO_MGMT_RESET_AVG",
+      "ECO_MGMT_ENERGY_TOTAL",
+      "ECO_MGMT_WATER_TOTAL",
+      "ECO_MGMT_RESET_TOTAL"
+    ]
+  },
+  {
+    "id": "CATEGORY_2",
+    "category": {
+      "description": "Geräteeinstellungen"
+    },
+    "commands": [
+      "CHILD_PROOF_LOCK",
+      "ALL_IN_ONE",
+      "DSP_ILLUMINATION",
+      "DSP_BUTTON_SOUND",
+      "DSP_SIGNAL_SOUND",
+      "BRIGHTENER",
+      "WATER_HARDNESS_UNIT",
+      "WATER_HARDNESS",
+      "TEMPERATURE_UNIT",
+      "INTERIOR_LIGHTING",
+      "FUNCTION_LIGHT",
+      "AUTO_DOOR_OPENER",
+      "DSP_CTRL_DOOR_ANGLE",
+      "STANDBY_AUTOMATIC",
+      "TANK_STORAGE_DURATION",
+      "EMPTY_TANK_ON_POWER_FAILURE",
+      "HOT_WATER"
+    ]
+  }
+]
