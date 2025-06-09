@@ -567,13 +567,22 @@ class VZugApi:
         )
         return data["value"]
 
-    async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
-        return await self._command(
+    async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo | None:
+        result = await self._command(
             "hh",
             command="getEcoInfo",
             expected_type=dict,
             value_on_err=(lambda: EcoInfo()) if default_on_error else None,
         )
+
+        if result:
+            water_total = result.get("water", {}).get("total", -1)
+            energy_total = result.get("energy", {}).get("total", -1)
+
+            if water_total == 0 and energy_total == 0:
+                return None
+
+        return result
 
     async def get_device_info(self, *, default_on_error: bool = False) -> DeviceInfo:
         # 'getAPIVersion' can be used to get only the API version
