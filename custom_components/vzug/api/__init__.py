@@ -567,7 +567,7 @@ class VZugApi:
         )
         return data["value"]
 
-    async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo | None:
+    async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
         result = await self._command(
             "hh",
             command="getEcoInfo",
@@ -575,12 +575,13 @@ class VZugApi:
             value_on_err=(lambda: EcoInfo()) if default_on_error else None,
         )
 
-        if result:
-            water_total = result.get("water", {}).get("total", -1)
-            energy_total = result.get("energy", {}).get("total", -1)
+        water_total = result.get("water", {}).get("total", 0)
+        energy_total = result.get("energy", {}).get("total", 0)
 
-            if water_total == 0 and energy_total == 0:
-                return None
+        # If both water and energy totals are 0, we return an empty EcoInfo
+        # This is to handle cases where the API returns 0s for both metrics
+        if water_total == 0 and energy_total == 0:
+            return EcoInfo()
 
         return result
 
