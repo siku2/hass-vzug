@@ -1,0 +1,223 @@
+[
+  {
+    "id": "buttonXtone",
+    "details": {
+      "type": "boolean",
+      "description": "Tastenton",
+      "command": "buttonXtone",
+      "value": "false"
+    }
+  },
+  {
+    "id": "backgroundXimage",
+    "details": {
+      "type": "boolean",
+      "description": "Hintergrundbild",
+      "command": "backgroundXimage",
+      "value": "true"
+    }
+  },
+  {
+    "id": "brightness",
+    "details": {
+      "type": "range",
+      "description": "Helligkeit",
+      "command": "brightness",
+      "value": "3",
+      "minMax": [
+        "1",
+        "4"
+      ]
+    }
+  },
+  {
+    "id": "spinningXat",
+    "details": {
+      "type": "selection",
+      "description": "Schleudern",
+      "command": "spinningXat",
+      "value": "1200",
+      "options": [
+        "1600",
+        "1400",
+        "1200",
+        "1000",
+        "800",
+        "600",
+        "400"
+      ]
+    }
+  },
+  {
+    "id": "soiling",
+    "details": {
+      "type": "selection",
+      "description": "Verschmutzung",
+      "command": "soiling",
+      "value": "Leicht",
+      "options": [
+        "Leicht",
+        "Mittel",
+        "Stark"
+      ]
+    }
+  },
+  {
+    "id": "aquaplus",
+    "details": {
+      "type": "selection",
+      "description": "AquaPlus",
+      "command": "aquaplus",
+      "value": "Basis",
+      "options": [
+        "Basis",
+        "+ Wasser",
+        "+ 1 Spülen",
+        "+ Wasser + 1 Spülen",
+        "Hautschutz"
+      ]
+    }
+  },
+  {
+    "id": "autoXdoorXopener",
+    "details": {
+      "type": "boolean",
+      "description": "Türöffnungsautomatik",
+      "command": "autoXdoorXopener",
+      "value": "true"
+    }
+  },
+  {
+    "id": "startXdelay",
+    "details": {
+      "type": "selection",
+      "description": "Startaufschub Uhrzeit",
+      "command": "startXdelay",
+      "value": "Programmende, OptiTime Aus",
+      "options": [
+        "Programmende, OptiTime Ein",
+        "Programmende, OptiTime Aus",
+        "Programmstart"
+      ]
+    }
+  },
+  {
+    "id": "hygieneXinformation",
+    "details": {
+      "type": "boolean",
+      "description": "Hygieneinfo",
+      "command": "hygieneXinformation",
+      "value": "true"
+    }
+  },
+  {
+    "id": "childproofXlock",
+    "details": {
+      "type": "boolean",
+      "description": "Kindersicherung",
+      "command": "childproofXlock",
+      "value": "false"
+    }
+  },
+  {
+    "id": "trommellicht",
+    "details": {
+      "type": "boolean",
+      "description": "Trommelbeleuchtung",
+      "command": "trommellicht",
+      "value": "true"
+    }
+  },
+  {
+    "id": "multiXcompXdetergent",
+    "details": {
+      "type": "boolean",
+      "description": "Baukastenwaschmittel",
+      "command": "multiXcompXdetergent",
+      "value": "false"
+    }
+  },
+  {
+    "id": "loosenXup",
+    "details": {
+      "type": "selection",
+      "description": "Auflockern",
+      "command": "loosenXup",
+      "value": "30 Sekunden",
+      "options": [
+        "30 Sekunden",
+        "10 Minuten",
+        "30 Minuten",
+        "6 Stunden"
+      ]
+    }
+  },
+  {
+    "id": "softXwater",
+    "details": {
+      "type": "boolean",
+      "description": "Weichwasser",
+      "command": "softXwater",
+      "value": "true"
+    }
+  },
+  {
+    "id": "ecoXhybrid",
+    "details": {
+      "type": "selection",
+      "description": "eHybrid",
+      "command": "ecoXhybrid",
+      "value": "Energieeffizienz optimal",
+      "options": [
+        "Energieeffizenz gut",
+        "Energieeffizenz sehr gut",
+        "Energieeffizienz optimal"
+      ]
+    }
+  },
+  {
+    "id": "ecom",
+    "details": {
+      "type": "boolean",
+      "description": "EcoManagement",
+      "command": "ecom",
+      "value": "true"
+    }
+  },
+  {
+    "id": "ecomXstatXtotal",
+    "details": {
+      "type": "status",
+      "description": "Gesamtverbrauch",
+      "command": "ecomXstatXtotal",
+      "value": " <0,1 kWh,  0ℓ "
+    }
+  },
+  {
+    "id": "ecomXstatXtotalXclear",
+    "details": {
+      "type": "action",
+      "description": "",
+      "command": "ecomXstatXtotalXclear",
+      "value": "Löschen"
+    }
+  },
+  {
+    "id": "ecomXstatXavarage",
+    "details": {
+      "type": "status",
+      "description": "Durchschnitt pro Charge",
+      "command": "ecomXstatXavarage",
+      "value": " <0,1 kWh,  0ℓ"
+    }
+  },
+  {
+    "id": "ecomXstatXavarageXclear",
+    "details": {
+      "type": "action",
+      "description": "",
+      "command": "ecomXstatXavarageXclear",
+      "value": "Löschen"
+    }
+  }
+]

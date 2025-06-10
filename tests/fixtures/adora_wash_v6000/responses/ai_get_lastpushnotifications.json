@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2025-06-05T12:47:17Z",
+    "message": "Programm 20°C WetClean beendet – Energie: 0,1kWh, Wasser: 38ℓ"
+  },
+  {
+    "date": "2025-06-05T07:55:21Z",
+    "message": "Programm 40°C Daunen beendet – Energie: 0,5kWh, Wasser: 99ℓ"
+  },
+  {
+    "date": "2025-06-03T10:07:33Z",
+    "message": "Programm 0 – Energie: 0,7kWh, Wasser: 57ℓ"
+  },
+  {
+    "date": "2025-06-02T08:13:30Z",
+    "message": "Programm 40°C Buntwäsche beendet – Energie: 0,4kWh, Wasser: 102ℓ"
+  },
+  {
+    "date": "2025-05-28T09:22:09Z",
+    "message": "Programm 60°C Buntwäsche beendet – Energie: 0,5kWh, Wasser: 75ℓ"
+  },
+  {
+    "date": "2025-05-26T16:42:37Z",
+    "message": "Programm 0 – Energie: 0,7kWh, Wasser: 57ℓ"
+  },
+  {
+    "date": "2025-05-25T14:03:47Z",
+    "message": "Programm 60°C Daunen beendet – Energie: 0,7kWh, Wasser: 91ℓ"
+  },
+  {
+    "date": "2025-05-19T08:28:59Z",
+    "message": "Programm 40°C Buntwäsche beendet – Energie: 0,4kWh, Wasser: 95ℓ"
+  },
+  {
+    "date": "2025-05-17T13:41:13Z",
+    "message": "Programm 40°C Buntwäsche beendet – Energie: 0,2kWh, Wasser: 65ℓ"
+  },
+  {
+    "date": "2025-05-17T12:21:24Z",
+    "message": "Programm 0 – Energie: 0,9kWh, Wasser: 60ℓ"
+  }
+]

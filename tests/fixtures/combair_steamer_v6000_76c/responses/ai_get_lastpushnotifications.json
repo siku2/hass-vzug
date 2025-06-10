@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2025-06-08T01:03:03Z",
+    "message": "Bitte schliessen Sie die Tür."
+  },
+  {
+    "date": "2025-06-08T01:01:26Z",
+    "message": "Aufgeheizt"
+  },
+  {
+    "date": "2025-06-07T12:10:33Z",
+    "message": "Der Betrieb wurde beendet."
+  },
+  {
+    "date": "2025-06-07T12:04:54Z",
+    "message": "Bitte schliessen Sie die Tür."
+  },
+  {
+    "date": "2025-06-07T12:01:18Z",
+    "message": "Aufgeheizt"
+  },
+  {
+    "date": "2025-06-06T09:29:12Z",
+    "message": "Aufgeheizt"
+  },
+  {
+    "date": "2025-06-05T18:03:29Z",
+    "message": "Aufgeheizt"
+  },
+  {
+    "date": "2025-06-05T18:01:59Z",
+    "message": "Der Betrieb wurde beendet."
+  },
+  {
+    "date": "2025-06-05T18:01:05Z",
+    "message": "Aufgeheizt"
+  },
+  {
+    "date": "2025-06-05T10:04:18Z",
+    "message": "Der Betrieb wurde beendet."
+  }
+]

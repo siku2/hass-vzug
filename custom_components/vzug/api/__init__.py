@@ -568,12 +568,22 @@ class VZugApi:
         return data["value"]
 
     async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
-        return await self._command(
+        result = await self._command(
             "hh",
             command="getEcoInfo",
             expected_type=dict,
             value_on_err=(lambda: EcoInfo()) if default_on_error else None,
         )
+
+        water_total = result.get("water", {}).get("total", 0)
+        energy_total = result.get("energy", {}).get("total", 0)
+
+        # If both water and energy totals are 0, we return an empty EcoInfo
+        # This is to handle cases where the API returns 0s for both metrics
+        if water_total == 0 and energy_total == 0:
+            return EcoInfo()
+
+        return result
 
     async def get_device_info(self, *, default_on_error: bool = False) -> DeviceInfo:
         # 'getAPIVersion' can be used to get only the API version

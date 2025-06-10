@@ -1,0 +1,12 @@
+{
+  "DeviceName": "Adora SL",
+  "Serial": "46126 182263",
+  "Inactive": "true",
+  "Program": "",
+  "Status": "Bitte Glanzmittel nachfüllen",
+  "ProgramEnd": {
+    "End": "",
+    "EndType": "0"
+  },
+  "deviceUuid": "7738150909"
+}
