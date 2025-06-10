@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, AsyncMock
 
-from custom_components.vzug.api import VZugApi, EcoInfo
+from custom_components.vzug.api import VZugApi
 
 
 @pytest.fixture
