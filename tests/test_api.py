@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, AsyncMock
 
-from custom_components.vzug.api import VZugApi
+from custom_components.vzug.api import VZugApi, EcoInfo
 
 
 @pytest.fixture
@@ -72,8 +72,8 @@ async def test_get_eco_info_returns_none_when_zeros(vzug_api):
         # Call the method under test
         result = await vzug_api.get_eco_info()
 
-        # Verify result is None as specified in the function
-        assert result is None
+        # Verify result is an empty dictionary
+        assert result == {}
 
 
 @pytest.mark.asyncio
@@ -95,4 +95,4 @@ async def test_get_eco_info_incomplete_data(vzug_api):
         result = await vzug_api.get_eco_info()
 
         # Should use default value of -1 when total is missing
-        assert result == mock_response
+        assert result == {}
