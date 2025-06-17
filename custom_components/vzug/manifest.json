@@ -9,7 +9,9 @@
     "@siku2"
   ],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": [
+    "json-repair"
+  ],
   "dhcp": [
     {
       "macaddress": "FC1BFF*"
