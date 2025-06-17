@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 
 from custom_components.vzug.api import VZugApi
 
@@ -96,3 +96,47 @@ async def test_get_eco_info_incomplete_data(vzug_api):
 
         # Should use default value of -1 when total is missing
         assert result == {}
+
+
+@pytest.mark.asyncio
+async def test_json_repair_with_valid_json(vzug_api):
+    """Test that valid JSON is processed normally without repair."""
+    valid_json = '{"status": "idle", "value": 123}'
+
+    # Mock httpx response properly
+    mock_response = MagicMock()
+    mock_response.json.return_value = valid_json
+    mock_response.raise_for_status.return_value = None
+
+    with patch.object(vzug_api._client, 'get', new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_response
+
+        result = await vzug_api._command("ai", command="getDeviceStatus")
+
+        assert result == valid_json
+        mock_response.json.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_json_repair_with_real_broken_device_status():
+    """Test JSON repair with a realistic broken device status response."""
+    # Example of broken JSON that might come from V-ZUG device
+    broken_json = '''[{"date":"2025-06-10T16:06:06Z","message":"Der Betrieb wurde beendet."}\n,{"date":"2025-06-10T15:40:43Z","message":"Das Vorheizen wurde beendet. Bitte schieben Sie das Gargut ein."} ,{"date":"2025-06-04T16:38:18Z","message":"Aufgeheizt"} ,{"date":"2025-06-04T09:50:01Z","message":"Aufgeheizt"} ,{"date":"2025-06-04T09:40:01Z","message":"Betriebsart gestartet"} ,{"date":"2025-05-26T16:07:52Z","message":"Aufgeheizt"} ,{"date":"2025-05-25T09:37:41Z","message":"Das Vorheizen wurde beendet. Bitte schieben Sie das Gargut ein."} ,{"date":"2025-05-21T10:24:55Z","message"]'''
+
+    vzug_api = VZugApi(base_url="http://example.com")
+
+    # Mock httpx response that fails json() but has content
+    mock_response = MagicMock()
+    mock_response.json.side_effect = ValueError("Expecting property name enclosed in double quotes")
+    mock_response.content = broken_json.encode()
+    mock_response.text = broken_json
+    mock_response.raise_for_status.return_value = None
+
+    with patch.object(vzug_api._client, 'get', new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_response
+
+        # This will use the REAL json_repair library
+        result = await vzug_api._command("hh", command="getProgram")
+
+        assert result is not None
+        assert len(result) == 8

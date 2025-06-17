@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
+import json_repair
 
 import httpx
 from yarl import URL
@@ -307,9 +308,17 @@ class VZugApi:
             except ValueError:
                 if resp.content:
                     _LOGGER.debug("invalid json payload: %s", resp.content)
-                    raise
-                # we got an empty response, we just treat this as 'None'
-                data = None
+                    #Try to repair the JSON response before giving up
+                    try:
+                        repaired_json = json_repair.repair_json(resp.text)
+                        data = json.loads(repaired_json)
+                        _LOGGER.debug("successfully repaired json: %s", data)
+                    except Exception as repair_error:
+                        _LOGGER.debug("json repair failed: %s", repair_error)
+                        raise  # Re-raise the original ValueError
+                else:
+                    # we got an empty response, we just treat this as 'None'
+                    data = None
 
             _LOGGER.debug("data: %s", data)
             if expected_type is list and data is None:
