@@ -308,7 +308,7 @@ class VZugApi:
             except ValueError:
                 if resp.content:
                     _LOGGER.debug("invalid json payload: %s", resp.content)
-                    #Try to repair the JSON response before giving up
+                    # Try to repair the JSON response before giving up
                     try:
                         repaired_json = json_repair.repair_json(resp.text)
                         data = json.loads(repaired_json)
@@ -326,9 +326,9 @@ class VZugApi:
                 data: Any = []
 
             if expected_type is not None:
-                assert isinstance(
-                    data, expected_type
-                ), f"data type mismatch ({type(data)} != {expected_type})"
+                assert isinstance(data, expected_type), (
+                    f"data type mismatch ({type(data)} != {expected_type})"
+                )
             if reject_empty:
                 assert len(data) > 0, "empty response rejected"
             return data
