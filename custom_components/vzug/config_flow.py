@@ -8,7 +8,6 @@ from typing import Any, cast
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.network import Adapter, async_get_adapters
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
@@ -20,6 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from yarl import URL
 
 from . import api
@@ -68,14 +68,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # entry points
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         return self.async_show_menu(
             step_id="user", menu_options=["manual", "start_discovery"]
         )
 
     async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -88,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._base_url = base_url
                 if res := await self._check_device(
-                    needs_confirmation=False, errors=errors
+                        needs_confirmation=False, errors=errors
                 ):
                     return res
 
@@ -122,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=ABORT_FALSE_DISCOVERY)
 
     async def async_step_start_discovery(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         adapters = await async_get_adapters(self.hass)
         results = await asyncio.gather(
@@ -157,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=ABORT_FALSE_DISCOVERY)
 
     async def _check_device(
-        self, *, needs_confirmation: bool, errors: dict[str, str]
+            self, *, needs_confirmation: bool, errors: dict[str, str]
     ) -> FlowResult | None:
         self._set_client()
         assert self._client
@@ -177,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # authentication
 
     async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -215,7 +215,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # end
 
     async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
+            self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         if user_input is not None:
             return await self._create_entry()
