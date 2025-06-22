@@ -2,7 +2,7 @@
     "name": "V-ZUG",
     "filename": "vzug.zip",
     "hide_default_branch": true,
-    "homeassistant": "2025.5.3",
+    "homeassistant": "2025.6.0",
     "render_readme": true,
     "zip_release": true
 }
