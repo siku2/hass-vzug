@@ -47,8 +47,9 @@ async def test_hh_get_categories_and_commands():
 
 @pytest.mark.asyncio
 async def test_hh_get_eco_info():
+    # API returns json, but then vzug_client filters 0 values
     await test_core.assert_hh_get_eco_info(
-        vzug_client, expected_result, expect_water=True, expect_energy=True
+        vzug_client, expected_result, expect_water=False, expect_energy=False
     )
 
 

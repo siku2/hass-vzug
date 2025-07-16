@@ -1,7 +1,7 @@
+### Expected decoded results for AdoraDish V6000."""
+
 import custom_components.vzug.api as api
 from tests.fixtures.shared import category_expectation
-
-### This file contains expected decoded results
 
 ai_model_description = "AdoraDish V6000"
 
@@ -69,7 +69,7 @@ hh_total_commands = 182
 
 hh_eco_info = api.EcoInfo(
     water=api.EcoInfoMetric(total=10783, average=17, program=14),
-    energy=api.EcoInfoMetric(total=533, average=1.1, program=0.8)
+    energy=api.EcoInfoMetric(total=533, average=1.1, program=0.8),
 )
 
 hh_firmware_version = api.HhFwVersion(
@@ -83,3 +83,5 @@ hh_firmware_version = api.HhFwVersion(
     vr0C="1090228-R19",
     vr01="1069783-R01",
 )
+
+hh_zh_mode = 2

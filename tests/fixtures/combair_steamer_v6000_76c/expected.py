@@ -1,7 +1,6 @@
-import custom_components.vzug.api as api
-from tests.fixtures.shared import category_expectation
+### Expected decoded results for CombairSteamer V6000 76C."""
 
-### This file contains expected decoded results
+import custom_components.vzug.api as api
 
 ai_model_description = "CombairSteamer V6000 76C"
 
@@ -89,3 +88,5 @@ hh_firmware_version = api.HhFwVersion(
     vr21="06000015FFF",
     ZHSW="1052633-R20",
 )
+
+hh_zh_mode = 2

@@ -170,8 +170,8 @@ async def assert_hh_get_fw_version(vzug_client, expected_result):
 
 
 async def assert_hh_get_zh_mode(vzug_client, expected_result):
-    # zh_mode = await vzug_client.get_zh_mode()
-    assert 1 == 0
+    zh_mode = await vzug_client.get_zh_mode(default_on_error=True)
+    assert zh_mode == expected_result.hh_zh_mode
 
 
 def is_valid_macaddr802(value):

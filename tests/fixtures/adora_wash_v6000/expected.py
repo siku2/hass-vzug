@@ -1,7 +1,7 @@
+### Expected decoded results for AdoraWash V6000."""
+
 import custom_components.vzug.api as api
 from tests.fixtures.shared import category_expectation
-
-### This file contains expected decoded results
 
 ai_model_description = "AdoraWash V6000"
 
@@ -91,3 +91,5 @@ hh_firmware_version = api.HhFwVersion(
   ZV="???????-???",
   ZHSW="1052633-R20",
 )
+
+hh_zh_mode = 2

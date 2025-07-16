@@ -1,7 +1,7 @@
+### Expected decoded results for Adora SLQ (Washing Machine)."""
+
 import custom_components.vzug.api as api
 from tests.fixtures.shared import category_expectation
-
-### This file contains expected decoded results
 
 ai_model_description = "Adora SLQ"
 
@@ -64,8 +64,8 @@ hh_categories = [category_expectation("settings", 1, 19)]
 hh_total_commands = 82
 
 hh_eco_info = api.EcoInfo(
-    water=api.EcoInfoMetric(total=6893.8, average=35, program= 45.1),
-    energy=api.EcoInfoMetric(total=96.3, average=0.5, program=0.4)
+    water=api.EcoInfoMetric(total=6893.8, average=35, program=45.1),
+    energy=api.EcoInfoMetric(total=96.3, average=0.5, program=0.4),
 )
 
 hh_firmware_version = api.HhFwVersion(
@@ -78,3 +78,5 @@ hh_firmware_version = api.HhFwVersion(
     vh2="W4211304",
     v3="W424921",
 )
+
+hh_zh_mode = -1
