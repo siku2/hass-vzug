@@ -20,9 +20,10 @@ async def test_ai_get_fw_version():
     await test_core.assert_ai_get_fw_version(vzug_client, expected_result)
 
 
-@pytest.mark.asyncio
-async def test_ai_get_last_push_notifications():
-    await test_core.assert_ai_get_last_push_notifications(vzug_client, expected_result)
+# Changes from time to time, so we don't check this for real device
+# @pytest.mark.asyncio
+# async def test_ai_get_last_push_notifications():
+#     await test_core.assert_ai_get_last_push_notifications(vzug_client, expected_result)
 
 
 @pytest.mark.asyncio
@@ -45,9 +46,10 @@ async def test_hh_get_categories_and_commands():
     await test_core.assert_hh_get_categories_and_commands(vzug_client, expected_result)
 
 
-@pytest.mark.asyncio
-async def test_hh_get_eco_info():
-    await test_core.assert_hh_get_eco_info(vzug_client, expected_result)
+# Changes from time to time, so we don't check this for real device
+# @pytest.mark.asyncio
+# async def test_hh_get_eco_info():
+#     await test_core.assert_hh_get_eco_info(vzug_client, expected_result, expect_water=False, expect_energy=True)
 
 
 @pytest.mark.asyncio

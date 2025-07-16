@@ -125,18 +125,32 @@ async def assert_hh_get_categories_and_commands(vzug_client, expected_result):
     assert total_commands == expected_result.hh_total_commands
 
 
-async def assert_hh_get_eco_info(vzug_client, expected_result):
+async def assert_hh_get_eco_info(
+    vzug_client, expected_result, expect_water: bool, expect_energy: bool
+):
     eco_info = await vzug_client.get_eco_info()
 
-    assert eco_info["energy"]["total"] == expected_result.hh_eco_info["energy"]["total"]
-    assert (
-        eco_info["energy"]["average"]
-        == expected_result.hh_eco_info["energy"]["average"]
-    )
-    assert (
-        eco_info["energy"]["program"]
-        == expected_result.hh_eco_info["energy"]["program"]
-    )
+    resources = []
+    if expect_water:
+        resources.append("water")
+    if expect_energy:
+        resources.append("energy")
+
+    assert len(eco_info) == len(resources)
+
+    for resource in resources:
+        assert (
+            eco_info[resource]["total"]
+            == expected_result.hh_eco_info[resource]["total"]
+        )
+        assert (
+            eco_info[resource]["average"]
+            == expected_result.hh_eco_info[resource]["average"]
+        )
+        assert (
+            eco_info[resource]["program"]
+            == expected_result.hh_eco_info[resource]["program"]
+        )
 
 
 async def assert_hh_get_fw_version(vzug_client, expected_result):
@@ -148,8 +162,11 @@ async def assert_hh_get_fw_version(vzug_client, expected_result):
         elif key == "an" or key == "deviceUuid":
             assert is_valid_serial_type_2(fw_version[key])
         else:
-            # For other keys, just compare the values directly
-            assert fw_version[key].strip() == value.strip()
+            if isinstance(value, int):
+                assert fw_version[key] == value
+            else:
+                # For other keys, just compare the values directly
+                assert fw_version[key].strip() == value.strip()
 
 
 async def assert_hh_get_zh_mode(vzug_client, expected_result):

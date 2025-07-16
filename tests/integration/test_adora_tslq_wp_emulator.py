@@ -3,7 +3,7 @@ import pytest
 import tests.fixtures.adora_tslq_wp.expected as expected_result
 import tests.integration.test_core as test_core
 
-BASE_URL = "http://127.0.0.1:5001"
+BASE_URL = "http://127.0.0.1:5002"
 
 ########################################################################
 
@@ -47,7 +47,9 @@ async def test_hh_get_categories_and_commands():
 
 @pytest.mark.asyncio
 async def test_hh_get_eco_info():
-    await test_core.assert_hh_get_eco_info(vzug_client, expected_result)
+    await test_core.assert_hh_get_eco_info(
+        vzug_client, expected_result, expect_water=False, expect_energy=True
+    )
 
 
 @pytest.mark.asyncio

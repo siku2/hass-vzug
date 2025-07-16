@@ -3,26 +3,26 @@ from tests.fixtures.shared import category_expectation
 
 ### This file contains expected decoded results
 
-ai_model_description = "Adora SLQ"
+ai_model_description = "AdoraWash V6000"
 
 ai_device_status = api.DeviceStatus(
     DeviceName="",
-    Serial="98765 012345",
+    Serial="33147 536171",
     Inactive="true",
     Program="",
     Status="",
     ProgramEnd=api.DeviceStatusProgramEnd(EndType="0", End=""),
-    deviceUuid="1122334455",
+    deviceUuid="7531027869",
 )
 
 ai_firmware_version = api.AiFwVersion(
-    fn="98765 012345",
-    SW="1052633-R20",
-    SD="1052633-R20",
-    HW="1065944-R02",
-    apiVersion="1.8.0",
-    phy="WLAN",
-    deviceUuid="1122334455",
+  fn="33147 536171",
+  SW="1052633-R20",
+  SD="1052633-R20",
+  HW="1077219-R05",
+  apiVersion="1.8.0",
+  phy="WLAN",
+  deviceUuid="7531027869",
 )
 
 ai_update_status = api.UpdateStatus(
@@ -50,31 +50,44 @@ ai_update_status = api.UpdateStatus(
 
 ai_last_push_notifications: list[api.PushNotification] = [
     api.PushNotification(
-        date="2025-04-13T17:15:13Z",
-        message="Programm 30°C Ecoprogramm beendet - Energie: 0,4kWh, Wasser: 45ℓ.",
+        date="2025-06-05T12:47:17Z",
+        message= "Programm 20°C WetClean beendet – Energie: 0,1kWh, Wasser: 38ℓ"
     ),
     api.PushNotification(
-        date="2025-04-13T15:14:50Z",
-        message="Programm 40°C Dampfglätten beendet - Energie: 0,3kWh, Wasser: 1ℓ.",
+        date="2025-06-05T07:55:21Z",
+        message="Programm 40°C Daunen beendet – Energie: 0,5kWh, Wasser: 99ℓ"
     ),
 ]
 
-hh_categories = [category_expectation("settings", 1, 19)]
+hh_categories = [
+    category_expectation("settings", 1, 15),
+    category_expectation("ecoManagement", 1, 5),
+]
 
-hh_total_commands = 82
+hh_total_commands = 87
 
 hh_eco_info = api.EcoInfo(
-    water=api.EcoInfoMetric(total=6893.8, average=35, program= 45.1),
-    energy=api.EcoInfoMetric(total=96.3, average=0.5, program=0.4)
+    water=api.EcoInfoMetric(total=0, average=0, program=0),
+    energy=api.EcoInfoMetric(total=0, average=0, program=0)
 )
 
 hh_firmware_version = api.HhFwVersion(
-    fn="98765 012345",
-    an="9876500000",
-    v="W4215911",
-    v2="W421095",
-    vp="W422046",
-    vh1="W4215009",
-    vh2="W4211304",
-    v3="W424921",
+  fn="33147 536171",
+  an="7531027869",
+  v="1032589-R18",
+  vr01="1032596-R03",
+  v2="1032591-R06",
+  vr10="1032592-R02",
+  vi2="1039144-R01",
+  vh1="1077219-R05",
+  vh2="1037281-R07",
+  vr0B="1069346-R05",
+  vp="1064277-R21",
+  vr0C="1069072-R01",
+  vr0E="1032590-R03",
+  Mh="???????-???",
+  MD="???????-???",
+  Zh="???????-???",
+  ZV="???????-???",
+  ZHSW="1052633-R20",
 )

@@ -1,8 +1,12 @@
 #!/bin/bash
 
+START_PORT=5000
+END_PORT=5004
+
 echo "----------------------------------------------------------------------"
-echo "Terminate processes listing on 5000 and 5001 ..."
+echo "Terminate processes listing on $START_PORT - $END_PORT"
 echo "----------------------------------------------------------------------"
 
-lsof -i tcp:5000 | awk 'NR!=1 {print $2}' | xargs kill 
-lsof -i tcp:5001 | awk 'NR!=1 {print $2}' | xargs kill 
+for port in $(seq $START_PORT $END_PORT); do
+    lsof -i tcp:$port | awk 'NR!=1 {print $2}' | xargs -r kill
+done

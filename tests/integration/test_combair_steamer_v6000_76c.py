@@ -1,9 +1,9 @@
 import pytest
 import custom_components.vzug.api as api
-import tests.fixtures.adora_slq.expected as expected_result
+import tests.fixtures.combair_steamer_v6000_76c.expected as expected_result
 import tests.integration.test_core as test_core
 
-BASE_URL = "http://127.0.0.1:5001"
+BASE_URL = "http://127.0.0.1:5004"
 
 ########################################################################
 
@@ -48,7 +48,7 @@ async def test_hh_get_categories_and_commands():
 @pytest.mark.asyncio
 async def test_hh_get_eco_info():
     await test_core.assert_hh_get_eco_info(
-        vzug_client, expected_result, expect_water=True, expect_energy=True
+        vzug_client, expected_result, expect_water=False, expect_energy=True
     )
 
 
