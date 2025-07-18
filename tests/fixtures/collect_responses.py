@@ -83,11 +83,24 @@ def collect_responses(device_id):
         record_call("hh_get_ecoinfo.json", "/hh?command=getEcoInfo", False, False),
         record_call("hh_get_fwversion.json", "/hh?command=getFWVersion", False, False),
         record_call("hh_get_zhmode.json", "/hh?command=getZHMode", False, False),
+
+        # new with 0.4.0
+        record_call("hh_get_allprogramids.json", "/hh?command=getAllProgramIds", False, False),
+        record_call("hh_get_deviceinfo.json", "/hh?command=getDeviceInfo", False, False),
+        record_call("hh_get_getprogram.json", "/hh?command=getProgram", False, False),
+
+        # sample some negative responses
         record_call(
             "ai_get_invalid_command.txt", "/ai?command=getErrorAnswer42", False, False
         ),
         record_call(
             "hh_get_invalid_command.txt", "/hh?command=getErrorAnswer42", False, False
+        ),
+        record_call(
+            "ai_bad_request.txt", "/hh?getErrorAnswer42", False, False
+        ),
+        record_call(
+            "hh_bad_request.txt", "/hh?getErrorAnswer42", False, False
         ),
     }
 
