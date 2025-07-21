@@ -59,6 +59,18 @@ hh_categories = []
 
 hh_total_commands = 0
 
+hh_device_info = api.DeviceInfo(
+    model="CSB",
+    description="CombairSteamer V6000 76C",
+    type="ST",
+    name="",
+    serialNumber="40695 200742",
+    articleNumber="7593387505",
+    apiVersion="1.11.0",
+    zhMode=2,
+)
+
+
 hh_eco_info = api.EcoInfo(
     energy=api.EcoInfoMetric(total=277.709, average=0.561, program=0.438)
 )
@@ -87,6 +99,82 @@ hh_firmware_version = api.HhFwVersion(
     vh3="1086324-R05",
     vr21="06000015FFF",
     ZHSW="1052633-R20",
+)
+
+hh_all_program_ids = list[int](
+    [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        21,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        42,
+        44,
+        48,
+        49,
+        101,
+        106,
+        107,
+        109,
+        113,
+        114,
+        116,
+        117,
+        118,
+        119,
+        120,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        136,
+        141,
+        142,
+        143,
+        146,
+        150,
+        158,
+        169,
+        170,
+        171,
+        174,
+        175,
+        177,
+        179,
+        180,
+        181,
+        182,
+        184,
+        186,
+        187,
+        189,
+        190,
+        192,
+    ]
 )
 
 hh_zh_mode = 2

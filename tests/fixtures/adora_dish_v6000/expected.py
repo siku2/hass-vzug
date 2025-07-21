@@ -67,6 +67,17 @@ hh_categories = [
 
 hh_total_commands = 182
 
+hh_device_info = api.DeviceInfo(
+    model="AS6TDI",
+    description="AdoraDish V6000",
+    type="GS",
+    name="Adora SL",
+    serialNumber="46126 182263",
+    articleNumber="7738150909",
+    apiVersion="1.8.0",
+    zhMode=2,
+)
+
 hh_eco_info = api.EcoInfo(
     water=api.EcoInfoMetric(total=10783, average=17, program=14),
     energy=api.EcoInfoMetric(total=533, average=1.1, program=0.8),
@@ -82,6 +93,10 @@ hh_firmware_version = api.HhFwVersion(
     vp="1090227-R17",
     vr0C="1090228-R19",
     vr01="1069783-R01",
+)
+
+hh_all_program_ids = list[int](
+    [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 88, 94, 89, 93, 87, 95, 92, 91, 90]
 )
 
 hh_zh_mode = 2

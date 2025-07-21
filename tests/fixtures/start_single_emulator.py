@@ -23,7 +23,7 @@ def file_content_or_error(response_directory, filename):
         return jsonify({"error": '{ "code":400.03}'}), 400
 
 
-def register_routes(app, response_directory):
+def register_route_ai(app, response_directory):
     @app.route("/ai", methods=["GET"])
     def handle_ai_request():
         # extract params from request
@@ -44,11 +44,16 @@ def register_routes(app, response_directory):
             )
         elif command == "getUpdateStatus":
             return file_content_or_error(response_directory, "ai_get_updatestatus.json")
-        else:
-            return file_content_or_error(
-                response_directory, "ai_get_invalid_command.txt"
-            ), 404
 
+        elif command:  # command exists and is not empty
+            return file_content_or_error(
+                response_directory, "hh_get_invalid_command.txt"
+            ), 404
+        else:
+            return file_content_or_error(response_directory, "hh_bad_request.txt"), 400
+
+
+def register_route_hh(app, response_directory):
     @app.route("/hh", methods=["GET"])
     def handle_hh_request():
         # extract params from request
@@ -105,18 +110,31 @@ def register_routes(app, response_directory):
                 else:
                     return jsonify({"error": ["code", "400.03"]}), 400
 
+        elif command == "getAllProgramIds":
+            return file_content_or_error(
+                response_directory, "hh_get_allprogramids.json"
+            )
+        elif command == "getProgram":
+            # Probably depends on the currently running program
+            return file_content_or_error(response_directory, "hh_get_getprogram.json")
+
+        elif command == "getDeviceInfo":
+            return file_content_or_error(response_directory, "hh_get_deviceinfo.json")
         elif command == "getEcoInfo":
             return file_content_or_error(response_directory, "hh_get_ecoinfo.json")
         elif command == "getFWVersion":
             return file_content_or_error(response_directory, "hh_get_fwversion.json")
         elif command == "getZHMode":
             return file_content_or_error(response_directory, "hh_get_zhmode.json")
-        else:
+        elif command:  # command exists and is not empty
             return file_content_or_error(
                 response_directory, "hh_get_invalid_command.txt"
             ), 404
+        else:
+            return file_content_or_error(response_directory, "hh_bad_request.txt"), 400
 
-    # add default route
+
+def register_route_default(app):
     @app.route("/", methods=["GET"])
     def handle_default_request():
         logging.ERROR("Invalid URL '/'. Request parameters:")
@@ -129,7 +147,9 @@ def start_emulator(port, device_id):
     app = Flask(f"V-Zug Emulator {device_id}")
 
     # Register routes
-    register_routes(app, shared.responses_directory(device_id))
+    register_route_ai(app, shared.responses_directory(device_id))
+    register_route_hh(app, shared.responses_directory(device_id))
+    register_route_default(app)
 
     # Run the app
     app.run(port=port, debug=False, threaded=True)

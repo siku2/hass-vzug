@@ -1,3 +1,4 @@
+import httpx
 import custom_components.vzug.api as api
 import pytest
 import tests.fixtures.adora_tslq_wp.expected as expected_result
@@ -41,8 +42,22 @@ async def test_ai_get_update_status():
 
 
 @pytest.mark.asyncio
+async def test_hh_get_all_program_ids():
+    with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        await test_core.assert_hh_get_all_program_ids(vzug_client, expected_result)
+    assert exc_info.value.response.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_hh_get_categories_and_commands():
     await test_core.assert_hh_get_categories_and_commands(vzug_client, expected_result)
+
+
+@pytest.mark.asyncio
+async def test_hh_get_device_info():
+    with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        await test_core.assert_hh_get_device_info(vzug_client, expected_result)
+    assert exc_info.value.response.status_code == 404
 
 
 @pytest.mark.asyncio
