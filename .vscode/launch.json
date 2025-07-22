@@ -5,11 +5,8 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Remote Attach",
-
-            // The name of the task defined in tasks.json
-            //"preLaunchTask": "Run Home Assistant on port 8123", 
-
+            // HA must be running before attaching the debugger
+            "name": "Remote Attach",
             "type": "debugpy",
             "request": "attach",
             "connect": {
@@ -24,10 +21,27 @@
             ]
         },
         {
-            "name": "Python: Current File",
+            "name": "Current File",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}"
+        },
+        {
+            // This is used debug the emulator itself, e.g. with postman
+            // Stop all emulators before doing so
+            // 'Remote Attach' to the emulator does not work, as that one is  
+            // probably bound to the HomeAssistant process, and the code called from there
+            "name": "Emulator",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                // Choose the desired emulator & port
+                "--port",
+                "5000",
+                "--device_id",
+                "adora_dish_v6000"
+            ],
+            "program": "${workspaceFolder}/tests/fixtures/start_single_emulator.py"
         }
     ]
 }

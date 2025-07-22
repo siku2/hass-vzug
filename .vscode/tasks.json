@@ -2,10 +2,59 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run Home Assistant on port 8123",
+            "label": "Start HA",
             "type": "shell",
             "command": "scripts/start_ha.sh",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Stop HA",
+            "type": "shell",
+            "command": "scripts/stop_ha.sh",
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Start Emulators",
+            "type": "shell",
+            "command": "scripts/start_all_emulators.sh",
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Stop Emulators",
+            "type": "shell",
+            "command": "scripts/stop_all_emulators.sh",
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Lint",
+            "type": "shell",
+            "command": "scripts/lint.sh",
+            "problemMatcher": [],
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
         }
     ]
 }
