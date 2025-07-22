@@ -60,9 +60,10 @@ People *love* thorough bug reports. I'm not even kidding.
     start_ha.sh
     ...
     stop_all_emulators.sh
+    stop_ha.sh
     ```
 
-  - Once HA is up and running, login and add V-Zug device on 127.0.0.1:5000 and 127.0.0.1:5001
+  - Once HA is up and running, login and add V-Zug device on 127.0.0.1:5000, 127.0.0.1:5001, ...
   - In the terminal window you will see all the API calls done to the emulators
   
 - To get API responses from a new device, simple run following command and follow the instructions
@@ -81,8 +82,9 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## API Notes
 
-- Yes means confirmed
-- ? has not been captured by emulator yet
+- `Yes` means confirmed valid result
+- `No` means confirmed 404
+- `?` has not been collected yet
 
 | Scope, Command              | Support added | Adora Dish v6000 | Adora SQL | Adora TSQL WP | Adora Wash v6000 | Combair Steamer v6000 |
 | --------------------------- | ------------- | ---------------- | --------- | ------------- | ---------------- | --------------------- |
@@ -101,11 +103,11 @@ People *love* thorough bug reports. I'm not even kidding.
 | hh?getCommands              |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
 | hh?getEcoInfo               |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
 | hh?getFWVersion             |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getZHMode                |               | No               | No        | No            | Yes              | Yes                   |
-| hh?getAllProgramIds         | 0.4           | ?                | No        | No            | ?                | ?                     |
-| hh?getDeviceInfo            | 0.4           | ?                | No        | No            | ?                | ?                     |
-| hh?getProgram               | 0.4           | ?                | No        | No            | ?                | ?                     |
-| hh?setProgram               | 0.4           | ?                | No        | No            | ?                | ?                     |
+| hh?getZHMode                |               | Yes              | No        | No            | Yes              | Yes                   |
+| hh?getAllProgramIds         | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
+| hh?getDeviceInfo            | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
+| hh?getProgram               | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
+| hh?setProgram               | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
 
 ## Use a Consistent Coding Style
 

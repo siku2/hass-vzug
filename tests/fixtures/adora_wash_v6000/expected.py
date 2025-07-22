@@ -67,13 +67,13 @@ hh_categories = [
 hh_total_commands = 87
 
 hh_device_info = api.DeviceInfo(
-    model="AS6TDI",
-    description="AdoraDish V6000",
-    type="GS",
-    name="Adora SL",
+    model="AW6T",
+    description="AdoraWash V6000",
+    type="WA",
+    name="",
     serialNumber="33147 536171",
     articleNumber="7531027869",
-    apiVersion="1.8.0",
+    apiVersion="1.7.0",
     zhMode=2,
 )
 

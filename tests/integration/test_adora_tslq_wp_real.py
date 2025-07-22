@@ -74,4 +74,6 @@ async def test_hh_get_fw_version():
 
 @pytest.mark.asyncio
 async def test_hh_get_zh_mode():
-    await test_core.assert_hh_get_zh_mode(vzug_client, expected_result)
+    with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        await test_core.assert_hh_get_zh_mode(vzug_client, expected_result)
+    assert exc_info.value.response.status_code == 404
