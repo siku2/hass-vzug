@@ -1,7 +1,7 @@
+### Expected decoded results for Adora TSLQ WP (Dryer)."""
+
 import custom_components.vzug.api as api
 from tests.fixtures.shared import category_expectation
-
-### This file contains expected decoded results
 
 ai_model_description = "Adora TSLQ WP"
 
@@ -83,3 +83,5 @@ hh_firmware_version = api.HhFwVersion(
 
 hh_firmware_version["main-ressource"] = "W5642905"
 hh_firmware_version["device-type"] = "KUNDE"
+
+hh_zh_mode = -1

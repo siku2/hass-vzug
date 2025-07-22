@@ -1,0 +1,10 @@
+{
+  "model": "AS6TDI",
+  "description": "AdoraDish V6000",
+  "type": "GS",
+  "name": "Adora SL",
+  "serialNumber": "46126 182263",
+  "articleNumber": "7738150909",
+  "apiVersion": "1.8.0",
+  "zhMode": 2
+}

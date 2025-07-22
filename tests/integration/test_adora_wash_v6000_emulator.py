@@ -1,10 +1,9 @@
-import httpx
-import custom_components.vzug.api as api
 import pytest
-import tests.fixtures.adora_tslq_wp.expected as expected_result
+import custom_components.vzug.api as api
+import tests.fixtures.adora_wash_v6000.expected as expected_result
 import tests.integration.test_core as test_core
 
-BASE_URL = "http://10.0.0.90"
+BASE_URL = "http://127.0.0.1:5003"
 
 ########################################################################
 
@@ -21,10 +20,9 @@ async def test_ai_get_fw_version():
     await test_core.assert_ai_get_fw_version(vzug_client, expected_result)
 
 
-# Changes from time to time, so we don't check this for real device
-# @pytest.mark.asyncio
-# async def test_ai_get_last_push_notifications():
-#     await test_core.assert_ai_get_last_push_notifications(vzug_client, expected_result)
+@pytest.mark.asyncio
+async def test_ai_get_last_push_notifications():
+    await test_core.assert_ai_get_last_push_notifications(vzug_client, expected_result)
 
 
 @pytest.mark.asyncio
@@ -44,9 +42,7 @@ async def test_ai_get_update_status():
 
 @pytest.mark.asyncio
 async def test_hh_get_all_program_ids():
-    with pytest.raises(httpx.HTTPStatusError) as exc_info:
-        await test_core.assert_hh_get_all_program_ids(vzug_client, expected_result)
-    assert exc_info.value.response.status_code == 404
+    await test_core.assert_hh_get_all_program_ids(vzug_client, expected_result)
 
 
 @pytest.mark.asyncio
@@ -56,15 +52,15 @@ async def test_hh_get_categories_and_commands():
 
 @pytest.mark.asyncio
 async def test_hh_get_device_info():
-    with pytest.raises(httpx.HTTPStatusError) as exc_info:
-        await test_core.assert_hh_get_device_info(vzug_client, expected_result)
-    assert exc_info.value.response.status_code == 404
+    await test_core.assert_hh_get_device_info(vzug_client, expected_result)
 
 
-# Changes from time to time, so we don't check this for real device
-# @pytest.mark.asyncio
-# async def test_hh_get_eco_info():
-#     await test_core.assert_hh_get_eco_info(vzug_client, expected_result, expect_water=False, expect_energy=True)
+@pytest.mark.asyncio
+async def test_hh_get_eco_info():
+    # API returns json, but then vzug_client filters 0 values
+    await test_core.assert_hh_get_eco_info(
+        vzug_client, expected_result, expect_water=False, expect_energy=False
+    )
 
 
 @pytest.mark.asyncio
@@ -74,6 +70,4 @@ async def test_hh_get_fw_version():
 
 @pytest.mark.asyncio
 async def test_hh_get_zh_mode():
-    with pytest.raises(httpx.HTTPStatusError) as exc_info:
-        await test_core.assert_hh_get_zh_mode(vzug_client, expected_result)
-    assert exc_info.value.response.status_code == 404
+    await test_core.assert_hh_get_zh_mode(vzug_client, expected_result)

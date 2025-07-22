@@ -1,0 +1,49 @@
+[
+  {
+    "status": "idle",
+    "zone": "cookingChamber1",
+    "light": {
+      "set": false,
+      "options": [
+        false,
+        true
+      ]
+    },
+    "doorStatus": {
+      "act": "closed"
+    },
+    "preheatStatus": {
+      "act": "inactive"
+    },
+    "probeInserted": {
+      "act": false
+    }
+  },
+  {
+    "status": "idle",
+    "zone": "countdown1",
+    "duration": {
+      "set": 300,
+      "min": 10,
+      "max": 259200,
+      "step": 10
+    }
+  },
+  {
+    "status": "idle",
+    "zone": "warmingDrawer1",
+    "duration": {
+      "set": 7200,
+      "act": 7200,
+      "min": 1800,
+      "max": 43200,
+      "step": 60
+    },
+    "endtime": {
+      "act": 7200,
+      "min": 7200,
+      "max": 93540,
+      "step": 60
+    }
+  }
+]

@@ -1,0 +1,33 @@
+{
+    "version": "0.2",
+    "ignorePaths": [],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        "Adora",
+        "beendet",
+        "Combair",
+        "Daunen",
+        "Wasser",
+        "WLAN",
+        "Programm",
+        "vzug"
+    ],
+    "ignoreWords": [
+        "allprogramids",
+        "devicestatus",
+        "ecoinfo",
+        "fwversion",
+        "getprogram",
+        "macaddr",
+        "macaddress",
+        "modeldescription",
+        "updatestatus",
+        "lastpushnotifications",
+        "PYTHONPATH",
+        "tslq",
+        "zhmode",
+        "ZHSW",
+    ],
+    "import": []
+}

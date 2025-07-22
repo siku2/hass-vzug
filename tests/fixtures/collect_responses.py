@@ -83,12 +83,23 @@ def collect_responses(device_id):
         record_call("hh_get_ecoinfo.json", "/hh?command=getEcoInfo", False, False),
         record_call("hh_get_fwversion.json", "/hh?command=getFWVersion", False, False),
         record_call("hh_get_zhmode.json", "/hh?command=getZHMode", False, False),
+        # new with 0.4.0
+        record_call(
+            "hh_get_allprogramids.json", "/hh?command=getAllProgramIds", False, False
+        ),
+        record_call(
+            "hh_get_deviceinfo.json", "/hh?command=getDeviceInfo", False, False
+        ),
+        record_call("hh_get_getprogram.json", "/hh?command=getProgram", False, False),
+        # sample some negative responses
         record_call(
             "ai_get_invalid_command.txt", "/ai?command=getErrorAnswer42", False, False
         ),
         record_call(
             "hh_get_invalid_command.txt", "/hh?command=getErrorAnswer42", False, False
         ),
+        record_call("ai_bad_request.txt", "/hh?getErrorAnswer42", False, False),
+        record_call("hh_bad_request.txt", "/hh?getErrorAnswer42", False, False),
     }
 
     for current_call in record_calls:
@@ -99,7 +110,7 @@ def collect_responses(device_id):
         i = 0
         while i < 10:
             response = requests.get(url.strip())
-            if response.status_code == 503:
+            if response.status_code == 503 or response.status_code == 500:
                 logging.warning(
                     f" {current_call.relative_url}: {response.status_code} - {response.text}"
                 )
@@ -140,6 +151,10 @@ def collect_responses(device_id):
                 response_json["an"] = config["fake_device_serial_2"]
             if "deviceUuid" in response_json:
                 response_json["deviceUuid"] = config["fake_device_serial_2"]
+            if "serialNumber" in response_json:
+                response_json["serialNumber"] = config["fake_device_serial_1"]
+            if "articleNumber" in response_json:
+                response_json["articleNumber"] = config["fake_device_serial_2"]
 
             if "400.03" in response.text:
                 logging.error(f"The response from {url} contains 400.03 error.")

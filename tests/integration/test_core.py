@@ -121,22 +121,62 @@ async def assert_hh_get_categories_and_commands(vzug_client, expected_result):
             details = await vzug_client.get_command(curr_command)
             total_commands = total_commands + len(details)
 
-    # Rather artifical number. But still a good inidcator whether we got all the details
+    # Rather artificial number. But still a good indicator whether we got all the details
     assert total_commands == expected_result.hh_total_commands
 
 
-async def assert_hh_get_eco_info(vzug_client, expected_result):
+async def assert_hh_get_all_program_ids(vzug_client, expected_result):
+    all_program_ids = await vzug_client.get_all_program_ids()
+
+    all_program_ids.sort()
+    expected_result.hh_all_program_ids.sort()
+
+    assert len(all_program_ids) == len(expected_result.hh_all_program_ids)
+
+    for i in range(len(expected_result.hh_all_program_ids)):
+        assert all_program_ids[i] == expected_result.hh_all_program_ids[i]
+
+
+async def assert_hh_get_device_info(vzug_client, expected_result):
+    device_info = await vzug_client.get_device_info()
+
+    assert is_valid_serial_type_1(device_info["serialNumber"])
+    assert is_valid_serial_type_2(device_info["articleNumber"])
+
+    assert device_info["model"] == expected_result.hh_device_info["model"]
+    assert device_info["description"] == expected_result.hh_device_info["description"]
+    assert device_info["type"] == expected_result.hh_device_info["type"]
+    assert device_info["name"] == expected_result.hh_device_info["name"]
+    assert device_info["apiVersion"] == expected_result.hh_device_info["apiVersion"]
+    assert device_info["zhMode"] == expected_result.hh_device_info["zhMode"]
+
+
+async def assert_hh_get_eco_info(
+    vzug_client, expected_result, expect_water: bool, expect_energy: bool
+):
     eco_info = await vzug_client.get_eco_info()
 
-    assert eco_info["energy"]["total"] == expected_result.hh_eco_info["energy"]["total"]
-    assert (
-        eco_info["energy"]["average"]
-        == expected_result.hh_eco_info["energy"]["average"]
-    )
-    assert (
-        eco_info["energy"]["program"]
-        == expected_result.hh_eco_info["energy"]["program"]
-    )
+    resources = []
+    if expect_water:
+        resources.append("water")
+    if expect_energy:
+        resources.append("energy")
+
+    assert len(eco_info) == len(resources)
+
+    for resource in resources:
+        assert (
+            eco_info[resource]["total"]
+            == expected_result.hh_eco_info[resource]["total"]
+        )
+        assert (
+            eco_info[resource]["average"]
+            == expected_result.hh_eco_info[resource]["average"]
+        )
+        assert (
+            eco_info[resource]["program"]
+            == expected_result.hh_eco_info[resource]["program"]
+        )
 
 
 async def assert_hh_get_fw_version(vzug_client, expected_result):
@@ -148,13 +188,22 @@ async def assert_hh_get_fw_version(vzug_client, expected_result):
         elif key == "an" or key == "deviceUuid":
             assert is_valid_serial_type_2(fw_version[key])
         else:
-            # For other keys, just compare the values directly
-            assert fw_version[key].strip() == value.strip()
+            if isinstance(value, int):
+                assert fw_version[key] == value
+            else:
+                # For other keys, just compare the values directly
+                assert fw_version[key].strip() == value.strip()
+
+
+# async def assert_hh_get_program(vzug_client, expected_result):
+#     program = await vzug_client.get_program()
+    # This data structure is all over the place
+    # No meaningful tests yet
 
 
 async def assert_hh_get_zh_mode(vzug_client, expected_result):
-    # zh_mode = await vzug_client.get_zh_mode()
-    assert 1 == 0
+    zh_mode = await vzug_client.get_zh_mode(default_on_error=True)
+    assert zh_mode == expected_result.hh_zh_mode
 
 
 def is_valid_macaddr802(value):
