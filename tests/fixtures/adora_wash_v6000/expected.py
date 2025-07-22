@@ -131,3 +131,13 @@ hh_all_program_ids = list[int](
 )
 
 hh_zh_mode = 2
+
+aggregate_meta = api.AggMeta(
+    mac_address="02:3a:1e:e3:51:12",
+    model_id="AW6T",
+    model_name="AdoraWash V6000",
+    device_name="",
+    serial_number="33147 536171",
+    api_version=(1, 7, 0),
+)
+

@@ -370,7 +370,8 @@ class VZugApi:
 
     async def aggregate_state(self, *, default_on_error: bool = True) -> AggState:
         # always start with zh_mode, that seems to do something??
-        zh_mode = await self.get_zh_mode(default_on_error=True)
+        # zh_mode = await self.get_zh_mode(default_on_error=True)
+        zh_mode = -1
 
         async def _device() -> tuple[DeviceStatus, datetime]:
             data = await self.get_device_status(default_on_error=default_on_error)
@@ -410,21 +411,54 @@ class VZugApi:
         )
 
     async def aggregate_meta(self, *, default_on_error: bool = False) -> AggMeta:
-        mac_address, device_info = await asyncio.gather(
+        # First method used in config flow to get details about the device
+        (
+            mac_address,
+            device_status,
+            model_description,
+            ai_firmware,
+        ) = await asyncio.gather(
+            # This is all from the AI Module/API
             self.get_mac_address(default_on_error=default_on_error),
-            self.get_device_info(default_on_error=default_on_error),
+            self.get_device_status(default_on_error=default_on_error),
+            self.get_model_description(default_on_error=default_on_error),
+            self.get_ai_fw_version(default_on_error=default_on_error),
         )
-        raw_api_version = device_info.get("apiVersion", "")
-        api_version = tuple(map(int, (raw_api_version.split("."))))
 
-        return AggMeta(
-            mac_address=mac_address,
-            model_id=device_info.get("model", ""),
-            model_name=device_info.get("description", ""),
-            device_name=device_info.get("name", ""),
-            serial_number=device_info.get("serialNumber", ""),
-            api_version=api_version,
-        )
+        try:
+            # Only supported on some devices, probably with newer hh module
+            device_info = await self.get_device_info(default_on_error=True)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == httpx.codes.NOT_FOUND:
+                # Device does not support this, so we just use the AI data
+                device_info = None
+            else:
+                raise
+
+        if device_info:
+            raw_api_version = device_info.get("apiVersion", "")
+            hh_api_version = tuple(map(int, (raw_api_version.split("."))))
+
+            return AggMeta(
+                mac_address=mac_address,
+                model_id=device_info.get("model", ""),
+                model_name=device_info.get("description", ""),
+                device_name=device_info.get("name", ""),
+                serial_number=device_info.get("serialNumber", ""),
+                api_version=hh_api_version,
+            )
+        else:
+            raw_api_version = ai_firmware.get("apiVersion", "")
+            ai_api_version = tuple(map(int, (raw_api_version.split("."))))
+
+            return AggMeta(
+                mac_address=mac_address,
+                model_id="",
+                model_name=model_description,
+                device_name=device_status.get("DeviceName", ""),
+                serial_number=device_status.get("Serial", ""),
+                api_version=ai_api_version,
+            )
 
     async def aggregate_config(self) -> AggConfig:
         category_keys = await self.list_categories()

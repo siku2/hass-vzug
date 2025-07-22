@@ -178,3 +178,13 @@ hh_all_program_ids = list[int](
 )
 
 hh_zh_mode = 2
+
+aggregate_meta = api.AggMeta(
+    mac_address="02:56:61:f8:c4:21",
+    model_id="CSB",
+    model_name="CombairSteamer V6000 76C",
+    device_name="",
+    serial_number="40695 200742",
+    api_version=(1, 11, 0),
+)
+
