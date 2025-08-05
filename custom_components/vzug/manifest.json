@@ -23,7 +23,7 @@
   "loggers": [],
   "mqtt": [],
   "requirements": [
-    "json-repair"
+    "json-repair~=0.46.2"
   ],
   "ssdp": [],
   "usb": [],
