@@ -71,3 +71,13 @@ async def test_hh_get_fw_version():
 @pytest.mark.asyncio
 async def test_hh_get_zh_mode():
     await test_core.assert_hh_get_zh_mode(vzug_client, expected_result)
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta():
+    await test_core.assert_aggregate_meta(vzug_client, expected_result)
+
+
+@pytest.mark.asyncio
+async def test_aggregate_state():
+    await test_core.assert_aggregate_state(vzug_client, expected_result, expect_energy=False)

@@ -7,7 +7,7 @@ ai_model_description = "Adora SLQ"
 
 ai_device_status = api.DeviceStatus(
     DeviceName="",
-    Serial="98765 012345",
+    Serial="33493 832315",
     Inactive="true",
     Program="",
     Status="",
@@ -16,7 +16,7 @@ ai_device_status = api.DeviceStatus(
 )
 
 ai_firmware_version = api.AiFwVersion(
-    fn="98765 012345",
+    fn="33493 832315",
     SW="1052633-R20",
     SD="1052633-R20",
     HW="1065944-R02",
@@ -69,7 +69,7 @@ hh_eco_info = api.EcoInfo(
 )
 
 hh_firmware_version = api.HhFwVersion(
-    fn="98765 012345",
+    fn="33493 832315",
     an="9876500000",
     v="W4215911",
     v2="W421095",
@@ -80,3 +80,13 @@ hh_firmware_version = api.HhFwVersion(
 )
 
 hh_zh_mode = -1
+
+aggregate_meta = api.AggMeta(
+    mac_address="02:7A:1C:92:79:28",
+    model_id="",
+    model_name="Adora SLQ Emulator",
+    device_name="",
+    serial_number="33493 832315",
+    api_version=(1, 8, 0),
+)
+

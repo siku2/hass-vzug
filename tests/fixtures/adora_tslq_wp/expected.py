@@ -7,7 +7,7 @@ ai_model_description = "Adora TSLQ WP"
 
 ai_device_status = api.DeviceStatus(
     DeviceName="",
-    Serial="98765 012345",
+    Serial="61358 902645",
     Inactive="true",
     Program="",
     Status="",
@@ -16,7 +16,7 @@ ai_device_status = api.DeviceStatus(
 )
 
 ai_firmware_version = api.AiFwVersion(
-    fn="98765 012345",
+    fn="61358 902645",
     SW="1052633-R20",
     SD="1052633-R20",
     HW="1065944-R02",
@@ -71,7 +71,7 @@ hh_eco_info = api.EcoInfo(
 )
 
 hh_firmware_version = api.HhFwVersion(
-    fn="98765 012345",
+    fn="61358 902645",
     an="9876500000",
     v="W5640910",
     v2="W564197",
@@ -85,3 +85,12 @@ hh_firmware_version["main-ressource"] = "W5642905"
 hh_firmware_version["device-type"] = "KUNDE"
 
 hh_zh_mode = -1
+
+aggregate_meta = api.AggMeta(
+    mac_address="02:47:41:99:80:E4",
+    model_id="",
+    model_name="Adora TSLQ WP Emulator",
+    device_name="",
+    serial_number="61358 902645",
+    api_version=(1, 8, 0),
+)

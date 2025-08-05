@@ -100,3 +100,12 @@ hh_all_program_ids = list[int](
 )
 
 hh_zh_mode = 2
+
+aggregate_meta = api.AggMeta(
+    mac_address="02:43:a0:d1:80:f9",
+    model_id="AS6TDI",
+    model_name="AdoraDish V6000",
+    device_name="Adora SL",
+    serial_number="46126 182263",
+    api_version=(1, 8, 0),
+)
