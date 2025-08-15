@@ -2,41 +2,107 @@ name: "Release"
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: true
   push:
     tags:
-      - '*'
+      - 'v*'
 
 permissions: {}
 
 jobs:
+  prepare:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      domain: ${{ steps.info.outputs.domain }}
+      component_dir: ${{ steps.info.outputs.component_dir }}
+      hacs_filename: ${{ steps.info.outputs.hacs_filename }}
+      version: ${{ steps.info.outputs.version }}
+      tag_name: ${{ steps.info.outputs.tag_name }}
+      release_body: ${{ steps.git-cliff.outputs.content }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Gather information
+        id: info
+        shell: bash
+        run: |
+          {
+            domain="$(yq -r -oj '.domain' custom_components/*/manifest.json)"
+            if [ -z "$domain" ]; then
+              echo >&2 "No domain found in manifest.json. Please check your custom component."
+              exit 1
+            fi
+            hacs_filename="$(yq -r '.filename' hacs.json)"
+            if [ -z "$hacs_filename" ]; then
+              echo >&2 "No filename found in hacs.json. Please check your HACS configuration."
+              exit 1
+            fi
+
+            echo "domain=${domain}"
+            echo "component_dir=custom_components/${domain}"
+            echo "hacs_filename=${hacs_filename}"
+
+            if [ -z '${{ inputs.version }}' ]; then
+              echo >&2 "No version provided. Using the tag name as version."
+              tag_name='${{ github.ref_name }}'
+              echo "tag_name=${tag_name}"
+              echo "version=${tag_name#v}" # Remove 'v' prefix if present
+            else
+              echo "version=${{ inputs.version }}"
+              echo "tag_name=v${{ inputs.version }}"
+            fi
+          } | tee "$GITHUB_OUTPUT"
+
+      - name: Sanity check
+        shell: bash
+        run: |
+          # Ensure version matches semver (e.g., 1.2.3, 1.2.3-beta.1)
+          if ! [[ "${{ steps.info.outputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Error: Version '${{ steps.info.outputs.version }}' does not match SemVer format (e.g., 1.2.3 or 1.2.3-beta.1)."
+            exit 1
+          fi
+
+      - name: Generate changelog
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff
+        with:
+          config: ""
+          args: --verbose --unreleased --strip=header --config-url=https://raw.githubusercontent.com/orhun/git-cliff/refs/heads/main/examples/github.toml
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+          GIT_CLIFF_TAG: ${{ steps.info.outputs.tag_name }}
+
   release:
+    needs: prepare
     name: "Release"
     runs-on: "ubuntu-latest"
     permissions:
       contents: write
     steps:
       - name: "Checkout the repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
 
-      - name: Gather information
-        shell: bash
-        run: |
-          INTEGRATION_DOMAIN=$(yq -r -oj '.domain' custom_components/*/manifest.json) || exit
-          echo "INTEGRATION_DOMAIN=$INTEGRATION_DOMAIN" | tee "$GITHUB_ENV"
-
-      - name: "Adjust version number"
+      - name: "Build the integration"
         shell: "bash"
         run: |
-          yq -i -o json '.version="${{ github.ref_name }}"' \
-            "${{ github.workspace }}/custom_components/$INTEGRATION_DOMAIN/manifest.json"
+          # Update version
+          yq -i -o json '.version="${{ needs.prepare.outputs.version }}"' '${{ needs.prepare.outputs.component_dir }}/manifest.json'
+          # Archive
+          cd '${{ needs.prepare.outputs.component_dir }}'
+          zip '${{ needs.prepare.outputs.hacs_filename }}' -r ./
 
-      - name: "ZIP the integration directory"
-        shell: "bash"
-        run: |
-          cd "${{ github.workspace }}/custom_components/$INTEGRATION_DOMAIN"
-          zip "$INTEGRATION_DOMAIN.zip" -r ./
-
-      - name: "Upload the ZIP file to the release"
-        uses: softprops/action-gh-release@v2.3.2
+      - name: "Create release"
+        uses: softprops/action-gh-release@v2
         with:
-          files: ${{ github.workspace }}/custom_components/${{ env.INTEGRATION_DOMAIN }}/${{ env.INTEGRATION_DOMAIN }}.zip
+          body: '${{ needs.prepare.outputs.release_body }}'
+          tag_name: '${{ needs.prepare.outputs.tag_name }}'
+          target_commitish: '${{ github.sha }}'
+          files: ${{ needs.prepare.outputs.component_dir }}/${{ needs.prepare.outputs.hacs_filename }}
