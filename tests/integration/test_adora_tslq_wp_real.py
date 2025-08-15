@@ -77,3 +77,13 @@ async def test_hh_get_zh_mode():
     with pytest.raises(httpx.HTTPStatusError) as exc_info:
         await test_core.assert_hh_get_zh_mode(vzug_client, expected_result)
     assert exc_info.value.response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta():
+    await test_core.assert_aggregate_meta(vzug_client, expected_result)
+
+
+@pytest.mark.asyncio
+async def test_aggregate_state():
+    await test_core.assert_aggregate_state(vzug_client, expected_result, expect_energy=True)
