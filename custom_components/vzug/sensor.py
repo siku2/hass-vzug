@@ -22,10 +22,14 @@ from .const import DOMAIN
 from .helpers import UserConfigEntity
 from .shared import Shared, StateCoordinator
 
+# https://developers.home-assistant.io/docs/core/entity/sensor/
+
 _ECO_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         "water.total",
         device_class=SensorDeviceClass.WATER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.TOTAL,
         translation_key="water_total",
@@ -33,6 +37,8 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         "water.program",
         device_class=SensorDeviceClass.WATER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="water_program",
@@ -40,6 +46,8 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         "energy.total",
         device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL,
         translation_key="energy_total",
@@ -47,19 +55,29 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         "energy.program",
         device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="energy_program",
     ),
     SensorEntityDescription(
+        # This is tricky, because it is not really a measurement, but calculated by the device.
+        # But HomeAssistant does not like that combination. It prevents SensorDeviceClass.WATER with SensorStateClass.MEASUREMENT
+        # Therefore we do not set the device class here.
         "water.average",
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="water_average",
     ),
     SensorEntityDescription(
+        # This is tricky, because it is not really a measurement, but calculated by the device.
+        # But HomeAssistant does not like that combination. It prevents SensorDeviceClass.ENERGY with SensorStateClass.MEASUREMENT
+        # Therefore we do not set the device class here.
         "energy.average",
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.MEASUREMENT,
@@ -199,7 +217,7 @@ class ProgramEnd(ProgramEndRaw):
         elif self.__end_at is None:
             self.__end_at = end_at
         else:
-            # neiter is None, only update if more than 10 minutes apart
+            # neither is None, only update if more than 10 minutes apart
             if abs(end_at - self.__end_at) > timedelta(minutes=10):
                 self.__end_at = end_at
 
