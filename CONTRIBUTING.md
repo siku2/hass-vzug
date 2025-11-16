@@ -32,6 +32,7 @@ Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
 
 **Great Bug Reports** tend to have:
 
+- Specify the version of HomeAssistant and the V-Zug Integration
 - A quick summary and/or background
 - Steps to reproduce
   - Be specific!
@@ -41,6 +42,18 @@ Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
 - Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
 
 People *love* thorough bug reports. I'm not even kidding.
+
+## Collect data from your v-Zug Device
+
+- Download the binary from \dist\linux_x64 or \dist\windows_x64
+- Or build the binary it yourself. The virus scanner my not like the file.
+- Run
+
+  ```shell
+  .\collect_responses.exe --testdata_dir C:\MyVzugDevices
+  ```
+
+- Follow the instructions and upload the collected data as .zip to the issue
 
 ## Debugging using VSCode
 

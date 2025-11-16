@@ -2,8 +2,8 @@
 __pycache__
 .pytest*
 *.egg-info/
-*/build/*
-*/dist/*
+/opt/linux_x64/build/
+/opt/windows_x64/build/    
 
 # misc
 .coverage

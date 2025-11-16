@@ -310,8 +310,20 @@ def main():
         description="Collect JSON responses from predefined URLs into a single file"
     )
     parser.add_argument("--device_id", required=False, help="Output JSON file path")
+    parser.add_argument("--testdata_dir", required=False, help="Test data root directory")
 
     args = parser.parse_args()
+
+    if args.testdata_dir:
+        os.environ["PROJECT_ROOT"] = args.testdata_dir
+
+    if os.getenv("PROJECT_ROOT") is None:
+        logging.warning("Either --testdata_dir needs to be specified or PROJECT_ROOT environment variable is not set.")
+        return
+
+    fixtures_dir = os.path.join(os.getenv('PROJECT_ROOT'), "tests", "fixtures")
+    os.makedirs(fixtures_dir, exist_ok=True)
+    logging.info(f"Data root directory: {fixtures_dir}")
 
     if args.device_id and shared.is_valid_device(args.device_id):
         collect_responses(args.device_id)
