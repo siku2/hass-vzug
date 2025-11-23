@@ -45,8 +45,7 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Collect data from your v-Zug Device
 
-- Download the binary from \dist\linux_x64 or \dist\windows_x64
-- Or build the binary it yourself. The virus scanner my not like the file.
+- Download the binary from \dist\linux_x64 or \dist\windows_x64 or build the binary yourself. The virus scanner might not like the file, and require an exclusion. Therefore, feel free to run the program in a virtual machine or inside WSL to isolate its execution.
 - Run
 
   ```shell
