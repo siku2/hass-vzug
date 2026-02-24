@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 
 import yarl
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -39,6 +40,8 @@ class Shared:
         hass: HomeAssistant,
         base_url: yarl.URL,
         credentials: api.Credentials | None,
+        *,
+        config_entry: ConfigEntry,
     ) -> None:
         self.hass = hass
         self.client = api.VZugApi(
@@ -52,6 +55,7 @@ class Shared:
             name="state",
             update_interval=timedelta(seconds=30),
             update_method=self._fetch_state,
+            config_entry=config_entry,
         )
         self.update_coord = DataUpdateCoordinator(
             hass,
@@ -59,6 +63,7 @@ class Shared:
             name="update",
             update_interval=UPDATE_COORD_IDLE_INTERVAL,
             update_method=self._fetch_update,
+            config_entry=config_entry,
         )
         self.config_coord = DataUpdateCoordinator(
             hass,
@@ -66,6 +71,7 @@ class Shared:
             name="config",
             update_interval=timedelta(minutes=5),
             update_method=self._fetch_config,
+            config_entry=config_entry,
         )
 
         # the rest will be set on first refresh
