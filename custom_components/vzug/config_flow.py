@@ -11,7 +11,6 @@ from homeassistant import config_entries
 from homeassistant.components.network import Adapter, async_get_adapters
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import discovery_flow as df
 from homeassistant.helpers.selector import (
@@ -291,10 +290,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("creating entry")
         return self.async_create_entry(title=self._meta.create_unique_name(), data=data)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 def _iter_adapter_interfaces(adapters: list[Adapter]) -> Iterator[IPv4Interface]:
