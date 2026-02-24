@@ -17,11 +17,13 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api
-from .helpers import UserConfigEntity
-from .shared import Shared, StateCoordinator
+from .coordinator import Shared, StateCoordinator
+from .entity import UserConfigEntity
 
 if TYPE_CHECKING:
     from . import VZugConfigEntry
+
+PARALLEL_UPDATES = 0
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 

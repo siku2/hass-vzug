@@ -4,12 +4,14 @@ import contextlib
 import logging
 from datetime import timedelta
 
+import httpx
 import yarl
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
@@ -103,10 +105,22 @@ class Shared:
         config_entry: ConfigEntry,
     ) -> None:
         self.hass = hass
-        self.client = api.VZugApi(
-            base_url,
-            credentials=credentials,
+        auth = (
+            httpx.DigestAuth(
+                username=credentials.username, password=credentials.password
+            )
+            if credentials
+            else None
         )
+        transport = httpx.AsyncHTTPTransport(
+            verify=False,
+            limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
+            retries=5,
+        )
+        httpx_client = create_async_httpx_client(
+            hass, verify_ssl=False, auth=auth, transport=transport
+        )
+        self.client = api.VZugApi(base_url, client=httpx_client)
 
         # the rest will be set on first refresh
         self.unique_id_prefix = ""

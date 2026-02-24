@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .shared import Shared
+from .coordinator import Shared
 
 if TYPE_CHECKING:
     from . import VZugConfigEntry

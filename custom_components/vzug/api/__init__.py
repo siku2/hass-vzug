@@ -249,21 +249,9 @@ class VZugApi:
         self,
         base_url: URL | str,
         *,
-        credentials: Credentials | None = None,
+        client: httpx.AsyncClient,
     ) -> None:
-        auth = (
-            httpx.DigestAuth(
-                username=credentials.username, password=credentials.password
-            )
-            if credentials
-            else None
-        )
-        transport = httpx.AsyncHTTPTransport(
-            verify=False,
-            limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
-            retries=5,
-        )
-        self._client = httpx.AsyncClient(auth=auth, transport=transport)
+        self._client = client
         self._base_url = URL(base_url)
 
     async def _command(

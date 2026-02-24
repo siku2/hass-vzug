@@ -2,12 +2,16 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .helpers import UserConfigEntity
+from .const import DOMAIN
+from .entity import UserConfigEntity
 
 if TYPE_CHECKING:
     from . import VZugConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -52,7 +56,17 @@ class UserConfig(SwitchEntity, UserConfigEntity):
         await self._vzug_set_state(False)
 
     async def _vzug_set_state(self, on: bool) -> None:
-        await self.shared.client.set_command(
-            self.vzug_command_key, "true" if on else "false"
-        )
+        try:
+            await self.shared.client.set_command(
+                self.vzug_command_key, "true" if on else "false"
+            )
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_command_failed",
+                translation_placeholders={
+                    "command_key": self.vzug_command_key,
+                    "error": str(err),
+                },
+            ) from err
         await self.coordinator.async_request_refresh()

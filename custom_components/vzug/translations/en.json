@@ -50,6 +50,23 @@
             }
         }
     },
+    "exceptions": {
+        "check_update_failed": {
+            "message": "Failed to check for updates: {error}"
+        },
+        "command_action_failed": {
+            "message": "Failed to execute action '{command_key}': {error}"
+        },
+        "set_command_failed": {
+            "message": "Failed to set '{command_key}': {error}"
+        },
+        "unknown_update_component": {
+            "message": "Unknown update component: {name}"
+        },
+        "install_update_failed": {
+            "message": "Failed to install update '{name}': {error}"
+        }
+    },
     "entity": {
         "button": {
             "check_update": {

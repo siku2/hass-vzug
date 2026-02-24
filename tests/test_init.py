@@ -12,7 +12,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vzug import api
 from custom_components.vzug.const import CONF_BASE_URL, DOMAIN
-from custom_components.vzug.shared import Shared
+from custom_components.vzug.coordinator import Shared
 
 
 async def test_setup_entry_success(

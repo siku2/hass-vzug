@@ -1,13 +1,24 @@
+import httpx
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
 
 from custom_components.vzug.api import VZugApi
 
 
+def _create_test_client() -> httpx.AsyncClient:
+    """Create an httpx client for testing."""
+    transport = httpx.AsyncHTTPTransport(
+        verify=False,
+        limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
+        retries=5,
+    )
+    return httpx.AsyncClient(transport=transport)
+
+
 @pytest.fixture
 def vzug_api():
     """Create a VZugApi instance for testing."""
-    return VZugApi(base_url="http://example.com")
+    return VZugApi(base_url="http://example.com", client=_create_test_client())
 
 
 @pytest.mark.asyncio
@@ -99,7 +110,7 @@ async def test_json_repair_with_real_broken_device_status():
     # Example of broken JSON that might come from V-ZUG device
     broken_json = """[{"date":"2025-06-10T16:06:06Z","message":"Der Betrieb wurde beendet."}\n,{"date":"2025-06-10T15:40:43Z","message":"Das Vorheizen wurde beendet. Bitte schieben Sie das Gargut ein."} ,{"date":"2025-06-04T16:38:18Z","message":"Aufgeheizt"} ,{"date":"2025-06-04T09:50:01Z","message":"Aufgeheizt"} ,{"date":"2025-06-04T09:40:01Z","message":"Betriebsart gestartet"} ,{"date":"2025-05-26T16:07:52Z","message":"Aufgeheizt"} ,{"date":"2025-05-25T09:37:41Z","message":"Das Vorheizen wurde beendet. Bitte schieben Sie das Gargut ein."} ,{"date":"2025-05-21T10:24:55Z","message"]"""
 
-    vzug_api = VZugApi(base_url="http://example.com")
+    vzug_api = VZugApi(base_url="http://example.com", client=_create_test_client())
 
     # Mock httpx response that fails json() but has content
     mock_response = MagicMock()

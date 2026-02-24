@@ -8,7 +8,7 @@ BASE_URL = "http://10.0.0.90"
 
 ########################################################################
 
-vzug_client = api.VZugApi(BASE_URL)
+vzug_client = api.VZugApi(BASE_URL, client=httpx.AsyncClient())
 
 
 @pytest.mark.asyncio

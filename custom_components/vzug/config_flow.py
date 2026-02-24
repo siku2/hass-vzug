@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from ipaddress import IPv4Interface
 from typing import Any, cast
 
+import httpx
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.network import Adapter, async_get_adapters
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNA
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import discovery_flow as df
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -53,17 +55,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _set_client(self) -> None:
         assert self._base_url
-        if self._username is not None and self._password is not None:
-            credentials = api.Credentials(
-                username=self._username, password=self._password
-            )
-        else:
-            credentials = None
-
-        self._client = api.VZugApi(
-            self._base_url,
-            credentials=credentials,
+        auth = (
+            httpx.DigestAuth(username=self._username, password=self._password)
+            if self._username is not None and self._password is not None
+            else None
         )
+        transport = httpx.AsyncHTTPTransport(
+            verify=False,
+            limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
+            retries=5,
+        )
+        httpx_client = create_async_httpx_client(
+            self.hass, verify_ssl=False, auth=auth, transport=transport
+        )
+        self._client = api.VZugApi(self._base_url, client=httpx_client)
 
     # entry points
 

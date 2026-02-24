@@ -3,7 +3,10 @@
     "sensor": {
       "water_average": { "default": "mdi:water" },
       "energy_average": { "default": "mdi:lightning-bolt" },
-      "last_notification": { "default": "mdi:bell" }
+      "last_notification": { "default": "mdi:bell" },
+      "program": { "default": "mdi:play-circle" },
+      "program_end_raw": { "default": "mdi:clock-end" },
+      "status": { "default": "mdi:information" }
     }
   }
 }

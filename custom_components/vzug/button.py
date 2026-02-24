@@ -5,13 +5,17 @@ from typing import TYPE_CHECKING
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .helpers import UserConfigEntity
-from .shared import Shared
+from .const import DOMAIN
+from .coordinator import Shared
+from .entity import UserConfigEntity
 
 if TYPE_CHECKING:
     from . import VZugConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -52,10 +56,27 @@ class CheckUpdate(ButtonEntity):
         self._attr_device_info = shared.device_info
 
     async def async_press(self) -> None:
-        await self.shared.client.check_for_updates()
+        try:
+            await self.shared.client.check_for_updates()
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="check_update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         await self.shared.update_coord.async_request_refresh()
 
 
 class UserConfig(ButtonEntity, UserConfigEntity):
     async def async_press(self) -> None:
-        await self.shared.client.do_command_action(self.vzug_command_key)
+        try:
+            await self.shared.client.do_command_action(self.vzug_command_key)
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_action_failed",
+                translation_placeholders={
+                    "command_key": self.vzug_command_key,
+                    "error": str(err),
+                },
+            ) from err

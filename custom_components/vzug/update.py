@@ -8,14 +8,18 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api
-from .shared import Shared, UpdateCoordinator
+from .const import DOMAIN
+from .coordinator import Shared, UpdateCoordinator
 
 if TYPE_CHECKING:
     from . import VZugConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -80,12 +84,25 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
         if not name:
             return
 
-        if name == "AI":
-            await self.shared.client.do_ai_update()
-        elif name == "HHG":
-            await self.shared.client.do_hhg_update()
-        else:
-            raise ValueError("unknown update component", name)
+        try:
+            if name == "AI":
+                await self.shared.client.do_ai_update()
+            elif name == "HHG":
+                await self.shared.client.do_hhg_update()
+            else:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_update_component",
+                    translation_placeholders={"name": name},
+                )
+        except HomeAssistantError:
+            raise
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_update_failed",
+                translation_placeholders={"name": name, "error": str(err)},
+            ) from err
         await self.coordinator.async_request_refresh()
 
     @property

@@ -1,3 +1,4 @@
+import httpx
 import pytest
 import custom_components.vzug.api as api
 import tests.fixtures.combair_steamer_v6000_76c.expected as expected_result
@@ -7,7 +8,7 @@ BASE_URL = "http://127.0.0.1:5004"
 
 ########################################################################
 
-vzug_client = api.VZugApi(BASE_URL)
+vzug_client = api.VZugApi(BASE_URL, client=httpx.AsyncClient())
 
 
 @pytest.mark.asyncio

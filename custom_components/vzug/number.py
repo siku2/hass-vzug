@@ -4,12 +4,16 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .helpers import UserConfigEntity
+from .const import DOMAIN
+from .entity import UserConfigEntity
 
 if TYPE_CHECKING:
     from . import VZugConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -67,5 +71,15 @@ class UserConfig(NumberEntity, UserConfigEntity):
             return None
 
     async def async_set_native_value(self, value: float) -> None:
-        await self.shared.client.set_command(self.vzug_command_key, str(int(value)))
+        try:
+            await self.shared.client.set_command(self.vzug_command_key, str(int(value)))
+        except Exception as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_command_failed",
+                translation_placeholders={
+                    "command_key": self.vzug_command_key,
+                    "error": str(err),
+                },
+            ) from err
         await self.coordinator.async_request_refresh()

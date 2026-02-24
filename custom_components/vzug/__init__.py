@@ -9,7 +9,7 @@ from yarl import URL
 
 from . import api
 from .const import CONF_BASE_URL
-from .shared import Shared
+from .coordinator import Shared
 
 type VZugConfigEntry = ConfigEntry[Shared]
 
