@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "water_average": { "default": "mdi:water" },
+      "energy_average": { "default": "mdi:lightning-bolt" },
+      "last_notification": { "default": "mdi:bell" }
+    }
+  }
+}

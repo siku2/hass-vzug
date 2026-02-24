@@ -30,7 +30,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "water.total",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.TOTAL,
         translation_key="water_total",
@@ -39,7 +38,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "water.program",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="water_program",
@@ -48,7 +46,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "energy.total",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL,
         translation_key="energy_total",
@@ -57,7 +54,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "energy.program",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="energy_program",
@@ -68,7 +64,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # Therefore we do not set the device class here.
         "water.average",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="water_average",
@@ -79,7 +74,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # Therefore we do not set the device class here.
         "energy.average",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="energy_average",
@@ -262,8 +256,6 @@ class Eco(StateBase):
 
 class LastNotification(StateBase):
     _attr_translation_key = "last_notification"
-    _attr_icon = "mdi:bell"
-
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         try:
