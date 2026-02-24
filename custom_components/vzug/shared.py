@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import logging
 from datetime import timedelta
@@ -15,12 +17,66 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-StateCoordinator = DataUpdateCoordinator[api.AggState]
-UpdateCoordinator = DataUpdateCoordinator[api.AggUpdateStatus]
 UPDATE_COORD_IDLE_INTERVAL = timedelta(hours=6)
 UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
 
-ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
+
+class StateCoordinator(DataUpdateCoordinator[api.AggState]):
+    def __init__(self, shared: Shared, config_entry: ConfigEntry) -> None:
+        super().__init__(
+            shared.hass,
+            _LOGGER,
+            name="state",
+            update_interval=timedelta(seconds=30),
+            config_entry=config_entry,
+        )
+        self.shared = shared
+
+    async def _async_update_data(self) -> api.AggState:
+        async with detect_auth_failed():
+            return await self.shared.client.aggregate_state(
+                default_on_error=self.shared._first_refresh_done
+            )
+
+
+class UpdateCoordinator(DataUpdateCoordinator[api.AggUpdateStatus]):
+    def __init__(self, shared: Shared, config_entry: ConfigEntry) -> None:
+        super().__init__(
+            shared.hass,
+            _LOGGER,
+            name="update",
+            update_interval=UPDATE_COORD_IDLE_INTERVAL,
+            config_entry=config_entry,
+        )
+        self.shared = shared
+
+    async def _async_update_data(self) -> api.AggUpdateStatus:
+        async with detect_auth_failed():
+            data = await self.shared.client.aggregate_update_status(
+                supports_update_status=self.shared.meta.supports_update_status(),
+                default_on_error=True,  # we allow the update to fail because it's not essential
+            )
+        if data.update.get("status") in ("idle", None):
+            self.update_interval = UPDATE_COORD_IDLE_INTERVAL
+        else:
+            self.update_interval = UPDATE_COORD_ACTIVE_INTERVAL
+        return data
+
+
+class ConfigCoordinator(DataUpdateCoordinator[api.AggConfig]):
+    def __init__(self, shared: Shared, config_entry: ConfigEntry) -> None:
+        super().__init__(
+            shared.hass,
+            _LOGGER,
+            name="config",
+            update_interval=timedelta(minutes=5),
+            config_entry=config_entry,
+        )
+        self.shared = shared
+
+    async def _async_update_data(self) -> api.AggConfig:
+        async with detect_auth_failed():
+            return await self.shared.client.aggregate_config()
 
 
 class Shared:
@@ -49,35 +105,14 @@ class Shared:
             credentials=credentials,
         )
 
-        self.state_coord = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="state",
-            update_interval=timedelta(seconds=30),
-            update_method=self._fetch_state,
-            config_entry=config_entry,
-        )
-        self.update_coord = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="update",
-            update_interval=UPDATE_COORD_IDLE_INTERVAL,
-            update_method=self._fetch_update,
-            config_entry=config_entry,
-        )
-        self.config_coord = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="config",
-            update_interval=timedelta(minutes=5),
-            update_method=self._fetch_config,
-            config_entry=config_entry,
-        )
-
         # the rest will be set on first refresh
         self.unique_id_prefix = ""
         self.device_info = DeviceInfo()
         self._first_refresh_done = False
+
+        self.state_coord = StateCoordinator(self, config_entry)
+        self.update_coord = UpdateCoordinator(self, config_entry)
+        self.config_coord = ConfigCoordinator(self, config_entry)
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
@@ -119,28 +154,6 @@ class Shared:
         )
 
         self._first_refresh_done = True
-
-    async def _fetch_state(self) -> api.AggState:
-        async with detect_auth_failed():
-            return await self.client.aggregate_state(
-                default_on_error=self._first_refresh_done
-            )
-
-    async def _fetch_update(self) -> api.AggUpdateStatus:
-        async with detect_auth_failed():
-            data = await self.client.aggregate_update_status(
-                supports_update_status=self.meta.supports_update_status(),
-                default_on_error=True,  # we allow the update to fail because it's not essential
-            )
-        if data.update.get("status") in ("idle", None):
-            self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL
-        else:
-            self.update_coord.update_interval = UPDATE_COORD_ACTIVE_INTERVAL
-        return data
-
-    async def _fetch_config(self) -> api.AggConfig:
-        async with detect_auth_failed():
-            return await self.client.aggregate_config()
 
 
 @contextlib.asynccontextmanager
