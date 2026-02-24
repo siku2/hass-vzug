@@ -64,6 +64,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # Therefore we do not set the device class here.
         "water.average",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement="L",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="water_average",
@@ -74,6 +75,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # Therefore we do not set the device class here.
         "energy.average",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="energy_average",
@@ -148,6 +150,7 @@ class Program(StateBase):
 class ProgramEndRaw(StateBase):
     _attr_translation_key = "program_end_raw"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
 
     @property
     def vzug_program_end(self) -> api.DeviceStatusProgramEnd:
