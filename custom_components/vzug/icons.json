@@ -23,8 +23,6 @@
       "door1_openings_7DayAvg_duration": { "default": "mdi:door-open" },
       "door1_openings_30DayAvg_amount": { "default": "mdi:door-open" },
       "door1_openings_30DayAvg_duration": { "default": "mdi:door-open" },
-      "temperature_fridge1": { "default": "mdi:thermometer" },
-      "temperature_set_fridge1": { "default": "mdi:thermometer" },
       "temperature_freezer1": { "default": "mdi:snowflake-thermometer" },
       "temperature_set_freezer1": { "default": "mdi:snowflake-thermometer" }
     }
