@@ -102,7 +102,7 @@ class Shared:
         mac_addr = dr.format_mac(self.meta.mac_address)
         self.unique_id_prefix = mac_addr
         if not self.unique_id_prefix:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 "unable to determine unique id from device data: %s", self.meta
             )
 

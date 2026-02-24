@@ -42,7 +42,7 @@ class _DiscoveryProtocol(asyncio.DatagramProtocol):
         )
 
     def error_received(self, exc: Exception) -> None:
-        _LOGGER.warn("received error", exc_info=exc)
+        _LOGGER.warning("received error", exc_info=exc)
 
 
 async def _make_iter(protocol: _DiscoveryProtocol) -> AsyncIterator[DiscoveryInfo]:
