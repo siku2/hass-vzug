@@ -29,6 +29,7 @@ class StateCoordinator(DataUpdateCoordinator[api.AggState]):
             name="state",
             update_interval=timedelta(seconds=30),
             config_entry=config_entry,
+            always_update=False,
         )
         self.shared = shared
 
@@ -47,6 +48,7 @@ class UpdateCoordinator(DataUpdateCoordinator[api.AggUpdateStatus]):
             name="update",
             update_interval=UPDATE_COORD_IDLE_INTERVAL,
             config_entry=config_entry,
+            always_update=False,
         )
         self.shared = shared
 
@@ -71,6 +73,7 @@ class ConfigCoordinator(DataUpdateCoordinator[api.AggConfig]):
             name="config",
             update_interval=timedelta(minutes=5),
             config_entry=config_entry,
+            always_update=False,
         )
         self.shared = shared
 

@@ -188,7 +188,7 @@ class Program:
 class AggState:
     zh_mode: int
     device: DeviceStatus
-    device_fetched_at: datetime
+    device_fetched_at: datetime = dataclasses.field(compare=False)
     notifications: list[PushNotification]
     eco_info: EcoInfo
 
