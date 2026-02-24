@@ -5,6 +5,7 @@
       "update_success": "Update Erfolgreich",
       "false_discovery": "Falsch positive Entdeckung",
       "discovery_finished": "{count} Gerät(e) entdeckt",
+      "reauth_successful": "Erneute Authentifizierung erfolgreich",
       "reconfigure_successful": "Neukonfiguration erfolgreich",
       "wrong_device": "Der neue Host verweist auf ein anderes Gerät"
     },

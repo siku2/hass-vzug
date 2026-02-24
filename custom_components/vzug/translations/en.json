@@ -5,6 +5,7 @@
             "update_success": "Update successful",
             "false_discovery": "False-positive Discovery",
             "discovery_finished": "Discovered {count} device(s)",
+            "reauth_successful": "Re-authentication successful",
             "reconfigure_successful": "Reconfiguration successful",
             "wrong_device": "The new host points to a different device"
         },

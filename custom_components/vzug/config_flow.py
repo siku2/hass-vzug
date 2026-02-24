@@ -273,6 +273,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 reconfigure_entry, data=data
             )
 
+        if self.source == config_entries.SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
+            return self.async_update_reload_and_abort(reauth_entry, data=data)
+
         existing_entry = await self.async_set_unique_id(
             dr.format_mac(self._meta.mac_address)
         )

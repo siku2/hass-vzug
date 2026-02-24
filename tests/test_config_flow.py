@@ -351,6 +351,6 @@ async def test_step_reauth(
         {CONF_USERNAME: "new_admin", CONF_PASSWORD: "new_secret"},
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "update_success"
+    assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_secret"

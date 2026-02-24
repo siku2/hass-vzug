@@ -5,6 +5,7 @@
             "update_success": "Mise à jour réussie",
             "false_discovery": "Découverte fausse positive",
             "discovery_finished": "{count} appareil(s) découvert(s)",
+            "reauth_successful": "Ré-authentification réussie",
             "reconfigure_successful": "Reconfiguration réussie",
             "wrong_device": "Le nouvel hôte pointe vers un autre appareil"
         },
