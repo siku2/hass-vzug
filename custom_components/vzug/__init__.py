@@ -8,8 +8,10 @@ from homeassistant.helpers import entity_registry as er
 from yarl import URL
 
 from . import api
-from .const import CONF_BASE_URL, DOMAIN
+from .const import CONF_BASE_URL
 from .shared import Shared
+
+type VZugConfigEntry = ConfigEntry[Shared]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +25,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VZugConfigEntry) -> bool:
     """Set up V-ZUG from a config entry."""
     base_url = URL(entry.data[CONF_BASE_URL])
     try:
@@ -35,20 +37,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     shared = Shared(hass, base_url, credentials)
     await shared.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = shared
+    entry.runtime_data = shared
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VZugConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        shared: Shared
-        if shared := hass.data[DOMAIN].pop(entry.entry_id):
-            await shared.async_shutdown()
+        await entry.runtime_data.async_shutdown()
 
     return unload_ok
 

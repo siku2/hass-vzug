@@ -1,20 +1,25 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .helpers import UserConfigEntity
 from .shared import Shared
+
+if TYPE_CHECKING:
+    from . import VZugConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
 
     entities: list[ButtonEntity] = []
     if shared.meta.supports_update_status():
