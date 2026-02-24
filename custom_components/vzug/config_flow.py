@@ -32,6 +32,7 @@ _DISCOVERY_TIMEOUT = 3.0
 ABORT_UPDATE_SUCCESS = "update_success"
 ABORT_FALSE_DISCOVERY = "false_discovery"
 ABORT_DISCOVERY_FINISHED = "discovery_finished"
+ABORT_WRONG_DEVICE = "wrong_device"
 
 ERR_AUTH_FAILED = "auth_failed"
 ERR_INVALID_HOST = "invalid_host"
@@ -97,6 +98,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                base_url = URL(user_input["host"])
+                if not base_url.is_absolute():
+                    base_url = URL(f"http://{base_url}")
+            except Exception:
+                errors[CONF_HOST] = ERR_INVALID_HOST
+            else:
+                self._base_url = base_url
+                if res := await self._check_device(
+                    needs_confirmation=False, errors=errors
+                ):
+                    return res
+
+        current_host = URL(reconfigure_entry.data[CONF_BASE_URL]).host or ""
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=current_host): str,
                 }
             ),
             errors=errors,
@@ -231,6 +263,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: self._password,
             CONF_BASE_URL: str(self._base_url),
         }
+
+        if self.source == config_entries.SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            new_mac = dr.format_mac(self._meta.mac_address)
+            if reconfigure_entry.unique_id and new_mac != reconfigure_entry.unique_id:
+                return self.async_abort(reason=ABORT_WRONG_DEVICE)
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data=data
+            )
+
         existing_entry = await self.async_set_unique_id(
             dr.format_mac(self._meta.mac_address)
         )

@@ -4,7 +4,9 @@
       "already_configured": "Gerät ist bereits konfiguriert",
       "update_success": "Update Erfolgreich",
       "false_discovery": "Falsch positive Entdeckung",
-      "discovery_finished": "{count} Gerät(e) entdeckt"
+      "discovery_finished": "{count} Gerät(e) entdeckt",
+      "reconfigure_successful": "Neukonfiguration erfolgreich",
+      "wrong_device": "Der neue Host verweist auf ein anderes Gerät"
     },
     "error": {
       "auth_failed": "Authentifizierung fehlgeschlagen",
@@ -32,6 +34,14 @@
         "data": {
           "username": "Nutzername",
           "password": "Passwort"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "Die IP-Adresse, der Host oder die Basis-URL des Geräts"
         }
       },
       "confirm": {

@@ -4,7 +4,9 @@
             "already_configured": "Le périphérique est déjà configuré",
             "update_success": "Mise à jour réussie",
             "false_discovery": "Découverte fausse positive",
-            "discovery_finished": "{count} appareil(s) découvert(s)"
+            "discovery_finished": "{count} appareil(s) découvert(s)",
+            "reconfigure_successful": "Reconfiguration réussie",
+            "wrong_device": "Le nouvel hôte pointe vers un autre appareil"
         },
         "error": {
             "auth_failed": "Échec de l'authentification",
@@ -32,6 +34,14 @@
                 "data": {
                     "username": "Nom d'utilisateur",
                     "password": "Mot de passe"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "host": "Nom d'hôte"
+                },
+                "data_description": {
+                    "host": "L'adresse IP, l'hôte ou l'URL de base de l'appareil"
                 }
             },
             "confirm": {
