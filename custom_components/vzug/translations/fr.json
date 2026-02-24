@@ -51,6 +51,14 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "door_fridge1": {
+                "name": "Porte du réfrigérateur"
+            },
+            "door_freezer1": {
+                "name": "Porte du congélateur"
+            }
+        },
         "button": {
             "check_update": {
                 "name": "Vérifier les Mises à Jour"
@@ -93,6 +101,54 @@
             },
             "status": {
                 "name": "État"
+            },
+            "door0_openings_today_amount": {
+                "name": "Ouvertures de porte aujourd'hui"
+            },
+            "door0_openings_today_duration": {
+                "name": "Durée porte ouverte aujourd'hui"
+            },
+            "door0_openings_7DayAvg_amount": {
+                "name": "Ouvertures de porte moyenne 7 jours"
+            },
+            "door0_openings_7DayAvg_duration": {
+                "name": "Durée porte ouverte moyenne 7 jours"
+            },
+            "door0_openings_30DayAvg_amount": {
+                "name": "Ouvertures de porte moyenne 30 jours"
+            },
+            "door0_openings_30DayAvg_duration": {
+                "name": "Durée porte ouverte moyenne 30 jours"
+            },
+            "door1_openings_today_amount": {
+                "name": "Ouvertures porte 2 aujourd'hui"
+            },
+            "door1_openings_today_duration": {
+                "name": "Durée porte 2 ouverte aujourd'hui"
+            },
+            "door1_openings_7DayAvg_amount": {
+                "name": "Ouvertures porte 2 moyenne 7 jours"
+            },
+            "door1_openings_7DayAvg_duration": {
+                "name": "Durée porte 2 ouverte moyenne 7 jours"
+            },
+            "door1_openings_30DayAvg_amount": {
+                "name": "Ouvertures porte 2 moyenne 30 jours"
+            },
+            "door1_openings_30DayAvg_duration": {
+                "name": "Durée porte 2 ouverte moyenne 30 jours"
+            },
+            "temperature_fridge1": {
+                "name": "Température réfrigérateur"
+            },
+            "temperature_set_fridge1": {
+                "name": "Température cible réfrigérateur"
+            },
+            "temperature_freezer1": {
+                "name": "Température congélateur"
+            },
+            "temperature_set_freezer1": {
+                "name": "Température cible congélateur"
             }
         },
         "update": {

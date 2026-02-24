@@ -28,6 +28,7 @@ def mock_agg_meta() -> api.AggMeta:
         device_name="Kitchen Dishwasher",
         serial_number="12345 678901",
         api_version=(1, 8, 0),
+        ai_api_version=(1, 8, 0),
     )
 
 
@@ -63,11 +64,18 @@ def mock_agg_config() -> api.AggConfig:
 
 
 @pytest.fixture
+def mock_agg_program_state() -> api.AggProgramState:
+    """Default: no zones (non-refrigerator device)."""
+    return api.AggProgramState(zones=[])
+
+
+@pytest.fixture
 def mock_vzug_api(
     mock_agg_meta: api.AggMeta,
     mock_agg_state: api.AggState,
     mock_agg_update_status: api.AggUpdateStatus,
     mock_agg_config: api.AggConfig,
+    mock_agg_program_state: api.AggProgramState,
 ) -> AsyncMock:
     """Patch VZugApi constructor to return a pre-configured AsyncMock."""
     mock_client = AsyncMock(spec=api.VZugApi)
@@ -75,6 +83,7 @@ def mock_vzug_api(
     mock_client.aggregate_state.return_value = mock_agg_state
     mock_client.aggregate_update_status.return_value = mock_agg_update_status
     mock_client.aggregate_config.return_value = mock_agg_config
+    mock_client.aggregate_program.return_value = mock_agg_program_state
     mock_client.base_url = "http://192.168.1.100"
 
     with patch(

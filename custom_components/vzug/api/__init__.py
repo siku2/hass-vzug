@@ -121,9 +121,15 @@ class EcoInfoMetric(TypedDict, total=False):
     option: float  # sent by adorawash for water, no idea what it is
 
 
+class DoorOpeningPeriod(TypedDict, total=False):
+    duration: int
+    amount: int
+
+
 class EcoInfo(TypedDict, total=False):
     water: EcoInfoMetric
     energy: EcoInfoMetric
+    doorOpenings: dict[str, dict[str, DoorOpeningPeriod]]
 
 
 class Category(TypedDict, total=False):
@@ -184,6 +190,26 @@ class Program:
         return Program(info=cast(ProgramInfo, info), options=options)
 
 
+class ZoneTemp(TypedDict, total=False):
+    set: float
+    act: float
+    min: float
+    max: float
+
+
+class ZoneProgram(TypedDict, total=False):
+    id: int
+    status: str
+    temp: ZoneTemp
+    doorClosed: bool
+    zone: str
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class AggProgramState:
+    zones: list[ZoneProgram]
+
+
 @dataclasses.dataclass(slots=True, kw_only=True)
 class AggState:
     zh_mode: int
@@ -208,6 +234,7 @@ class AggMeta:
     device_name: str
     serial_number: str
     api_version: tuple[int, ...]
+    ai_api_version: tuple[int, ...]
 
     def create_name(self) -> str:
         if name := self.device_name.strip():
@@ -221,7 +248,7 @@ class AggMeta:
         return f"{name} ({self.serial_number})"
 
     def supports_update_status(self) -> bool:
-        return self.api_version >= (1, 7, 0)
+        return self.ai_api_version >= (1, 7, 0)
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -423,6 +450,9 @@ class VZugApi:
             else:
                 raise
 
+        raw_ai_api_version = ai_firmware.get("apiVersion", "")
+        ai_api_version = tuple(map(int, raw_ai_api_version.split(".")))
+
         if device_info:
             raw_api_version = device_info.get("apiVersion", "")
             hh_api_version = tuple(map(int, (raw_api_version.split("."))))
@@ -434,11 +464,9 @@ class VZugApi:
                 device_name=device_info.get("name", ""),
                 serial_number=device_info.get("serialNumber", ""),
                 api_version=hh_api_version,
+                ai_api_version=ai_api_version,
             )
         else:
-            raw_api_version = ai_firmware.get("apiVersion", "")
-            ai_api_version = tuple(map(int, (raw_api_version.split("."))))
-
             return AggMeta(
                 mac_address=mac_address,
                 model_id="",
@@ -446,6 +474,7 @@ class VZugApi:
                 device_name=device_status.get("DeviceName", ""),
                 serial_number=device_status.get("Serial", ""),
                 api_version=ai_api_version,
+                ai_api_version=ai_api_version,
             )
 
     async def aggregate_config(self) -> AggConfig:
@@ -609,9 +638,10 @@ class VZugApi:
         water_total = result.get("water", {}).get("total", 0)
         energy_total = result.get("energy", {}).get("total", 0)
 
-        # If both water and energy totals are 0, we return an empty EcoInfo
+        # If both water and energy totals are 0, and there are no doorOpenings,
+        # we return an empty EcoInfo.
         # This is to handle cases where the API returns 0s for both metrics
-        if water_total == 0 and energy_total == 0:
+        if water_total == 0 and energy_total == 0 and "doorOpenings" not in result:
             return EcoInfo()
 
         return result
@@ -626,16 +656,28 @@ class VZugApi:
             value_on_err=(lambda: DeviceInfo()) if default_on_error else None,
         )
 
-    async def get_program(self) -> list[Program]:
-        # TODO: this is interesting but what can we do with it??
-        # [{"id":52,"name":"Alltag Kurz","status":"selected","starttime":{"min":0,"max":86400,"step":600},"duration":{"set":2460}, "energySaving":{"set":false,"options":[true,false]},"optiStart":{"set":false},"steamfinish":{"set":false,"options":[true,false]},"partialload":{"set":false,"options":[true,false]},"rinsePlus":{"set":false,"options":[true,false]},"dryPlus":{"set":false,"options":[true,false]},"stepIds":[82,81,82,79,78,76,73,74,75,72,71,70]}]
-        # [{"id":50,"name":"Eco",        "status":"selected","starttime":{"min":0,"max":86400,"step":600},"duration":{"set":22440},"energySaving":{"set":false,"options":[true,false]},"optiStart":{"set":false},"steamfinish":{"set":true, "options":[true,false]},"partialload":{"set":false,"options":[true,false]},"rinsePlus":{"set":false,"options":[true,false]},"dryPlus":{"set":false,"options":[true,false]},"stepIds":[79,81,79,78,74,75,72,70]}]
-        raw_programs: list[dict[str, Any]] = await self._command(
+    async def get_program(self) -> list[dict[str, Any]]:
+        return await self._command(
             "hh",
             command="getProgram",
             expected_type=list,
         )
-        return [Program.build(raw) for raw in raw_programs]
+
+    async def aggregate_program(
+        self, *, default_on_error: bool = False
+    ) -> AggProgramState:
+        raw_programs = await self._command(
+            "hh",
+            command="getProgram",
+            expected_type=list,
+            value_on_err=(lambda: []) if default_on_error else None,
+        )
+        zones: list[ZoneProgram] = [
+            cast(ZoneProgram, z)
+            for z in raw_programs
+            if "zone" in z
+        ]
+        return AggProgramState(zones=zones)
 
     async def set_program(
         self, program_id: int, options: dict[str, Any] | None = None

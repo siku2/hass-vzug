@@ -51,6 +51,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door_fridge1": {
+        "name": "Kühlschranktür"
+      },
+      "door_freezer1": {
+        "name": "Gefrierfachtür"
+      }
+    },
     "button": {
       "check_update": {
         "name": "Nach Updates Suchen"
@@ -93,6 +101,54 @@
       },
       "status": {
         "name": "Zustand"
+      },
+      "door0_openings_today_amount": {
+        "name": "Türöffnungen Heute"
+      },
+      "door0_openings_today_duration": {
+        "name": "Tür Offen Dauer Heute"
+      },
+      "door0_openings_7DayAvg_amount": {
+        "name": "Türöffnungen 7-Tage-Durchschnitt"
+      },
+      "door0_openings_7DayAvg_duration": {
+        "name": "Tür Offen Dauer 7-Tage-Durchschnitt"
+      },
+      "door0_openings_30DayAvg_amount": {
+        "name": "Türöffnungen 30-Tage-Durchschnitt"
+      },
+      "door0_openings_30DayAvg_duration": {
+        "name": "Tür Offen Dauer 30-Tage-Durchschnitt"
+      },
+      "door1_openings_today_amount": {
+        "name": "Tür 2 Öffnungen Heute"
+      },
+      "door1_openings_today_duration": {
+        "name": "Tür 2 Offen Dauer Heute"
+      },
+      "door1_openings_7DayAvg_amount": {
+        "name": "Tür 2 Öffnungen 7-Tage-Durchschnitt"
+      },
+      "door1_openings_7DayAvg_duration": {
+        "name": "Tür 2 Offen Dauer 7-Tage-Durchschnitt"
+      },
+      "door1_openings_30DayAvg_amount": {
+        "name": "Tür 2 Öffnungen 30-Tage-Durchschnitt"
+      },
+      "door1_openings_30DayAvg_duration": {
+        "name": "Tür 2 Offen Dauer 30-Tage-Durchschnitt"
+      },
+      "temperature_fridge1": {
+        "name": "Kühlschranktemperatur"
+      },
+      "temperature_set_fridge1": {
+        "name": "Kühlschrank Solltemperatur"
+      },
+      "temperature_freezer1": {
+        "name": "Gefriertemperatur"
+      },
+      "temperature_set_freezer1": {
+        "name": "Gefrierfach Solltemperatur"
       }
     },
     "update": {

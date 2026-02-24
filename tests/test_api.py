@@ -86,6 +86,83 @@ async def test_get_eco_info_incomplete_data(vzug_api):
 
 
 @pytest.mark.asyncio
+async def test_get_eco_info_with_door_openings(vzug_api):
+    """Test get_eco_info with door openings data (refrigerator)."""
+    mock_response = {
+        "doorOpenings": {
+            "door0": {
+                "today": {"duration": 554, "amount": 20},
+                "7DayAvg": {"duration": 233, "amount": 17},
+                "30DayAvg": {"duration": 245, "amount": 19},
+            },
+            "door1": {
+                "today": {"duration": 60, "amount": 3},
+                "7DayAvg": {"duration": 7, "amount": 1},
+                "30DayAvg": {"duration": 8, "amount": 1},
+            },
+        }
+    }
+
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        mock_command.return_value = mock_response
+
+        result = await vzug_api.get_eco_info()
+
+        # Should NOT be discarded even though water/energy totals are 0
+        assert "doorOpenings" in result
+        assert result["doorOpenings"]["door0"]["today"]["amount"] == 20
+
+
+@pytest.mark.asyncio
+async def test_aggregate_program_filters_zones(vzug_api):
+    """Test aggregate_program only returns items with 'zone' key."""
+    mock_response = [
+        {"id": 2000, "status": "active", "temp": {"set": 5.0, "act": 5.0}, "doorClosed": True, "zone": "fridge1"},
+        {"id": 2001, "status": "active", "temp": {"set": -18.0, "act": -18.0}, "doorClosed": True, "zone": "freezer1"},
+        {"status": "idle", "duration": {"min": 0, "max": 35700}, "zone": "countdown1"},
+    ]
+
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        mock_command.return_value = mock_response
+
+        result = await vzug_api.aggregate_program()
+
+        assert len(result.zones) == 3
+        assert result.zones[0]["zone"] == "fridge1"
+        assert result.zones[1]["zone"] == "freezer1"
+
+
+@pytest.mark.asyncio
+async def test_supports_update_status_uses_ai_version():
+    """Test supports_update_status uses AI API version, not HH."""
+    from custom_components.vzug.api import AggMeta
+
+    # KS case: HH=1.6.0, AI=1.8.0 → should support updates
+    meta_ks = AggMeta(
+        mac_address="AA:BB:CC:DD:EE:FF",
+        model_id="CCO4T",
+        model_name="CombiCooler V4000",
+        device_name="Refrigerator",
+        serial_number="51108 116207",
+        api_version=(1, 6, 0),
+        ai_api_version=(1, 8, 0),
+    )
+    assert meta_ks.supports_update_status() is True
+
+    # Old device: HH=1.5.0, AI=1.5.0 → should not support updates
+    meta_old = AggMeta(
+        mac_address="AA:BB:CC:DD:EE:FF",
+        model_id="OLD",
+        model_name="Old Device",
+        device_name="Old",
+        serial_number="00000 000000",
+        api_version=(1, 5, 0),
+        ai_api_version=(1, 5, 0),
+    )
+    assert meta_old.supports_update_status() is False
+
+
+@pytest.mark.asyncio
 async def test_json_repair_with_valid_json(vzug_api):
     """Test that valid JSON is processed normally without repair."""
     valid_json = '{"status": "idle", "value": 123}'

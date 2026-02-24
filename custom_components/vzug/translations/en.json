@@ -68,6 +68,14 @@
         }
     },
     "entity": {
+        "binary_sensor": {
+            "door_fridge1": {
+                "name": "Fridge Door"
+            },
+            "door_freezer1": {
+                "name": "Freezer Door"
+            }
+        },
         "button": {
             "check_update": {
                 "name": "Check for Updates"
@@ -110,6 +118,54 @@
             },
             "status": {
                 "name": "Status"
+            },
+            "door0_openings_today_amount": {
+                "name": "Door Openings Today"
+            },
+            "door0_openings_today_duration": {
+                "name": "Door Open Duration Today"
+            },
+            "door0_openings_7DayAvg_amount": {
+                "name": "Door Openings 7-Day Average"
+            },
+            "door0_openings_7DayAvg_duration": {
+                "name": "Door Open Duration 7-Day Average"
+            },
+            "door0_openings_30DayAvg_amount": {
+                "name": "Door Openings 30-Day Average"
+            },
+            "door0_openings_30DayAvg_duration": {
+                "name": "Door Open Duration 30-Day Average"
+            },
+            "door1_openings_today_amount": {
+                "name": "Door 2 Openings Today"
+            },
+            "door1_openings_today_duration": {
+                "name": "Door 2 Open Duration Today"
+            },
+            "door1_openings_7DayAvg_amount": {
+                "name": "Door 2 Openings 7-Day Average"
+            },
+            "door1_openings_7DayAvg_duration": {
+                "name": "Door 2 Open Duration 7-Day Average"
+            },
+            "door1_openings_30DayAvg_amount": {
+                "name": "Door 2 Openings 30-Day Average"
+            },
+            "door1_openings_30DayAvg_duration": {
+                "name": "Door 2 Open Duration 30-Day Average"
+            },
+            "temperature_fridge1": {
+                "name": "Fridge Temperature"
+            },
+            "temperature_set_fridge1": {
+                "name": "Fridge Set Temperature"
+            },
+            "temperature_freezer1": {
+                "name": "Freezer Temperature"
+            },
+            "temperature_set_freezer1": {
+                "name": "Freezer Set Temperature"
             }
         },
         "update": {

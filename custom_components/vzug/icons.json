@@ -1,12 +1,32 @@
 {
   "entity": {
+    "binary_sensor": {
+      "door_fridge1": { "default": "mdi:fridge" },
+      "door_freezer1": { "default": "mdi:fridge-bottom" }
+    },
     "sensor": {
       "water_average": { "default": "mdi:water" },
       "energy_average": { "default": "mdi:lightning-bolt" },
       "last_notification": { "default": "mdi:bell" },
       "program": { "default": "mdi:play-circle" },
       "program_end_raw": { "default": "mdi:clock-end" },
-      "status": { "default": "mdi:information" }
+      "status": { "default": "mdi:information" },
+      "door0_openings_today_amount": { "default": "mdi:door-open" },
+      "door0_openings_today_duration": { "default": "mdi:door-open" },
+      "door0_openings_7DayAvg_amount": { "default": "mdi:door-open" },
+      "door0_openings_7DayAvg_duration": { "default": "mdi:door-open" },
+      "door0_openings_30DayAvg_amount": { "default": "mdi:door-open" },
+      "door0_openings_30DayAvg_duration": { "default": "mdi:door-open" },
+      "door1_openings_today_amount": { "default": "mdi:door-open" },
+      "door1_openings_today_duration": { "default": "mdi:door-open" },
+      "door1_openings_7DayAvg_amount": { "default": "mdi:door-open" },
+      "door1_openings_7DayAvg_duration": { "default": "mdi:door-open" },
+      "door1_openings_30DayAvg_amount": { "default": "mdi:door-open" },
+      "door1_openings_30DayAvg_duration": { "default": "mdi:door-open" },
+      "temperature_fridge1": { "default": "mdi:thermometer" },
+      "temperature_set_fridge1": { "default": "mdi:thermometer" },
+      "temperature_freezer1": { "default": "mdi:snowflake-thermometer" },
+      "temperature_set_freezer1": { "default": "mdi:snowflake-thermometer" }
     }
   }
 }

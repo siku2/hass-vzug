@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api
-from .coordinator import Shared, StateCoordinator
+from .coordinator import ProgramCoordinator, Shared, StateCoordinator
 from .entity import UserConfigEntity
 
 if TYPE_CHECKING:
@@ -116,6 +116,33 @@ async def async_setup_entry(
         if category not in shared.state_coord.data.eco_info:
             continue
         entities.append(Eco(shared, desc, category=category, field=field))
+
+    for door_key, door_data in (
+        shared.state_coord.data.eco_info.get("doorOpenings") or {}
+    ).items():
+        for period, period_data in door_data.items():
+            for field in ("amount", "duration"):
+                if field not in period_data:
+                    continue
+                entities.append(
+                    DoorOpeningEco(
+                        shared,
+                        door_key=door_key,
+                        period=period,
+                        field=field,
+                    )
+                )
+
+    if shared.program_coord is not None:
+        for zone in shared.program_coord.data.zones:
+            zone_name = zone.get("zone", "")
+            if "temp" in zone:
+                entities.append(
+                    ZoneTemperature(shared, zone_name=zone_name, field="act")
+                )
+                entities.append(
+                    ZoneTemperature(shared, zone_name=zone_name, field="set")
+                )
 
     async_add_entities(entities)
 
@@ -276,6 +303,88 @@ class LastNotification(StateBase):
             last_notification_date = None
 
         return {"timestamp": last_notification_date}
+
+
+_DOOR_OPENING_PERIOD_ENABLED: dict[str, bool] = {
+    "today": True,
+    "7DayAvg": False,
+    "30DayAvg": False,
+}
+
+
+class DoorOpeningEco(StateBase):
+    def __init__(
+        self,
+        shared: Shared,
+        *,
+        door_key: str,
+        period: str,
+        field: str,
+    ) -> None:
+        self._attr_translation_key = f"{door_key}_openings_{period}_{field}"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_entity_registry_enabled_default = _DOOR_OPENING_PERIOD_ENABLED.get(
+            period, False
+        )
+        if field == "duration":
+            self._attr_device_class = SensorDeviceClass.DURATION
+            self._attr_native_unit_of_measurement = "s"
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+        super().__init__(shared)
+        self.vzug_door_key = door_key
+        self.vzug_period = period
+        self.vzug_field = field
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        try:
+            return self.coordinator.data.eco_info["doorOpenings"][self.vzug_door_key][
+                self.vzug_period
+            ][self.vzug_field]
+        except (LookupError, TypeError):
+            return None
+
+
+class ZoneTemperature(SensorEntity, CoordinatorEntity[ProgramCoordinator]):
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = "°C"
+
+    def __init__(
+        self,
+        shared: Shared,
+        *,
+        zone_name: str,
+        field: str,
+    ) -> None:
+        assert shared.program_coord is not None
+        super().__init__(shared.program_coord)
+        self.shared = shared
+        self.vzug_zone_name = zone_name
+        self.vzug_field = field
+
+        if field == "set":
+            self._attr_translation_key = f"temperature_set_{zone_name}"
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        else:
+            self._attr_translation_key = f"temperature_{zone_name}"
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+
+        self._attr_unique_id = (
+            f"{shared.unique_id_prefix}-sensor-{self.translation_key}"
+        )
+        self._attr_device_info = shared.device_info
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        for zone in self.coordinator.data.zones:
+            if zone.get("zone") == self.vzug_zone_name:
+                try:
+                    return zone["temp"][self.vzug_field]
+                except (LookupError, TypeError):
+                    return None
+        return None
 
 
 class UserConfigSensor(SensorEntity, UserConfigEntity):

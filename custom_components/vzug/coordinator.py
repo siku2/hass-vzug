@@ -67,6 +67,25 @@ class UpdateCoordinator(DataUpdateCoordinator[api.AggUpdateStatus]):
         return data
 
 
+class ProgramCoordinator(DataUpdateCoordinator[api.AggProgramState]):
+    def __init__(self, shared: Shared, config_entry: ConfigEntry) -> None:
+        super().__init__(
+            shared.hass,
+            _LOGGER,
+            name="program",
+            update_interval=timedelta(seconds=60),
+            config_entry=config_entry,
+            always_update=False,
+        )
+        self.shared = shared
+
+    async def _async_update_data(self) -> api.AggProgramState:
+        async with detect_auth_failed():
+            return await self.shared.client.aggregate_program(
+                default_on_error=True,
+            )
+
+
 class ConfigCoordinator(DataUpdateCoordinator[api.AggConfig]):
     def __init__(self, shared: Shared, config_entry: ConfigEntry) -> None:
         super().__init__(
@@ -91,6 +110,7 @@ class Shared:
     state_coord: StateCoordinator
     update_coord: UpdateCoordinator
     config_coord: ConfigCoordinator
+    program_coord: ProgramCoordinator | None
 
     unique_id_prefix: str
     meta: api.AggMeta
@@ -126,6 +146,8 @@ class Shared:
         self.unique_id_prefix = ""
         self.device_info = DeviceInfo()
         self._first_refresh_done = False
+        self.program_coord = None
+        self._config_entry = config_entry
 
         self.state_coord = StateCoordinator(self, config_entry)
         self.update_coord = UpdateCoordinator(self, config_entry)
@@ -149,6 +171,8 @@ class Shared:
         await self.state_coord.async_shutdown()
         await self.update_coord.async_shutdown()
         await self.config_coord.async_shutdown()
+        if self.program_coord is not None:
+            await self.program_coord.async_shutdown()
 
     async def _post_first_refresh(self) -> None:
         mac_addr = dr.format_mac(self.meta.mac_address)
@@ -169,6 +193,21 @@ class Shared:
                 model=self.meta.model_name,
             )
         )
+
+        # Conditionally start ProgramCoordinator for devices with zone data
+        try:
+            program_state = await self.client.aggregate_program()
+            has_zone_data = any(
+                "temp" in zone or "doorClosed" in zone
+                for zone in program_state.zones
+            )
+        except Exception:
+            _LOGGER.debug("device does not support program zones", exc_info=True)
+            has_zone_data = False
+
+        if has_zone_data:
+            self.program_coord = ProgramCoordinator(self, self._config_entry)
+            await self.program_coord.async_config_entry_first_refresh()
 
         self._first_refresh_done = True
 

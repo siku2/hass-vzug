@@ -186,5 +186,6 @@ aggregate_meta = api.AggMeta(
     device_name="",
     serial_number="40695 200742",
     api_version=(1, 11, 0),
+    ai_api_version=(1, 11, 0),
 )
 

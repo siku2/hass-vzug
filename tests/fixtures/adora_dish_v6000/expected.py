@@ -108,4 +108,5 @@ aggregate_meta = api.AggMeta(
     device_name="Adora SL",
     serial_number="46126 182263",
     api_version=(1, 8, 0),
+    ai_api_version=(1, 8, 0),
 )
