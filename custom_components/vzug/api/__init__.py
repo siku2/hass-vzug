@@ -241,12 +241,48 @@ class AggState:
     eco_info: EcoInfo
     hh_device_status: HhDeviceStatus
 
+    def to_cache(self) -> dict:
+        return {
+            "zh_mode": self.zh_mode,
+            "device": dict(self.device),
+            "device_fetched_at": self.device_fetched_at.isoformat(),
+            "notifications": [dict(n) for n in self.notifications],
+            "eco_info": dict(self.eco_info),
+            "hh_device_status": dict(self.hh_device_status),
+        }
+
+    @classmethod
+    def from_cache(cls, data: dict) -> "AggState":
+        return cls(
+            zh_mode=data["zh_mode"],
+            device=DeviceStatus(**data["device"]),
+            device_fetched_at=datetime.fromisoformat(data["device_fetched_at"]),
+            notifications=[PushNotification(**n) for n in data["notifications"]],
+            eco_info=EcoInfo(**data["eco_info"]),
+            hh_device_status=HhDeviceStatus(**data["hh_device_status"]),
+        )
+
 
 @dataclasses.dataclass(slots=True, kw_only=True)
 class AggUpdateStatus:
     update: UpdateStatus
     ai_fw_version: AiFwVersion
     hh_fw_version: HhFwVersion
+
+    def to_cache(self) -> dict:
+        return {
+            "update": dict(self.update),
+            "ai_fw_version": dict(self.ai_fw_version),
+            "hh_fw_version": dict(self.hh_fw_version),
+        }
+
+    @classmethod
+    def from_cache(cls, data: dict) -> "AggUpdateStatus":
+        return cls(
+            update=UpdateStatus(**data["update"]),
+            ai_fw_version=AiFwVersion(**data["ai_fw_version"]),
+            hh_fw_version=HhFwVersion(**data["hh_fw_version"]),
+        )
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -284,6 +320,28 @@ class AggCategory:
 AggConfig = dict[str, AggCategory]
 
 
+def agg_config_to_cache(config: AggConfig) -> dict:
+    return {
+        key: {
+            "key": cat.key,
+            "description": cat.description,
+            "commands": {ck: dict(cv) for ck, cv in cat.commands.items()},
+        }
+        for key, cat in config.items()
+    }
+
+
+def agg_config_from_cache(data: dict) -> AggConfig:
+    return {
+        key: AggCategory(
+            key=cat["key"],
+            description=cat["description"],
+            commands={ck: Command(**cv) for ck, cv in cat["commands"].items()},
+        )
+        for key, cat in data.items()
+    }
+
+
 @dataclasses.dataclass(kw_only=True, slots=True)
 class Credentials:
     username: str
@@ -313,8 +371,8 @@ class VZugApi:
         raw: bool = False,
         expected_type: Any = None,
         reject_empty: bool = False,
-        attempts: int = 5,
-        retry_delay: float = 2.0,
+        attempts: int = 3,
+        retry_delay: float = 1.0,
         value_on_err: Callable[[], Any] | None = None,
     ) -> Any:
         if params is None:
@@ -509,27 +567,32 @@ class VZugApi:
 
     async def aggregate_config(self) -> AggConfig:
         category_keys = await self.list_categories()
-        config_tree: AggConfig = {}
-        for category_key in category_keys:
+
+        async def _fetch_category(
+            category_key: str,
+        ) -> tuple[str, AggCategory]:
             category_raw, command_keys = await asyncio.gather(
                 self.get_category(category_key),
                 self.list_commands(category_key),
             )
-            category = AggCategory(
-                key=category_key,
-                description=category_raw.get("description", ""),
-                commands={},
-            )
+            commands: dict[str, Command] = {}
 
-            async def handle_command_key(command_key: str) -> None:
-                command_raw = await self.get_command(command_key)
-                category.commands[command_key] = command_raw
+            async def _fetch_command(command_key: str) -> None:
+                commands[command_key] = await self.get_command(command_key)
 
             await asyncio.gather(
-                *(handle_command_key(command_key) for command_key in command_keys)
+                *(_fetch_command(ck) for ck in command_keys)
             )
-            config_tree[category_key] = category
-        return config_tree
+            return category_key, AggCategory(
+                key=category_key,
+                description=category_raw.get("description", ""),
+                commands=commands,
+            )
+
+        results = await asyncio.gather(
+            *(_fetch_category(k) for k in category_keys)
+        )
+        return {key: cat for key, cat in results}
 
     async def get_mac_address(self, *, default_on_error: bool = False) -> str:
         return await self._command(
