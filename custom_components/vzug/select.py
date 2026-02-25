@@ -8,6 +8,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import api
 from .const import DOMAIN
 from .coordinator import Shared, StateCoordinator
 from .entity import UserConfigEntity
@@ -106,6 +107,10 @@ class ProgramSelect(SelectEntity, CoordinatorEntity[StateCoordinator]):
                 return name
         except (ValueError, TypeError):
             pass
+        # Try translated firmware text (e.g. German → English)
+        translated = api.translate_device_text(current_program)
+        if translated in self._name_to_id:
+            return translated
         return None
 
     async def async_select_option(self, option: str) -> None:

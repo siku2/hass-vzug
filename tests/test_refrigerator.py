@@ -307,3 +307,33 @@ async def test_has_errors_on_refrigerator(
     state = hass.states.get("binary_sensor.kitchen_refrigerator_has_errors")
     assert state is not None
     assert state.state == "off"
+
+
+async def test_refrigerator_program_translates_german(
+    hass: HomeAssistant,
+    mock_vzug_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_agg_state: api.AggState,
+) -> None:
+    """Test fridge program sensor translates Normalbetrieb → Normal Operation."""
+    mock_agg_state.device = api.DeviceStatus(
+        DeviceName="Kitchen Refrigerator",
+        Serial="51108 116207",
+        Inactive="true",
+        Program="Normalbetrieb",
+        Status="Temperatureinstellung: 5 °C | -18 °C",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Program sensor: German → English
+    state = hass.states.get("sensor.kitchen_refrigerator_program")
+    assert state is not None
+    assert state.state == "Normal Operation"
+
+    # Status sensor: German prefix translated
+    state = hass.states.get("sensor.kitchen_refrigerator_status")
+    assert state is not None
+    assert state.state == "Temperature: 5 °C | -18 °C"

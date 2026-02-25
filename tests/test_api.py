@@ -282,3 +282,34 @@ async def test_json_repair_with_real_broken_device_status():
 
         assert result is not None
         assert len(result) == 8
+
+
+def test_translate_device_text_known_german():
+    """Test translate_device_text maps known German firmware strings."""
+    from custom_components.vzug.api import translate_device_text
+
+    assert translate_device_text("Keine Betriebsart") == "No Operating Mode"
+    assert translate_device_text("Normalbetrieb") == "Normal Operation"
+    assert translate_device_text("Heissluft") == "Hot Air"
+    assert translate_device_text("Ober-/Unterhitze") == "Top/Bottom Heat"
+    assert translate_device_text("Tellerwärmer") == "Plate Warmer"
+
+
+def test_translate_device_text_unknown_passthrough():
+    """Test translate_device_text passes through unknown strings unchanged."""
+    from custom_components.vzug.api import translate_device_text
+
+    assert translate_device_text("Eco") == "Eco"
+    assert translate_device_text("Some Unknown Text") == "Some Unknown Text"
+    assert translate_device_text("") == ""
+
+
+def test_translate_status_text():
+    """Test translate_status_text replaces known German patterns."""
+    from custom_components.vzug.api import translate_status_text
+
+    assert translate_status_text("Temperatureinstellung: 5 °C | -18 °C") == (
+        "Temperature: 5 °C | -18 °C"
+    )
+    # Unknown patterns pass through
+    assert translate_status_text("Some other status") == "Some other status"

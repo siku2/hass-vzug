@@ -180,11 +180,20 @@ class Program(StateBase):
     def native_value(self) -> StateType | date | datetime | Decimal:
         device = self.coordinator.data.device
         if program := device.get("Program"):
-            # Resolve numeric program IDs to human-readable names
+            # 1. Resolve numeric program IDs to human-readable names
             try:
                 return api.PROGRAM_NAMES.get(int(program), program)
             except (ValueError, TypeError):
-                return program
+                pass
+            # 2. Try active zone program ID (e.g. oven cooking chamber)
+            if self.shared.program_coord is not None:
+                for zone in self.shared.program_coord.data.zones:
+                    if zone.get("status") == "active" and "id" in zone:
+                        name = api.PROGRAM_NAMES.get(zone["id"])
+                        if name:
+                            return name
+            # 3. Translate known firmware text (e.g. German → English)
+            return api.translate_device_text(program)
         elif device.get("Inactive") == "true":
             return "standby"
         else:
@@ -271,8 +280,10 @@ class Status(StateBase):
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        # 'or None' so we don't display empty strings
-        return self.coordinator.data.device.get("Status") or None
+        status = self.coordinator.data.device.get("Status")
+        if not status:
+            return None
+        return api.translate_status_text(status.strip())
 
 
 class Eco(StateBase):

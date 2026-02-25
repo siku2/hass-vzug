@@ -818,5 +818,46 @@ _SELECTABLE_PROGRAM_IDS = frozenset(
     pid for pid in PROGRAM_NAMES if 50 <= pid <= 95
 )
 
+# German device firmware text → English translation.
+# The device API returns status strings in the appliance's display language.
+# There is no API to change it; these are best-effort client-side translations.
+DEVICE_TEXT_DE_EN: dict[str, str] = {
+    # Common device status strings
+    "Keine Betriebsart": "No Operating Mode",
+    "Normalbetrieb": "Normal Operation",
+    # Oven (BO) program names (from V-ZUG product documentation)
+    "Heissluft": "Hot Air",
+    "Heissluft feucht": "Hot Air Humid",
+    "Ober-/Unterhitze": "Top/Bottom Heat",
+    "Ober-/Unterhitze feucht": "Top/Bottom Heat Humid",
+    "Unterhitze": "Bottom Heat",
+    "Umluftgrillen": "Grill Forced Convection",
+    "Warmhalten": "Hold Temperature",
+    "Heissluft Eco": "Hot Air Eco",
+    "Ober-/Unterhitze Eco": "Top/Bottom Heat Eco",
+    "Tellerwärmer": "Plate Warmer",
+}
+
+# German status field prefix translations (for regex-based replacement).
+_STATUS_TRANSLATIONS_DE_EN: dict[str, str] = {
+    "Temperatureinstellung": "Temperature",
+}
+
+
+def translate_device_text(text: str) -> str:
+    """Translate known German device firmware text to English.
+
+    Returns the original text if no translation is found.
+    """
+    return DEVICE_TEXT_DE_EN.get(text, text)
+
+
+def translate_status_text(text: str) -> str:
+    """Translate known German status field patterns to English."""
+    for de, en in _STATUS_TRANSLATIONS_DE_EN.items():
+        if de in text:
+            text = text.replace(de, en)
+    return text
+
 
 class AuthenticationFailed(Exception): ...

@@ -262,3 +262,64 @@ async def test_oven_no_zone_features_when_absent(
 
     # Door should still exist
     assert hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_door") is not None
+
+
+async def test_oven_program_sensor_translates_german(
+    hass: HomeAssistant,
+    mock_vzug_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_agg_state: api.AggState,
+) -> None:
+    """Test program sensor translates German firmware text to English."""
+    mock_agg_state.device = api.DeviceStatus(
+        DeviceName="Kitchen Oven",
+        Serial="99999 123456",
+        Inactive="true",
+        Program="Keine Betriebsart",
+        Status="",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.kitchen_oven_program")
+    assert state is not None
+    assert state.state == "No Operating Mode"
+
+
+async def test_oven_program_sensor_resolves_active_zone_id(
+    hass: HomeAssistant,
+    mock_vzug_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_agg_state: api.AggState,
+    mock_agg_program_state: api.AggProgramState,
+) -> None:
+    """Test program sensor resolves active zone program ID to English name."""
+    # Oven is running Hot Air (program ID 4) but firmware returns German
+    mock_agg_state.device = api.DeviceStatus(
+        DeviceName="Kitchen Oven",
+        Serial="99999 123456",
+        Inactive="false",
+        Program="Heissluft",
+        Status="",
+    )
+    mock_agg_program_state.zones = [
+        api.ZoneProgram(
+            id=4,
+            status="active",
+            zone="cookingChamber1",
+            temp=api.ZoneTemp(set=200.0, act=175.0, min=30.0, max=300.0),
+            doorClosed=True,
+        ),
+    ]
+    mock_vzug_api.aggregate_program.return_value = mock_agg_program_state
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.kitchen_oven_program")
+    assert state is not None
+    # Should resolve program ID 4 → "Hot Air" via PROGRAM_NAMES, not "Heissluft"
+    assert state.state == "Hot Air"
