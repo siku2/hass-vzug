@@ -227,6 +227,7 @@ _RE_END_DURATON = re.compile(r"(?P<hours>\d+)[h](?P<minutes>\d+)", re.IGNORECASE
 class ProgramEnd(ProgramEndRaw):
     _attr_translation_key = "program_end"
     _attr_entity_category = None
+    _attr_entity_registry_enabled_default = True
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, shared: Shared) -> None:
