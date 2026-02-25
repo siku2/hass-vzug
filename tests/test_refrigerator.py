@@ -6,12 +6,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vzug import api
 from custom_components.vzug.const import CONF_BASE_URL, DOMAIN
-from custom_components.vzug.coordinator import Shared
 
 
 @pytest.fixture
@@ -163,23 +161,17 @@ async def test_door_opening_sensors_created(
     await hass.async_block_till_done()
 
     # door0 today amount (translation name: "Door Openings Today")
-    state = hass.states.get(
-        "sensor.kitchen_refrigerator_door_openings_today"
-    )
+    state = hass.states.get("sensor.kitchen_refrigerator_door_openings_today")
     assert state is not None
     assert state.state == "20"
 
     # door0 today duration (translation name: "Door Open Duration Today")
-    state = hass.states.get(
-        "sensor.kitchen_refrigerator_door_open_duration_today"
-    )
+    state = hass.states.get("sensor.kitchen_refrigerator_door_open_duration_today")
     assert state is not None
     assert state.state == "554"
 
     # door1 today amount (translation name: "Door 2 Openings Today")
-    state = hass.states.get(
-        "sensor.kitchen_refrigerator_door_2_openings_today"
-    )
+    state = hass.states.get("sensor.kitchen_refrigerator_door_2_openings_today")
     assert state is not None
     assert state.state == "3"
 

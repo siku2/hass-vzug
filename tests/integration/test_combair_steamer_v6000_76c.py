@@ -1,5 +1,6 @@
 import httpx
 import pytest
+
 import custom_components.vzug.api as api
 import tests.fixtures.combair_steamer_v6000_76c.expected as expected_result
 import tests.integration.test_core as test_core
@@ -80,4 +81,6 @@ async def test_aggregate_meta():
 
 @pytest.mark.asyncio
 async def test_aggregate_state():
-    await test_core.assert_aggregate_state(vzug_client, expected_result, expect_energy=True)
+    await test_core.assert_aggregate_state(
+        vzug_client, expected_result, expect_energy=True
+    )

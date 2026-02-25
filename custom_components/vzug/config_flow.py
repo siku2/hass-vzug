@@ -273,9 +273,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             new_mac = dr.format_mac(self._meta.mac_address)
             if reconfigure_entry.unique_id and new_mac != reconfigure_entry.unique_id:
                 return self.async_abort(reason=ABORT_WRONG_DEVICE)
-            return self.async_update_reload_and_abort(
-                reconfigure_entry, data=data
-            )
+            return self.async_update_reload_and_abort(reconfigure_entry, data=data)
 
         if self.source == config_entries.SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()

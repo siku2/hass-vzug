@@ -1,6 +1,5 @@
-from datetime import datetime
 import re
-
+from datetime import datetime
 
 
 async def assert_ai_get_device_status_core(vzug_client, expected_result):
@@ -208,15 +207,21 @@ async def assert_aggregate_meta(vzug_client, expected_result):
     assert meta.api_version == expected_result.aggregate_meta.api_version
 
 
-async def assert_aggregate_state( vzug_client, expected_result, expect_energy: bool):
+async def assert_aggregate_state(vzug_client, expected_result, expect_energy: bool):
     state = await vzug_client.aggregate_state()
 
     assert state.zh_mode == -1
     assert state.device["Serial"] == expected_result.ai_device_status["Serial"]
     assert (datetime.now().astimezone() - state.device_fetched_at).total_seconds() <= 60
     if expect_energy:
-        assert state.eco_info["energy"]["total"] == expected_result.hh_eco_info["energy"]["total"]
-    assert state.notifications[0]["date"] == expected_result.ai_last_push_notifications[0]["date"]
+        assert (
+            state.eco_info["energy"]["total"]
+            == expected_result.hh_eco_info["energy"]["total"]
+        )
+    assert (
+        state.notifications[0]["date"]
+        == expected_result.ai_last_push_notifications[0]["date"]
+    )
 
 
 # async def assert_hh_get_program(vzug_client, expected_result):

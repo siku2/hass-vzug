@@ -1,5 +1,6 @@
 import logging
 import os
+
 import coloredlogs
 
 DEVICE_CONF_FILE = "config.json"

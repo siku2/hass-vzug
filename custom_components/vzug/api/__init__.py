@@ -6,9 +6,9 @@ import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
-import json_repair
 
 import httpx
+import json_repair
 from yarl import URL
 
 from . import discovery  # noqa: F401 # type: ignore
@@ -422,9 +422,9 @@ class VZugApi:
                 data: Any = []
 
             if expected_type is not None:
-                assert isinstance(data, expected_type), (
-                    f"data type mismatch ({type(data)} != {expected_type})"
-                )
+                assert isinstance(
+                    data, expected_type
+                ), f"data type mismatch ({type(data)} != {expected_type})"
             if reject_empty:
                 assert len(data) > 0, "empty response rejected"
             return data
@@ -580,19 +580,15 @@ class VZugApi:
             async def _fetch_command(command_key: str) -> None:
                 commands[command_key] = await self.get_command(command_key)
 
-            await asyncio.gather(
-                *(_fetch_command(ck) for ck in command_keys)
-            )
+            await asyncio.gather(*(_fetch_command(ck) for ck in command_keys))
             return category_key, AggCategory(
                 key=category_key,
                 description=category_raw.get("description", ""),
                 commands=commands,
             )
 
-        results = await asyncio.gather(
-            *(_fetch_category(k) for k in category_keys)
-        )
-        return {key: cat for key, cat in results}
+        results = await asyncio.gather(*(_fetch_category(k) for k in category_keys))
+        return dict(results)
 
     async def get_mac_address(self, *, default_on_error: bool = False) -> str:
         return await self._command(
@@ -759,9 +755,7 @@ class VZugApi:
             value_on_err=(lambda: HhDeviceStatus()) if default_on_error else None,
         )
 
-    async def get_cloud_status(
-        self, *, default_on_error: bool = False
-    ) -> CloudStatus:
+    async def get_cloud_status(self, *, default_on_error: bool = False) -> CloudStatus:
         return await self._command(
             "ai",
             command="getCloudStatus",
@@ -786,9 +780,7 @@ class VZugApi:
             value_on_err=(lambda: []) if default_on_error else None,
         )
         zones: list[ZoneProgram] = [
-            cast(ZoneProgram, z)
-            for z in raw_programs
-            if "zone" in z
+            cast(ZoneProgram, z) for z in raw_programs if "zone" in z
         ]
         return AggProgramState(zones=zones)
 
@@ -877,9 +869,7 @@ PROGRAM_NAMES: dict[int, str] = {
 # Only dishwasher (GS) programs — the V-ZUG app marks most other device
 # types as sendProgramSupported=false (including the BO Combair V600,
 # WA AdoraWash V2000, and WT AdoraDry V2000).
-_SELECTABLE_PROGRAM_IDS = frozenset(
-    pid for pid in PROGRAM_NAMES if 50 <= pid <= 95
-)
+_SELECTABLE_PROGRAM_IDS = frozenset(pid for pid in PROGRAM_NAMES if 50 <= pid <= 95)
 
 # German device firmware text → English translation.
 # The device API returns status strings in the appliance's display language.

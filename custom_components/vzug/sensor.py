@@ -314,6 +314,7 @@ class Eco(StateBase):
 
 class LastNotification(StateBase):
     _attr_translation_key = "last_notification"
+
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         try:

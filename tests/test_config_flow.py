@@ -7,7 +7,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vzug import api
@@ -327,9 +326,7 @@ async def test_step_confirm_creates_entry(
     )
     assert result["step_id"] == "confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BASE_URL] == "http://192.168.1.100"
 

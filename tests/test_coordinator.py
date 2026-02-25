@@ -7,12 +7,10 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vzug import api
 from custom_components.vzug.const import CONF_BASE_URL, DOMAIN
-from custom_components.vzug.coordinator import Shared
 
 
 @pytest.fixture
@@ -211,9 +209,7 @@ async def test_cache_hit_skips_network_refresh(
         "config": api.agg_config_to_cache(mock_agg_config),
     }
 
-    with patch(
-        "custom_components.vzug.coordinator.Store"
-    ) as MockStore:
+    with patch("custom_components.vzug.coordinator.Store") as MockStore:
         store_instance = AsyncMock()
         store_instance.async_load.return_value = cached_data
         MockStore.return_value = store_instance
@@ -237,9 +233,7 @@ async def test_cache_miss_falls_back_to_network(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """When no cache exists, coordinators block on first refresh normally."""
-    with patch(
-        "custom_components.vzug.coordinator.Store"
-    ) as MockStore:
+    with patch("custom_components.vzug.coordinator.Store") as MockStore:
         store_instance = AsyncMock()
         store_instance.async_load.return_value = None
         MockStore.return_value = store_instance
@@ -259,11 +253,13 @@ async def test_corrupt_cache_falls_back_to_network(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """When cache data is corrupt, fall back to network refresh."""
-    with patch(
-        "custom_components.vzug.coordinator.Store"
-    ) as MockStore:
+    with patch("custom_components.vzug.coordinator.Store") as MockStore:
         store_instance = AsyncMock()
-        store_instance.async_load.return_value = {"state": "garbage", "update": {}, "config": {}}
+        store_instance.async_load.return_value = {
+            "state": "garbage",
+            "update": {},
+            "config": {},
+        }
         MockStore.return_value = store_instance
 
         mock_config_entry.add_to_hass(hass)

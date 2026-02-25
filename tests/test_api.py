@@ -1,6 +1,7 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 
 from custom_components.vzug.api import VZugApi
 
@@ -117,8 +118,20 @@ async def test_get_eco_info_with_door_openings(vzug_api):
 async def test_aggregate_program_filters_zones(vzug_api):
     """Test aggregate_program only returns items with 'zone' key."""
     mock_response = [
-        {"id": 2000, "status": "active", "temp": {"set": 5.0, "act": 5.0}, "doorClosed": True, "zone": "fridge1"},
-        {"id": 2001, "status": "active", "temp": {"set": -18.0, "act": -18.0}, "doorClosed": True, "zone": "freezer1"},
+        {
+            "id": 2000,
+            "status": "active",
+            "temp": {"set": 5.0, "act": 5.0},
+            "doorClosed": True,
+            "zone": "fridge1",
+        },
+        {
+            "id": 2001,
+            "status": "active",
+            "temp": {"set": -18.0, "act": -18.0},
+            "doorClosed": True,
+            "zone": "freezer1",
+        },
         {"status": "idle", "duration": {"min": 0, "max": 35700}, "zone": "countdown1"},
     ]
 
@@ -206,7 +219,9 @@ async def test_get_cloud_status(vzug_api):
 @pytest.mark.asyncio
 async def test_get_program_list_resolves_known_names(vzug_api):
     """Test get_program_list resolves names from PROGRAM_NAMES mapping."""
-    with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
+    with patch.object(
+        vzug_api, "get_all_program_ids", new_callable=AsyncMock
+    ) as mock_ids:
         mock_ids.return_value = [50, 51, 54]
 
         result = await vzug_api.get_program_list()
@@ -217,7 +232,9 @@ async def test_get_program_list_resolves_known_names(vzug_api):
 @pytest.mark.asyncio
 async def test_get_program_list_excludes_non_selectable(vzug_api):
     """Test get_program_list excludes oven, washer, dryer, and zone programs."""
-    with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
+    with patch.object(
+        vzug_api, "get_all_program_ids", new_callable=AsyncMock
+    ) as mock_ids:
         # Oven (4), washer (3000), dryer (2500), fridge zone (2000)
         mock_ids.return_value = [4, 3000, 2500, 2000]
 
@@ -229,7 +246,9 @@ async def test_get_program_list_excludes_non_selectable(vzug_api):
 @pytest.mark.asyncio
 async def test_get_program_list_only_dishwasher_selectable(vzug_api):
     """Test only dishwasher programs (50-95) are selectable."""
-    with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
+    with patch.object(
+        vzug_api, "get_all_program_ids", new_callable=AsyncMock
+    ) as mock_ids:
         # Mix of dishwasher (50=Eco) and oven (4=Hot Air)
         mock_ids.return_value = [50, 4]
 

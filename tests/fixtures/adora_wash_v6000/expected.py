@@ -141,4 +141,3 @@ aggregate_meta = api.AggMeta(
     api_version=(1, 7, 0),
     ai_api_version=(1, 7, 0),
 )
-

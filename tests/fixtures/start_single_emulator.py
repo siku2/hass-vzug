@@ -2,9 +2,10 @@ import argparse
 import json
 import logging
 import os
-import tests.fixtures.shared as shared
 
 from flask import Flask, jsonify, request, send_from_directory
+
+import tests.fixtures.shared as shared
 
 ### If no parameters are specified, show the models to choose from
 ### Flask only allows one app.run at the same time
@@ -46,9 +47,10 @@ def register_route_ai(app, response_directory):
             return file_content_or_error(response_directory, "ai_get_updatestatus.json")
 
         elif command:  # command exists and is not empty
-            return file_content_or_error(
-                response_directory, "hh_get_invalid_command.txt"
-            ), 404
+            return (
+                file_content_or_error(response_directory, "hh_get_invalid_command.txt"),
+                404,
+            )
         else:
             return file_content_or_error(response_directory, "hh_bad_request.txt"), 400
 
@@ -127,9 +129,10 @@ def register_route_hh(app, response_directory):
         elif command == "getZHMode":
             return file_content_or_error(response_directory, "hh_get_zhmode.json")
         elif command:  # command exists and is not empty
-            return file_content_or_error(
-                response_directory, "hh_get_invalid_command.txt"
-            ), 404
+            return (
+                file_content_or_error(response_directory, "hh_get_invalid_command.txt"),
+                404,
+            )
         else:
             return file_content_or_error(response_directory, "hh_bad_request.txt"), 400
 

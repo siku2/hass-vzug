@@ -1,18 +1,12 @@
 """Tests for new entities: errors, cloud, program select, zone features, update attrs."""
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vzug import api
-from custom_components.vzug.const import CONF_BASE_URL, DOMAIN
-
 
 # ── Dishwasher (default) fixtures ──────────────────────────────────
 
@@ -171,9 +165,7 @@ async def test_update_extra_attributes(
     mock_agg_update_status: api.AggUpdateStatus,
 ) -> None:
     """Test update entity has status and isSynced attributes."""
-    mock_agg_update_status.update = api.UpdateStatus(
-        status="idle", isSynced=True
-    )
+    mock_agg_update_status.update = api.UpdateStatus(status="idle", isSynced=True)
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

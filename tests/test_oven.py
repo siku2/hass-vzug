@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vzug import api
@@ -141,9 +140,7 @@ async def test_oven_zone_light(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "binary_sensor.kitchen_oven_cooking_chamber_light"
-    )
+    state = hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_light")
     assert state is not None
     assert state.state == "on"
 
@@ -158,9 +155,7 @@ async def test_oven_zone_preheat(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "binary_sensor.kitchen_oven_cooking_chamber_preheat"
-    )
+    state = hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_preheat")
     assert state is not None
     assert state.state == "on"
 
@@ -175,9 +170,7 @@ async def test_oven_zone_probe(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "binary_sensor.kitchen_oven_cooking_chamber_probe"
-    )
+    state = hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_probe")
     assert state is not None
     assert state.state == "off"
 
@@ -192,9 +185,7 @@ async def test_oven_zone_door(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(
-        "binary_sensor.kitchen_oven_cooking_chamber_door"
-    )
+    state = hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_door")
     assert state is not None, (
         f"Expected cooking chamber door entity; available: "
         f"{[s.entity_id for s in hass.states.async_all() if 'door' in s.entity_id]}"
@@ -261,7 +252,9 @@ async def test_oven_no_zone_features_when_absent(
     assert hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_probe") is None
 
     # Door should still exist
-    assert hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_door") is not None
+    assert (
+        hass.states.get("binary_sensor.kitchen_oven_cooking_chamber_door") is not None
+    )
 
 
 async def test_oven_program_sensor_translates_german(
