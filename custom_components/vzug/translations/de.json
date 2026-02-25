@@ -86,11 +86,20 @@
       "supercool_fridge1": {
         "name": "Kühlschrank Superkühlen"
       },
+      "supercool_freezer1": {
+        "name": "Gefrierfach Superkühlen"
+      },
+      "superfreeze_fridge1": {
+        "name": "Kühlschrank Supergefrieren"
+      },
       "superfreeze_freezer1": {
         "name": "Gefrierfach Supergefrieren"
       },
       "partycooling_fridge1": {
         "name": "Kühlschrank Partykühlung"
+      },
+      "partycooling_freezer1": {
+        "name": "Gefrierfach Partykühlung"
       }
     },
     "select": {

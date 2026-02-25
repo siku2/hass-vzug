@@ -12,8 +12,11 @@
     },
     "number": {
       "supercool_fridge1": { "default": "mdi:snowflake" },
+      "supercool_freezer1": { "default": "mdi:snowflake" },
+      "superfreeze_fridge1": { "default": "mdi:snowflake-alert" },
       "superfreeze_freezer1": { "default": "mdi:snowflake-alert" },
-      "partycooling_fridge1": { "default": "mdi:party-popper" }
+      "partycooling_fridge1": { "default": "mdi:party-popper" },
+      "partycooling_freezer1": { "default": "mdi:party-popper" }
     },
     "select": {
       "program_select": { "default": "mdi:format-list-bulleted" }

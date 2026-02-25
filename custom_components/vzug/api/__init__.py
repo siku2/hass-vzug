@@ -752,34 +752,71 @@ class VZugApi:
             expected_type=list,
         )
 
-    async def get_program_by_id(self, program_id: int) -> dict[str, Any]:
-        return await self._command(
-            "hh",
-            command="getProgram",
-            params={"value": str(program_id)},
-            expected_type=list,
-        )
-
     async def get_program_list(self) -> dict[int, str]:
-        """Get all program IDs and resolve names where available."""
+        """Get selectable program IDs and resolve their names.
+
+        Only programs in _SELECTABLE_PROGRAM_IDS are included.
+        This limits program selection to device types where setProgram
+        is confirmed to work (currently dishwashers).
+        """
         program_ids = await self.get_all_program_ids()
-        result: dict[int, str] = {}
-        for pid in program_ids:
-            try:
-                raw = await self.get_program_by_id(pid)
-                # Filter out zone programs (e.g. KS fridge/freezer zones)
-                if any("zone" in item for item in raw):
-                    continue
-                # Try to extract name from the response
-                name: str | None = None
-                for item in raw:
-                    if "name" in item:
-                        name = item["name"]
-                        break
-                result[pid] = name if name else str(pid)
-            except Exception:
-                result[pid] = str(pid)
-        return result
+        return {
+            pid: PROGRAM_NAMES[pid]
+            for pid in program_ids
+            if pid in _SELECTABLE_PROGRAM_IDS
+        }
+
+
+# Program ID → human-readable name mapping.
+# Sourced from the V-ZUG app's EasyCook database (extracted.js asset paths).
+# The device API does NOT return program names; the official app resolves
+# them client-side from an embedded database.
+PROGRAM_NAMES: dict[int, str] = {
+    # ── Oven (BO) ──
+    3: "Hold Temperature",
+    4: "Hot Air",
+    5: "Hot Air Humid",
+    7: "PizzaPlus",
+    8: "Top/Bottom Heat",
+    9: "Top/Bottom Heat Humid",
+    10: "Bottom Heat",
+    11: "Grill",
+    12: "Grill Forced Convection",
+    48: "Hot Air Eco",
+    49: "Top/Bottom Heat Eco",
+    101: "Plate Warmer",
+    # ── Dishwasher (GS) ──
+    50: "Eco",
+    51: "Automatic",
+    52: "Daily Quick",
+    53: "Sprint",
+    54: "Intensive",
+    55: "Silent",
+    56: "Party",
+    57: "Glass",
+    58: "Fondue/Raclette",
+    59: "Hygiene",
+    60: "Machine Care",
+    61: "Pre-Rinsing",
+    86: "Short",
+    87: "Intensive Plus",
+    88: "Rinse Plus",
+    89: "Wine Degu",
+    90: "Plate Heat Up",
+    91: "Synthetic",
+    92: "Toy",
+    93: "Beer Glass",
+    94: "Wine Glass",
+    95: "Grease Filter",
+}
+
+# Program IDs where setProgram is confirmed to work.
+# Only dishwasher (GS) programs — the V-ZUG app marks most other device
+# types as sendProgramSupported=false (including the BO Combair V600,
+# WA AdoraWash V2000, and WT AdoraDry V2000).
+_SELECTABLE_PROGRAM_IDS = frozenset(
+    pid for pid in PROGRAM_NAMES if 50 <= pid <= 95
+)
 
 
 class AuthenticationFailed(Exception): ...

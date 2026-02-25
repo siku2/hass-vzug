@@ -180,7 +180,11 @@ class Program(StateBase):
     def native_value(self) -> StateType | date | datetime | Decimal:
         device = self.coordinator.data.device
         if program := device.get("Program"):
-            return program
+            # Resolve numeric program IDs to human-readable names
+            try:
+                return api.PROGRAM_NAMES.get(int(program), program)
+            except (ValueError, TypeError):
+                return program
         elif device.get("Inactive") == "true":
             return "standby"
         else:

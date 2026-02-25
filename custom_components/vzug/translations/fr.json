@@ -86,11 +86,20 @@
             "supercool_fridge1": {
                 "name": "Super refroidissement réfrigérateur"
             },
+            "supercool_freezer1": {
+                "name": "Super refroidissement congélateur"
+            },
+            "superfreeze_fridge1": {
+                "name": "Super congélation réfrigérateur"
+            },
             "superfreeze_freezer1": {
                 "name": "Super congélation congélateur"
             },
             "partycooling_fridge1": {
                 "name": "Refroidissement fête réfrigérateur"
+            },
+            "partycooling_freezer1": {
+                "name": "Refroidissement fête congélateur"
             }
         },
         "select": {

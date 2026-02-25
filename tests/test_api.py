@@ -204,58 +204,38 @@ async def test_get_cloud_status(vzug_api):
 
 
 @pytest.mark.asyncio
-async def test_get_program_list_with_names(vzug_api):
-    """Test get_program_list resolves names from getProgram responses."""
+async def test_get_program_list_resolves_known_names(vzug_api):
+    """Test get_program_list resolves names from PROGRAM_NAMES mapping."""
     with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
-        mock_ids.return_value = [50, 51]
+        mock_ids.return_value = [50, 51, 54]
 
-        with patch.object(vzug_api, "get_program_by_id", new_callable=AsyncMock) as mock_prog:
-            mock_prog.side_effect = [
-                [{"id": 50, "name": "Normal", "status": "idle"}],
-                [{"id": 51, "name": "Eco", "status": "idle"}],
-            ]
+        result = await vzug_api.get_program_list()
 
-            result = await vzug_api.get_program_list()
-
-            assert result == {50: "Normal", 51: "Eco"}
+        assert result == {50: "Eco", 51: "Automatic", 54: "Intensive"}
 
 
 @pytest.mark.asyncio
-async def test_get_program_list_without_names(vzug_api):
-    """Test get_program_list falls back to str(id) when no name."""
+async def test_get_program_list_excludes_non_selectable(vzug_api):
+    """Test get_program_list excludes oven, washer, dryer, and zone programs."""
     with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
-        mock_ids.return_value = [50, 51]
+        # Oven (4), washer (3000), dryer (2500), fridge zone (2000)
+        mock_ids.return_value = [4, 3000, 2500, 2000]
 
-        with patch.object(vzug_api, "get_program_by_id", new_callable=AsyncMock) as mock_prog:
-            mock_prog.side_effect = [
-                [{"id": 50, "status": "idle"}],
-                [{"id": 51, "status": "idle"}],
-            ]
+        result = await vzug_api.get_program_list()
 
-            result = await vzug_api.get_program_list()
-
-            assert result == {50: "50", 51: "51"}
+        assert result == {}
 
 
 @pytest.mark.asyncio
-async def test_get_program_list_filters_zone_programs(vzug_api):
-    """Test get_program_list filters out zone programs (KS fridge/freezer)."""
+async def test_get_program_list_only_dishwasher_selectable(vzug_api):
+    """Test only dishwasher programs (50-95) are selectable."""
     with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
-        mock_ids.return_value = [2000, 2001, 9000]
+        # Mix of dishwasher (50=Eco) and oven (4=Hot Air)
+        mock_ids.return_value = [50, 4]
 
-        with patch.object(vzug_api, "get_program_by_id", new_callable=AsyncMock) as mock_prog:
-            mock_prog.side_effect = [
-                [{"id": 2000, "zone": "fridge1", "status": "active"}],
-                [{"id": 2001, "zone": "freezer1", "status": "active"}],
-                [{"id": 9000, "name": "Special", "status": "idle"}],
-            ]
+        result = await vzug_api.get_program_list()
 
-            result = await vzug_api.get_program_list()
-
-            # Zone programs should be filtered out
-            assert 2000 not in result
-            assert 2001 not in result
-            assert result == {9000: "Special"}
+        assert result == {50: "Eco"}
 
 
 @pytest.mark.asyncio

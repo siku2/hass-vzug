@@ -73,7 +73,7 @@ class ProgramCoordinator(DataUpdateCoordinator[api.AggProgramState]):
             shared.hass,
             _LOGGER,
             name="program",
-            update_interval=timedelta(seconds=60),
+            update_interval=timedelta(seconds=30),
             config_entry=config_entry,
             always_update=False,
         )

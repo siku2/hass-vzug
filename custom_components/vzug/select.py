@@ -95,9 +95,17 @@ class ProgramSelect(SelectEntity, CoordinatorEntity[StateCoordinator]):
         current_program = self.coordinator.data.device.get("Program")
         if not current_program:
             return None
-        # Try to match by name
+        # Try to match by name directly
         if current_program in self._name_to_id:
             return current_program
+        # Try to resolve numeric program ID to name
+        try:
+            pid = int(current_program)
+            name = self.shared.program_list.get(pid)
+            if name and name in self._name_to_id:
+                return name
+        except (ValueError, TypeError):
+            pass
         return None
 
     async def async_select_option(self, option: str) -> None:

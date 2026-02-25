@@ -103,11 +103,20 @@
             "supercool_fridge1": {
                 "name": "Fridge Super Cool"
             },
+            "supercool_freezer1": {
+                "name": "Freezer Super Cool"
+            },
+            "superfreeze_fridge1": {
+                "name": "Fridge Super Freeze"
+            },
             "superfreeze_freezer1": {
                 "name": "Freezer Super Freeze"
             },
             "partycooling_fridge1": {
                 "name": "Fridge Party Cooling"
+            },
+            "partycooling_freezer1": {
+                "name": "Freezer Party Cooling"
             }
         },
         "select": {

@@ -134,9 +134,9 @@ async def test_program_select_entity(
 ) -> None:
     """Test program select entity with named programs."""
     mock_vzug_api.get_program_list.return_value = {
-        50: "Normal",
-        51: "Eco",
-        52: "Intensive",
+        50: "Eco",
+        51: "Automatic",
+        54: "Intensive",
     }
 
     mock_config_entry.add_to_hass(hass)
@@ -145,8 +145,8 @@ async def test_program_select_entity(
 
     state = hass.states.get("select.kitchen_dishwasher_program")
     assert state is not None
-    assert "Normal" in state.attributes["options"]
     assert "Eco" in state.attributes["options"]
+    assert "Automatic" in state.attributes["options"]
     assert "Intensive" in state.attributes["options"]
 
 

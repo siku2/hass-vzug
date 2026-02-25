@@ -92,7 +92,7 @@ def mock_vzug_api(
     mock_client.aggregate_update_status.return_value = mock_agg_update_status
     mock_client.aggregate_config.return_value = mock_agg_config
     mock_client.aggregate_program.return_value = mock_agg_program_state
-    mock_client.get_program_list.return_value = {100: "Convection", 101: "Grill"}
+    mock_client.get_program_list.return_value = {}  # BO doesn't support setProgram
     mock_client.get_cloud_status.return_value = api.CloudStatus(
         enabled=True, claimed=True, status="connected"
     )
@@ -219,20 +219,18 @@ async def test_oven_zone_temperature(
     assert state.state == "175.0"
 
 
-async def test_oven_program_select(
+async def test_oven_no_program_select(
     hass: HomeAssistant,
     mock_vzug_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test program select entity with named programs for oven."""
+    """Test program select is NOT created for oven (sendProgramSupported=false)."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("select.kitchen_oven_program")
-    assert state is not None
-    assert "Convection" in state.attributes["options"]
-    assert "Grill" in state.attributes["options"]
+    assert state is None
 
 
 async def test_oven_no_zone_features_when_absent(
