@@ -74,11 +74,45 @@
             },
             "door_freezer1": {
                 "name": "Freezer Door"
+            },
+            "has_errors": {
+                "name": "Has Errors"
+            },
+            "cloud_connected": {
+                "name": "Cloud Connected"
+            },
+            "light_cookingChamber1": {
+                "name": "Cooking Chamber Light"
+            },
+            "preheat_cookingChamber1": {
+                "name": "Cooking Chamber Preheat"
+            },
+            "probe_cookingChamber1": {
+                "name": "Cooking Chamber Probe"
+            },
+            "door_cookingChamber1": {
+                "name": "Cooking Chamber Door"
             }
         },
         "button": {
             "check_update": {
                 "name": "Check for Updates"
+            }
+        },
+        "number": {
+            "supercool_fridge1": {
+                "name": "Fridge Super Cool"
+            },
+            "superfreeze_freezer1": {
+                "name": "Freezer Super Freeze"
+            },
+            "partycooling_fridge1": {
+                "name": "Fridge Party Cooling"
+            }
+        },
+        "select": {
+            "program_select": {
+                "name": "Program"
             }
         },
         "sensor": {
@@ -100,8 +134,14 @@
             "water_total": {
                 "name": "Water Total"
             },
+            "water_option": {
+                "name": "Water Option"
+            },
             "last_notification": {
                 "name": "Last Notification"
+            },
+            "active_errors": {
+                "name": "Active Errors"
             },
             "program": {
                 "name": "Program",

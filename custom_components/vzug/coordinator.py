@@ -116,6 +116,9 @@ class Shared:
     meta: api.AggMeta
     device_info: DeviceInfo
 
+    program_list: dict[int, str]
+    cloud_status: api.CloudStatus
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -198,7 +201,11 @@ class Shared:
         try:
             program_state = await self.client.aggregate_program()
             has_zone_data = any(
-                "temp" in zone or "doorClosed" in zone
+                "temp" in zone
+                or "doorClosed" in zone
+                or "light" in zone
+                or "preheatStatus" in zone
+                or "probeInserted" in zone
                 for zone in program_state.zones
             )
         except Exception:
@@ -208,6 +215,22 @@ class Shared:
         if has_zone_data:
             self.program_coord = ProgramCoordinator(self, self._config_entry)
             await self.program_coord.async_config_entry_first_refresh()
+
+        # Fetch program list (static, fetched once)
+        try:
+            self.program_list = await self.client.get_program_list()
+        except Exception:
+            _LOGGER.debug("failed to fetch program list", exc_info=True)
+            self.program_list = {}
+
+        # Fetch cloud status (static, fetched once)
+        try:
+            self.cloud_status = await self.client.get_cloud_status(
+                default_on_error=True
+            )
+        except Exception:
+            _LOGGER.debug("failed to fetch cloud status", exc_info=True)
+            self.cloud_status = api.CloudStatus()
 
         self._first_refresh_done = True
 

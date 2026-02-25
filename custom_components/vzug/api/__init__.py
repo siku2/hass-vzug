@@ -203,6 +203,28 @@ class ZoneProgram(TypedDict, total=False):
     temp: ZoneTemp
     doorClosed: bool
     zone: str
+    light: dict[str, Any]
+    preheatStatus: dict[str, Any]
+    probeInserted: dict[str, Any]
+    superCool: dict[str, int]
+    superFreeze: dict[str, int]
+    partyCooling: dict[str, int]
+
+
+class HhDeviceStatus(TypedDict, total=False):
+    errors: list[dict[str, Any]]
+    displayedErrors: list[dict[str, Any]]
+    notifications: list[dict[str, Any]]
+    isUpdatePossible: bool
+
+
+class CloudStatus(TypedDict, total=False):
+    enabled: bool
+    claimed: bool
+    status: str
+    secTokenValid: bool
+    scope: str
+    telemetryCollectionEnabled: bool
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -217,6 +239,7 @@ class AggState:
     device_fetched_at: datetime = dataclasses.field(compare=False)
     notifications: list[PushNotification]
     eco_info: EcoInfo
+    hh_device_status: HhDeviceStatus
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -392,10 +415,16 @@ class VZugApi:
             data = await self.get_device_status(default_on_error=default_on_error)
             return data, datetime.now(UTC)
 
-        (device, device_fetched_at), notifications, eco_info = await asyncio.gather(
+        (
+            (device, device_fetched_at),
+            notifications,
+            eco_info,
+            hh_device_status,
+        ) = await asyncio.gather(
             _device(),
             self.get_last_push_notifications(default_on_error=default_on_error),
             self.get_eco_info(default_on_error=default_on_error),
+            self.get_hh_device_status(default_on_error=default_on_error),
         )
 
         return AggState(
@@ -404,6 +433,7 @@ class VZugApi:
             device_fetched_at=device_fetched_at,
             notifications=notifications,
             eco_info=eco_info,
+            hh_device_status=hh_device_status,
         )
 
     async def aggregate_update_status(
@@ -656,6 +686,26 @@ class VZugApi:
             value_on_err=(lambda: DeviceInfo()) if default_on_error else None,
         )
 
+    async def get_hh_device_status(
+        self, *, default_on_error: bool = False
+    ) -> HhDeviceStatus:
+        return await self._command(
+            "hh",
+            command="getDeviceStatus",
+            expected_type=dict,
+            value_on_err=(lambda: HhDeviceStatus()) if default_on_error else None,
+        )
+
+    async def get_cloud_status(
+        self, *, default_on_error: bool = False
+    ) -> CloudStatus:
+        return await self._command(
+            "ai",
+            command="getCloudStatus",
+            expected_type=dict,
+            value_on_err=(lambda: CloudStatus()) if default_on_error else None,
+        )
+
     async def get_program(self) -> list[dict[str, Any]]:
         return await self._command(
             "hh",
@@ -696,12 +746,40 @@ class VZugApi:
         )
 
     async def get_all_program_ids(self) -> list[int]:
-        # TODO: this gives us a nice list of ids that could be used with set_program, but we need a program id to name mapping
         return await self._command(
             "hh",
             command="getAllProgramIds",
             expected_type=list,
         )
+
+    async def get_program_by_id(self, program_id: int) -> dict[str, Any]:
+        return await self._command(
+            "hh",
+            command="getProgram",
+            params={"value": str(program_id)},
+            expected_type=list,
+        )
+
+    async def get_program_list(self) -> dict[int, str]:
+        """Get all program IDs and resolve names where available."""
+        program_ids = await self.get_all_program_ids()
+        result: dict[int, str] = {}
+        for pid in program_ids:
+            try:
+                raw = await self.get_program_by_id(pid)
+                # Filter out zone programs (e.g. KS fridge/freezer zones)
+                if any("zone" in item for item in raw):
+                    continue
+                # Try to extract name from the response
+                name: str | None = None
+                for item in raw:
+                    if "name" in item:
+                        name = item["name"]
+                        break
+                result[pid] = name if name else str(pid)
+            except Exception:
+                result[pid] = str(pid)
+        return result
 
 
 class AuthenticationFailed(Exception): ...

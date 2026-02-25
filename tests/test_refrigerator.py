@@ -54,6 +54,7 @@ def mock_agg_state() -> api.AggState:
                 },
             }
         ),
+        hh_device_status=api.HhDeviceStatus(),
     )
 
 
@@ -76,6 +77,8 @@ def mock_agg_program_state() -> api.AggProgramState:
                 temp=api.ZoneTemp(set=5.0, act=5.0, min=3.0, max=8.0),
                 doorClosed=True,
                 zone="fridge1",
+                superCool={"min": 0, "max": 86400},
+                partyCooling={"min": 0, "max": 172800},
             ),
             api.ZoneProgram(
                 id=2001,
@@ -83,6 +86,7 @@ def mock_agg_program_state() -> api.AggProgramState:
                 temp=api.ZoneTemp(set=-18.0, act=-18.0, min=-24.0, max=-14.0),
                 doorClosed=True,
                 zone="freezer1",
+                superFreeze={"min": 0, "max": 194400},
             ),
             api.ZoneProgram(
                 status="idle",
@@ -111,6 +115,8 @@ def mock_vzug_api(
     mock_client.aggregate_update_status.return_value = mock_agg_update_status
     mock_client.aggregate_config.return_value = mock_agg_config
     mock_client.aggregate_program.return_value = mock_agg_program_state
+    mock_client.get_program_list.return_value = {}
+    mock_client.get_cloud_status.return_value = api.CloudStatus()
     mock_client.base_url = "http://192.168.1.100"
 
     with patch(
@@ -257,3 +263,47 @@ async def test_unload_with_program_coord(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_zone_feature_timers_created(
+    hass: HomeAssistant,
+    mock_vzug_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that superCool, superFreeze, partyCooling number entities are created."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # superCool on fridge1
+    state = hass.states.get("number.kitchen_refrigerator_fridge_super_cool")
+    assert state is not None
+    assert state.attributes["min"] == 0.0
+    assert state.attributes["max"] == 86400.0
+
+    # superFreeze on freezer1
+    state = hass.states.get("number.kitchen_refrigerator_freezer_super_freeze")
+    assert state is not None
+    assert state.attributes["min"] == 0.0
+    assert state.attributes["max"] == 194400.0
+
+    # partyCooling on fridge1
+    state = hass.states.get("number.kitchen_refrigerator_fridge_party_cooling")
+    assert state is not None
+    assert state.attributes["min"] == 0.0
+    assert state.attributes["max"] == 172800.0
+
+
+async def test_has_errors_on_refrigerator(
+    hass: HomeAssistant,
+    mock_vzug_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test has_errors binary sensor on refrigerator."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.kitchen_refrigerator_has_errors")
+    assert state is not None
+    assert state.state == "off"

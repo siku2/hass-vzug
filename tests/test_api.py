@@ -163,6 +163,102 @@ async def test_supports_update_status_uses_ai_version():
 
 
 @pytest.mark.asyncio
+async def test_get_hh_device_status(vzug_api):
+    """Test get_hh_device_status returns device status."""
+    mock_response = {
+        "errors": [{"displayCode": "E01"}],
+        "displayedErrors": [],
+        "notifications": [],
+        "isUpdatePossible": True,
+    }
+
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        mock_command.return_value = mock_response
+        result = await vzug_api.get_hh_device_status()
+
+        mock_command.assert_called_once_with(
+            "hh", command="getDeviceStatus", expected_type=dict, value_on_err=None
+        )
+        assert len(result["errors"]) == 1
+        assert result["isUpdatePossible"] is True
+
+
+@pytest.mark.asyncio
+async def test_get_cloud_status(vzug_api):
+    """Test get_cloud_status returns cloud status."""
+    mock_response = {
+        "enabled": True,
+        "claimed": True,
+        "status": "connected",
+        "secTokenValid": True,
+    }
+
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        mock_command.return_value = mock_response
+        result = await vzug_api.get_cloud_status()
+
+        mock_command.assert_called_once_with(
+            "ai", command="getCloudStatus", expected_type=dict, value_on_err=None
+        )
+        assert result["status"] == "connected"
+
+
+@pytest.mark.asyncio
+async def test_get_program_list_with_names(vzug_api):
+    """Test get_program_list resolves names from getProgram responses."""
+    with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
+        mock_ids.return_value = [50, 51]
+
+        with patch.object(vzug_api, "get_program_by_id", new_callable=AsyncMock) as mock_prog:
+            mock_prog.side_effect = [
+                [{"id": 50, "name": "Normal", "status": "idle"}],
+                [{"id": 51, "name": "Eco", "status": "idle"}],
+            ]
+
+            result = await vzug_api.get_program_list()
+
+            assert result == {50: "Normal", 51: "Eco"}
+
+
+@pytest.mark.asyncio
+async def test_get_program_list_without_names(vzug_api):
+    """Test get_program_list falls back to str(id) when no name."""
+    with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
+        mock_ids.return_value = [50, 51]
+
+        with patch.object(vzug_api, "get_program_by_id", new_callable=AsyncMock) as mock_prog:
+            mock_prog.side_effect = [
+                [{"id": 50, "status": "idle"}],
+                [{"id": 51, "status": "idle"}],
+            ]
+
+            result = await vzug_api.get_program_list()
+
+            assert result == {50: "50", 51: "51"}
+
+
+@pytest.mark.asyncio
+async def test_get_program_list_filters_zone_programs(vzug_api):
+    """Test get_program_list filters out zone programs (KS fridge/freezer)."""
+    with patch.object(vzug_api, "get_all_program_ids", new_callable=AsyncMock) as mock_ids:
+        mock_ids.return_value = [2000, 2001, 9000]
+
+        with patch.object(vzug_api, "get_program_by_id", new_callable=AsyncMock) as mock_prog:
+            mock_prog.side_effect = [
+                [{"id": 2000, "zone": "fridge1", "status": "active"}],
+                [{"id": 2001, "zone": "freezer1", "status": "active"}],
+                [{"id": 9000, "name": "Special", "status": "idle"}],
+            ]
+
+            result = await vzug_api.get_program_list()
+
+            # Zone programs should be filtered out
+            assert 2000 not in result
+            assert 2001 not in result
+            assert result == {9000: "Special"}
+
+
+@pytest.mark.asyncio
 async def test_json_repair_with_valid_json(vzug_api):
     """Test that valid JSON is processed normally without repair."""
     valid_json = '{"status": "idle", "value": 123}'

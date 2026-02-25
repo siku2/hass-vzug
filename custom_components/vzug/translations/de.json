@@ -57,11 +57,45 @@
       },
       "door_freezer1": {
         "name": "Gefrierfachtür"
+      },
+      "has_errors": {
+        "name": "Hat Fehler"
+      },
+      "cloud_connected": {
+        "name": "Cloud Verbunden"
+      },
+      "light_cookingChamber1": {
+        "name": "Garraum Licht"
+      },
+      "preheat_cookingChamber1": {
+        "name": "Garraum Vorheizen"
+      },
+      "probe_cookingChamber1": {
+        "name": "Garraum Sonde"
+      },
+      "door_cookingChamber1": {
+        "name": "Garraumtür"
       }
     },
     "button": {
       "check_update": {
         "name": "Nach Updates Suchen"
+      }
+    },
+    "number": {
+      "supercool_fridge1": {
+        "name": "Kühlschrank Superkühlen"
+      },
+      "superfreeze_freezer1": {
+        "name": "Gefrierfach Supergefrieren"
+      },
+      "partycooling_fridge1": {
+        "name": "Kühlschrank Partykühlung"
+      }
+    },
+    "select": {
+      "program_select": {
+        "name": "Programm"
       }
     },
     "sensor": {
@@ -83,8 +117,14 @@
       "water_total": {
         "name": "Wasser Gesamt"
       },
+      "water_option": {
+        "name": "Wasser Option"
+      },
       "last_notification": {
         "name": "Letzte Benachrichtigung"
+      },
+      "active_errors": {
+        "name": "Aktive Fehler"
       },
       "program": {
         "name": "Programm",

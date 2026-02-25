@@ -57,11 +57,45 @@
             },
             "door_freezer1": {
                 "name": "Porte du congélateur"
+            },
+            "has_errors": {
+                "name": "A des erreurs"
+            },
+            "cloud_connected": {
+                "name": "Cloud connecté"
+            },
+            "light_cookingChamber1": {
+                "name": "Lumière chambre de cuisson"
+            },
+            "preheat_cookingChamber1": {
+                "name": "Préchauffage chambre de cuisson"
+            },
+            "probe_cookingChamber1": {
+                "name": "Sonde chambre de cuisson"
+            },
+            "door_cookingChamber1": {
+                "name": "Porte chambre de cuisson"
             }
         },
         "button": {
             "check_update": {
                 "name": "Vérifier les Mises à Jour"
+            }
+        },
+        "number": {
+            "supercool_fridge1": {
+                "name": "Super refroidissement réfrigérateur"
+            },
+            "superfreeze_freezer1": {
+                "name": "Super congélation congélateur"
+            },
+            "partycooling_fridge1": {
+                "name": "Refroidissement fête réfrigérateur"
+            }
+        },
+        "select": {
+            "program_select": {
+                "name": "Programme"
             }
         },
         "sensor": {
@@ -83,8 +117,14 @@
             "water_total": {
                 "name": "Total Eau"
             },
+            "water_option": {
+                "name": "Eau Option"
+            },
             "last_notification": {
                 "name": "Dernière Notification"
+            },
+            "active_errors": {
+                "name": "Erreurs actives"
             },
             "program": {
                 "name": "Programme",

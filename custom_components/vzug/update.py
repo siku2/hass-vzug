@@ -126,4 +126,6 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
         attrs.update(
             {f"hh_{k}": v for k, v in self.coordinator.data.hh_fw_version.items()}
         )
+        attrs["update_status"] = self.coordinator.data.update.get("status")
+        attrs["is_synced"] = self.coordinator.data.update.get("isSynced")
         return attrs

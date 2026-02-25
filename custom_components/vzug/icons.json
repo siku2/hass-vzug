@@ -2,12 +2,28 @@
   "entity": {
     "binary_sensor": {
       "door_fridge1": { "default": "mdi:fridge" },
-      "door_freezer1": { "default": "mdi:fridge-bottom" }
+      "door_freezer1": { "default": "mdi:fridge-bottom" },
+      "has_errors": { "default": "mdi:alert-circle" },
+      "cloud_connected": { "default": "mdi:cloud-check" },
+      "light_cookingChamber1": { "default": "mdi:lightbulb" },
+      "preheat_cookingChamber1": { "default": "mdi:radiator" },
+      "probe_cookingChamber1": { "default": "mdi:thermometer-probe" },
+      "door_cookingChamber1": { "default": "mdi:stove" }
+    },
+    "number": {
+      "supercool_fridge1": { "default": "mdi:snowflake" },
+      "superfreeze_freezer1": { "default": "mdi:snowflake-alert" },
+      "partycooling_fridge1": { "default": "mdi:party-popper" }
+    },
+    "select": {
+      "program_select": { "default": "mdi:format-list-bulleted" }
     },
     "sensor": {
       "water_average": { "default": "mdi:water" },
+      "water_option": { "default": "mdi:water" },
       "energy_average": { "default": "mdi:lightning-bolt" },
       "last_notification": { "default": "mdi:bell" },
+      "active_errors": { "default": "mdi:alert-circle" },
       "program": { "default": "mdi:play-circle" },
       "program_end_raw": { "default": "mdi:clock-end" },
       "status": { "default": "mdi:information" },

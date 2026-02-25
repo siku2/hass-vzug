@@ -46,6 +46,7 @@ def mock_agg_state() -> api.AggState:
         device_fetched_at=datetime.now(UTC),
         notifications=[],
         eco_info=api.EcoInfo(),
+        hh_device_status=api.HhDeviceStatus(),
     )
 
 
@@ -84,6 +85,8 @@ def mock_vzug_api(
     mock_client.aggregate_update_status.return_value = mock_agg_update_status
     mock_client.aggregate_config.return_value = mock_agg_config
     mock_client.aggregate_program.return_value = mock_agg_program_state
+    mock_client.get_program_list.return_value = {}
+    mock_client.get_cloud_status.return_value = api.CloudStatus()
     mock_client.base_url = "http://192.168.1.100"
 
     with patch(

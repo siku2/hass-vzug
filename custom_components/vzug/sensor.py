@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from collections.abc import Mapping
 from datetime import date, datetime, timedelta
@@ -82,6 +84,14 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="energy_average",
     ),
+    SensorEntityDescription(
+        "water.option",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement="L",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="water_option",
+    ),
 ]
 
 
@@ -98,6 +108,7 @@ async def async_setup_entry(
         ProgramEndRaw(shared),
         Status(shared),
         LastNotification(shared),
+        ActiveErrors(shared),
     ]
 
     for category in shared.config_coord.data.values():
@@ -385,6 +396,27 @@ class ZoneTemperature(SensorEntity, CoordinatorEntity[ProgramCoordinator]):
                 except (LookupError, TypeError):
                     return None
         return None
+
+
+class ActiveErrors(StateBase):
+    _attr_translation_key = "active_errors"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        hh_status = self.coordinator.data.hh_device_status
+        errors = hh_status.get("errors", [])
+        displayed_errors = hh_status.get("displayedErrors", [])
+        return len(errors) + len(displayed_errors)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        hh_status = self.coordinator.data.hh_device_status
+        return {
+            "errors": hh_status.get("errors", []),
+            "displayed_errors": hh_status.get("displayedErrors", []),
+        }
 
 
 class UserConfigSensor(SensorEntity, UserConfigEntity):
