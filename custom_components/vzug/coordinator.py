@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import logging
 from datetime import timedelta
@@ -137,9 +138,11 @@ class Shared:
 
         self.update_coord.meta = self.meta
 
-        await self.state_coord.async_config_entry_first_refresh()
-        await self.update_coord.async_config_entry_first_refresh()
-        await self.config_coord.async_config_entry_first_refresh()
+        await asyncio.gather(
+            self.state_coord.async_config_entry_first_refresh(),
+            self.update_coord.async_config_entry_first_refresh(),
+            self.config_coord.async_config_entry_first_refresh(),
+        )
 
         try:
             await self._post_first_refresh()
