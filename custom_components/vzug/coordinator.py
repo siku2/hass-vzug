@@ -32,6 +32,7 @@ class StateCoordinator(DataUpdateCoordinator[api.AggState]):
             config_entry=config_entry,
             name="state",
             update_interval=timedelta(seconds=30),
+            always_update=False,
         )
         self._client = client
         self._first_refresh_done = False
@@ -60,6 +61,7 @@ class UpdateCoordinator(DataUpdateCoordinator[api.AggUpdateStatus]):
             config_entry=config_entry,
             name="update",
             update_interval=UPDATE_COORD_IDLE_INTERVAL,
+            always_update=False,
         )
         self._client = client
 
@@ -89,6 +91,7 @@ class ConfigCoordinator(DataUpdateCoordinator[api.AggConfig]):
             config_entry=config_entry,
             name="config",
             update_interval=timedelta(minutes=5),
+            always_update=False,
         )
         self._client = client
 
