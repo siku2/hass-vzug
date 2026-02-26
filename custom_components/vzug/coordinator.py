@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 
 import yarl
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -14,12 +15,86 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-StateCoordinator = DataUpdateCoordinator[api.AggState]
-UpdateCoordinator = DataUpdateCoordinator[api.AggUpdateStatus]
 UPDATE_COORD_IDLE_INTERVAL = timedelta(hours=6)
 UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
 
-ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
+
+class StateCoordinator(DataUpdateCoordinator[api.AggState]):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: api.VZugApi,
+    ) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="state",
+            update_interval=timedelta(seconds=30),
+        )
+        self._client = client
+        self._first_refresh_done = False
+
+    async def _async_update_data(self) -> api.AggState:
+        async with detect_auth_failed():
+            data = await self._client.aggregate_state(
+                default_on_error=self._first_refresh_done
+            )
+        self._first_refresh_done = True
+        return data
+
+
+class UpdateCoordinator(DataUpdateCoordinator[api.AggUpdateStatus]):
+    meta: api.AggMeta
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: api.VZugApi,
+    ) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="update",
+            update_interval=UPDATE_COORD_IDLE_INTERVAL,
+        )
+        self._client = client
+
+    async def _async_update_data(self) -> api.AggUpdateStatus:
+        async with detect_auth_failed():
+            data = await self._client.aggregate_update_status(
+                supports_update_status=self.meta.supports_update_status(),
+                default_on_error=True,  # we allow the update to fail because it's not essential
+            )
+        if data.update.get("status") in ("idle", None):
+            self.update_interval = UPDATE_COORD_IDLE_INTERVAL
+        else:
+            self.update_interval = UPDATE_COORD_ACTIVE_INTERVAL
+        return data
+
+
+class ConfigCoordinator(DataUpdateCoordinator[api.AggConfig]):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: api.VZugApi,
+    ) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="config",
+            update_interval=timedelta(minutes=5),
+        )
+        self._client = client
+
+    async def _async_update_data(self) -> api.AggConfig:
+        async with detect_auth_failed():
+            return await self._client.aggregate_config()
 
 
 class Shared:
@@ -37,6 +112,7 @@ class Shared:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         base_url: yarl.URL,
         credentials: api.Credentials | None,
     ) -> None:
@@ -46,36 +122,19 @@ class Shared:
             credentials=credentials,
         )
 
-        self.state_coord = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="state",
-            update_interval=timedelta(seconds=30),
-            update_method=self._fetch_state,
-        )
-        self.update_coord = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="update",
-            update_interval=UPDATE_COORD_IDLE_INTERVAL,
-            update_method=self._fetch_update,
-        )
-        self.config_coord = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="config",
-            update_interval=timedelta(minutes=5),
-            update_method=self._fetch_config,
-        )
+        self.state_coord = StateCoordinator(hass, config_entry, self.client)
+        self.update_coord = UpdateCoordinator(hass, config_entry, self.client)
+        self.config_coord = ConfigCoordinator(hass, config_entry, self.client)
 
         # the rest will be set on first refresh
         self.unique_id_prefix = ""
         self.device_info = DeviceInfo()
-        self._first_refresh_done = False
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
             self.meta = await self.client.aggregate_meta()
+
+        self.update_coord.meta = self.meta
 
         await self.state_coord.async_config_entry_first_refresh()
         await self.update_coord.async_config_entry_first_refresh()
@@ -111,30 +170,6 @@ class Shared:
                 model=self.meta.model_name,
             )
         )
-
-        self._first_refresh_done = True
-
-    async def _fetch_state(self) -> api.AggState:
-        async with detect_auth_failed():
-            return await self.client.aggregate_state(
-                default_on_error=self._first_refresh_done
-            )
-
-    async def _fetch_update(self) -> api.AggUpdateStatus:
-        async with detect_auth_failed():
-            data = await self.client.aggregate_update_status(
-                supports_update_status=self.meta.supports_update_status(),
-                default_on_error=True,  # we allow the update to fail because it's not essential
-            )
-        if data.update.get("status") in ("idle", None):
-            self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL
-        else:
-            self.update_coord.update_interval = UPDATE_COORD_ACTIVE_INTERVAL
-        return data
-
-    async def _fetch_config(self) -> api.AggConfig:
-        async with detect_auth_failed():
-            return await self.client.aggregate_config()
 
 
 @contextlib.asynccontextmanager
