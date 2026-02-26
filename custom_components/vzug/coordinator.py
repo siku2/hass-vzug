@@ -149,11 +149,6 @@ class Shared:
             _LOGGER.exception("init failed")
             raise ConfigEntryNotReady() from exc
 
-    async def async_shutdown(self) -> None:
-        await self.state_coord.async_shutdown()
-        await self.update_coord.async_shutdown()
-        await self.config_coord.async_shutdown()
-
     async def _post_first_refresh(self) -> None:
         mac_addr = dr.format_mac(self.meta.mac_address)
         self.unique_id_prefix = mac_addr
