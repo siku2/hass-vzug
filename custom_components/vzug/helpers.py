@@ -3,7 +3,7 @@ from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api
-from .shared import ConfigCoordinator, Shared
+from .coordinator import ConfigCoordinator, Shared
 
 
 class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
