@@ -35,14 +35,12 @@ class StateCoordinator(DataUpdateCoordinator[api.AggState]):
             always_update=False,
         )
         self._client = client
-        self._first_refresh_done = False
 
     async def _async_update_data(self) -> api.AggState:
         async with detect_auth_failed():
             data = await self._client.aggregate_state(
-                default_on_error=self._first_refresh_done
+                default_on_error=self.data is not None
             )
-        self._first_refresh_done = True
         return data
 
 
