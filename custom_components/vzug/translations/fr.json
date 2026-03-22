@@ -78,7 +78,7 @@
                 "name": "Fin du Programme"
             },
             "program_end_raw": {
-                "name": "Valeur estimatif de la fin lavage"
+                "name": "Valeur brute de fin du programme"
             },
             "status": {
                 "name": "État"
