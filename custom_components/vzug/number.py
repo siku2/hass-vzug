@@ -5,7 +5,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .helpers import UserConfigEntity
-from .shared import Shared
+from .coordinator import Shared
 
 
 async def async_setup_entry(

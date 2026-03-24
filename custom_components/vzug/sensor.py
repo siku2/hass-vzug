@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import api
 from .const import DOMAIN
 from .helpers import UserConfigEntity
-from .shared import Shared, StateCoordinator
+from .coordinator import Shared, StateCoordinator
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 

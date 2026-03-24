@@ -8,7 +8,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .shared import Shared
+from .coordinator import Shared
 
 TO_REDACT: set[str] = {CONF_PASSWORD, CONF_USERNAME}
 
