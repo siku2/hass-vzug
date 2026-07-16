@@ -3,6 +3,7 @@ import dataclasses
 import json
 import logging
 import time
+import urllib.parse
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
@@ -281,11 +282,16 @@ class VZugApi:
     ) -> Any:
         if params is None:
             params = {}
-        final_params = params.copy()
-        final_params["command"] = command
-        final_params["_"] = str(int(time.time()))
+
+        # Some appliances are strict about query formatting. Mirror web UI shape:
+        # command first, value second, cache-buster in milliseconds, and spaces as %20.
+        final_params: dict[str, str] = {"command": command}
+        final_params.update(params)
+        final_params["_"] = str(int(time.time() * 1000))
+        query = urllib.parse.urlencode(final_params, quote_via=urllib.parse.quote)
 
         url = str(self._base_url / component)
+        request_url = f"{url}?{query}"
 
         async def once() -> Any:
             _LOGGER.debug(
@@ -295,7 +301,7 @@ class VZugApi:
                 component,
                 self._base_url,
             )
-            resp = await self._client.get(url, params=final_params)
+            resp = await self._client.get(request_url)
             resp.raise_for_status()
 
             if raw:
