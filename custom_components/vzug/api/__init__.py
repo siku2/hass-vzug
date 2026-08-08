@@ -327,6 +327,12 @@ class VZugApi:
                     data = None
 
             _LOGGER.debug("data: %s", data)
+            if isinstance(data, dict) and "error" in data:
+                # some appliances report unsupported commands and transient failures
+                # with a json error body and HTTP 200. Without this the body would
+                # satisfy the type check below and get stored as if it were valid.
+                raise ValueError(f"device returned an error response: {data['error']}")
+
             if expected_type is list and data is None:
                 # if we want a list and the response is null, we just treat that as an empty list
                 data: Any = []
@@ -358,7 +364,6 @@ class VZugApi:
             except httpx.TransportError as err:
                 last_exc = err
                 _LOGGER.debug("transport error: %r", err)
-                continue
             except AssertionError as exc:
                 last_exc = exc
                 _LOGGER.debug("response data assertion failed: %s", exc)
@@ -614,7 +619,7 @@ class VZugApi:
             expected_type=dict,
             value_on_err=(lambda: {"value": -1}) if default_on_error else None,
         )
-        return data["value"]
+        return data.get("value", -1)
 
     async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
         result = await self._command(
