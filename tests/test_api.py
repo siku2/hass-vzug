@@ -118,3 +118,54 @@ async def test_json_repair_with_real_broken_device_status():
 
         assert result is not None
         assert len(result) == 8
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_disables_itself(vzug_api):
+    """Appliances which don't know 'getZHMode' get probed exactly once."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        zh_mode.side_effect = ValueError("device returned an error response")
+        notifications.return_value = []
+        eco_info.return_value = {}
+
+        state = await vzug_api.aggregate_state()
+        assert state.zh_mode == -1
+        assert vzug_api._zh_mode_warmup is False
+
+        await vzug_api.aggregate_state()
+        assert zh_mode.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_runs_before_the_state_poll(vzug_api):
+    """The warm-up is only useful if it precedes the other commands."""
+    calls: list[str] = []
+
+    async def _zh_mode(**kwargs):
+        calls.append("getZHMode")
+        return 2
+
+    async def _eco_info(**kwargs):
+        calls.append("getEcoInfo")
+        return {"energy": {"total": 615.7}}
+
+    with (
+        patch.object(vzug_api, "get_zh_mode", side_effect=_zh_mode),
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", side_effect=_eco_info),
+    ):
+        notifications.return_value = []
+
+        state = await vzug_api.aggregate_state()
+
+        assert state.zh_mode == 2
+        assert calls == ["getZHMode", "getEcoInfo"]

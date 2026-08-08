@@ -266,6 +266,8 @@ class VZugApi:
         )
         self._client = httpx.AsyncClient(auth=auth, transport=transport)
         self._base_url = URL(base_url)
+        # unset once we learn that this appliance doesn't know 'getZHMode'
+        self._zh_mode_warmup = True
 
     async def _command(
         self,
@@ -375,9 +377,17 @@ class VZugApi:
         raise last_exc
 
     async def aggregate_state(self, *, default_on_error: bool = True) -> AggState:
-        # always start with zh_mode, that seems to do something??
-        # zh_mode = await self.get_zh_mode(default_on_error=True)
         zh_mode = -1
+        if self._zh_mode_warmup:
+            # a cheap 'hh' command before the state poll keeps 'getEcoInfo' from
+            # returning zeroed data on some appliances (ex. AdoraWash V6000).
+            # Appliances which don't know the command (ex. Adora SLQ) answer with an
+            # error, so we probe once and then stop asking.
+            try:
+                zh_mode = await self.get_zh_mode(attempts=1)
+            except Exception as exc:
+                _LOGGER.debug("zh_mode warm-up unsupported, disabling: %r", exc)
+                self._zh_mode_warmup = False
 
         async def _device() -> tuple[DeviceStatus, datetime]:
             data = await self.get_device_status(default_on_error=default_on_error)
@@ -607,11 +617,14 @@ class VZugApi:
             value_on_err=(lambda: AiFwVersion()) if default_on_error else None,
         )
 
-    async def get_zh_mode(self, *, default_on_error: bool = False) -> int:
+    async def get_zh_mode(
+        self, *, default_on_error: bool = False, attempts: int = 5
+    ) -> int:
         data = await self._command(
             "hh",
             command="getZHMode",
             expected_type=dict,
+            attempts=attempts,
             value_on_err=(lambda: {"value": -1}) if default_on_error else None,
         )
         return data["value"]

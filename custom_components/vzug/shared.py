@@ -20,6 +20,7 @@ UPDATE_COORD_IDLE_INTERVAL = timedelta(hours=6)
 UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
 
 ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
+STATE_MAX_STALE_UPDATES = 3
 
 
 class Shared:
@@ -72,6 +73,7 @@ class Shared:
         self.unique_id_prefix = ""
         self.device_info = DeviceInfo()
         self._first_refresh_done = False
+        self._eco_stale_count = 0
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
@@ -116,9 +118,27 @@ class Shared:
 
     async def _fetch_state(self) -> api.AggState:
         async with detect_auth_failed():
-            return await self.client.aggregate_state(
+            state = await self.client.aggregate_state(
                 default_on_error=self._first_refresh_done
             )
+
+        # an all-zero 'getEcoInfo' response is mapped to an empty EcoInfo, which would
+        # put every eco sensor to 'unknown'. Keep the previous values for a while
+        # instead - but not forever, the counters can legitimately be reset to 0.
+        previous = self.state_coord.data
+        if not state.eco_info and previous is not None and previous.eco_info:
+            if self._eco_stale_count < STATE_MAX_STALE_UPDATES:
+                self._eco_stale_count += 1
+                _LOGGER.debug(
+                    "eco info is empty (%s/%s), keeping previous values",
+                    self._eco_stale_count,
+                    STATE_MAX_STALE_UPDATES,
+                )
+                state.eco_info = previous.eco_info
+        else:
+            self._eco_stale_count = 0
+
+        return state
 
     async def _fetch_update(self) -> api.AggUpdateStatus:
         async with detect_auth_failed():
