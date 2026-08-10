@@ -1,7 +1,7 @@
 import httpx
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-from custom_components.vzug.api import VZugApi
+from custom_components.vzug.api import AggCategory, VZugApi
 
 def _json_response(payload):
     """Build a mock httpx response which returns 'payload' from .json()."""
