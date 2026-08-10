@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api
 from .const import DOMAIN
-from .shared import Shared, UpdateCoordinator
+from .coordinator import Shared, UpdateCoordinator
 
 
 async def async_setup_entry(
