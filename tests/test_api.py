@@ -1,7 +1,7 @@
 import httpx
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-from custom_components.vzug.api import VZugApi
+from custom_components.vzug.api import AggCategory, VZugApi
 
 def _json_response(payload):
     """Build a mock httpx response which returns 'payload' from .json()."""
@@ -127,6 +127,46 @@ async def test_json_repair_with_real_broken_device_status():
         assert len(result) == 8
 
 @pytest.mark.asyncio
+async def test_aggregate_config_retries_empty_categories(vzug_api):
+    """An empty 'getCategories' is a glitch and has to be retried."""
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch.object(vzug_api, "get_category", new_callable=AsyncMock) as category,
+        patch.object(vzug_api, "list_commands", new_callable=AsyncMock) as commands,
+        patch.object(vzug_api, "get_command", new_callable=AsyncMock) as command,
+        patch("custom_components.vzug.api.asyncio.sleep", new_callable=AsyncMock),
+    ):
+        categories.side_effect = [[], ["settings"]]
+        category.return_value = {"description": "Einstellungen"}
+        commands.return_value = ["brightness"]
+        command.return_value = {"command": "brightness", "value": "50"}
+
+        config_tree = await vzug_api.aggregate_config()
+
+        assert categories.call_count == 2
+        assert config_tree["settings"] == AggCategory(
+            key="settings",
+            description="Einstellungen",
+            commands={"brightness": {"command": "brightness", "value": "50"}},
+        )
+
+
+@pytest.mark.asyncio
+async def test_aggregate_config_stops_retrying_without_categories(vzug_api):
+    """Appliances without categories (ex. AdoraWash V4000) must not retry forever."""
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch("custom_components.vzug.api.asyncio.sleep", new_callable=AsyncMock),
+    ):
+        categories.return_value = []
+
+        assert await vzug_api.aggregate_config() == {}
+        assert categories.call_count == 3
+
+        # the appliance told us three times, we believe it now
+        categories.reset_mock()
+        assert await vzug_api.aggregate_config() == {}
+        assert categories.call_count == 1
 async def test_transport_error_counts_as_attempt(vzug_api):
     """A transport error must not restart the loop without incrementing the counter."""
     with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:

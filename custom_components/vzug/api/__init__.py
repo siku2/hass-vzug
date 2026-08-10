@@ -266,6 +266,8 @@ class VZugApi:
         )
         self._client = httpx.AsyncClient(auth=auth, transport=transport)
         self._base_url = URL(base_url)
+        # set once we learn that this appliance really doesn't have any categories
+        self._categories_may_be_empty = False
 
     async def _command(
         self,
@@ -473,6 +475,18 @@ class VZugApi:
 
     async def aggregate_config(self) -> AggConfig:
         category_keys = await self.list_categories()
+        if not category_keys and not self._categories_may_be_empty:
+            # some appliances wrongly return an empty list when the hh module is
+            # busy, others (ex. AdoraWash V4000) really don't have any categories.
+            # Retry a couple of times, then believe the appliance and stop retrying.
+            for delay in (1.0, 2.0):
+                _LOGGER.debug("getCategories returned empty, retrying in %ss", delay)
+                await asyncio.sleep(delay)
+                category_keys = await self.list_categories()
+                if category_keys:
+                    break
+        self._categories_may_be_empty = not category_keys
+
         config_tree: AggConfig = {}
         for category_key in category_keys:
             category_raw, command_keys = await asyncio.gather(
