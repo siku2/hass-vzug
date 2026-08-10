@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import api
 from .const import DOMAIN
@@ -21,6 +21,12 @@ UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
 
 ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
 STATE_MAX_STALE_UPDATES = 3
+
+# how many consecutive bad updates we cover by keeping the previous data around.
+# the appliance answers '200 []' or fails outright when it's busy and that must not
+# reach the entities, but the grace period has to be bounded so a genuine change
+# (ex. the eco counters being reset) still gets through.
+CONFIG_MAX_STALE_UPDATES = 3
 
 
 class Shared:
@@ -74,6 +80,7 @@ class Shared:
         self.device_info = DeviceInfo()
         self._first_refresh_done = False
         self._eco_stale_count = 0
+        self._config_stale_count = 0
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
@@ -153,8 +160,32 @@ class Shared:
         return data
 
     async def _fetch_config(self) -> api.AggConfig:
-        async with detect_auth_failed():
-            return await self.client.aggregate_config()
+        previous = self.config_coord.data
+        try:
+            async with detect_auth_failed():
+                config_tree = await self.client.aggregate_config()
+            if not config_tree and previous:
+                # the appliance answers '200 []' to 'getCategories' when it's busy.
+                # An empty result is only believable if the previous one was empty too.
+                raise UpdateFailed("getCategories returned empty")
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as exc:
+            # 'previous is None' means we never had a successful update, so there is
+            # nothing to keep and the caller should see the failure
+            if previous is None or self._config_stale_count >= CONFIG_MAX_STALE_UPDATES:
+                raise
+            self._config_stale_count += 1
+            _LOGGER.debug(
+                "config update failed (%s/%s), keeping previous data: %r",
+                self._config_stale_count,
+                CONFIG_MAX_STALE_UPDATES,
+                exc,
+            )
+            return previous
+
+        self._config_stale_count = 0
+        return config_tree
 
 
 @contextlib.asynccontextmanager

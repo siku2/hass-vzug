@@ -268,6 +268,8 @@ class VZugApi:
         self._base_url = URL(base_url)
         # unset once we learn that this appliance doesn't know 'getZHMode'
         self._zh_mode_warmup = True
+        # set once we learn that this appliance really doesn't have any categories
+        self._categories_may_be_empty = False
 
     async def _command(
         self,
@@ -329,6 +331,12 @@ class VZugApi:
                     data = None
 
             _LOGGER.debug("data: %s", data)
+            if isinstance(data, dict) and "error" in data:
+                # some appliances report unsupported commands and transient failures
+                # with a json error body and HTTP 200. Without this the body would
+                # satisfy the type check below and get stored as if it were valid.
+                raise ValueError(f"device returned an error response: {data['error']}")
+
             if expected_type is list and data is None:
                 # if we want a list and the response is null, we just treat that as an empty list
                 data: Any = []
@@ -360,7 +368,6 @@ class VZugApi:
             except httpx.TransportError as err:
                 last_exc = err
                 _LOGGER.debug("transport error: %r", err)
-                continue
             except AssertionError as exc:
                 last_exc = exc
                 _LOGGER.debug("response data assertion failed: %s", exc)
@@ -478,6 +485,18 @@ class VZugApi:
 
     async def aggregate_config(self) -> AggConfig:
         category_keys = await self.list_categories()
+        if not category_keys and not self._categories_may_be_empty:
+            # some appliances wrongly return an empty list when the hh module is
+            # busy, others (ex. AdoraWash V4000) really don't have any categories.
+            # Retry a couple of times, then believe the appliance and stop retrying.
+            for delay in (1.0, 2.0):
+                _LOGGER.debug("getCategories returned empty, retrying in %ss", delay)
+                await asyncio.sleep(delay)
+                category_keys = await self.list_categories()
+                if category_keys:
+                    break
+        self._categories_may_be_empty = not category_keys
+
         config_tree: AggConfig = {}
         for category_key in category_keys:
             category_raw, command_keys = await asyncio.gather(
@@ -627,7 +646,7 @@ class VZugApi:
             attempts=attempts,
             value_on_err=(lambda: {"value": -1}) if default_on_error else None,
         )
-        return data["value"]
+        return data.get("value", -1)
 
     async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
         result = await self._command(
