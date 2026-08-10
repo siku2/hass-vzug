@@ -1,7 +1,14 @@
+import httpx
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
+from custom_components.vzug.api import VZugApi
 
-from custom_components.vzug.api import AggCategory, VZugApi
+def _json_response(payload):
+    """Build a mock httpx response which returns 'payload' from .json()."""
+    response = MagicMock()
+    response.json.return_value = payload
+    response.raise_for_status.return_value = None
+    return response
 
 
 @pytest.fixture
@@ -160,4 +167,61 @@ async def test_aggregate_config_stops_retrying_without_categories(vzug_api):
         categories.reset_mock()
         assert await vzug_api.aggregate_config() == {}
         assert categories.call_count == 1
+async def test_transport_error_counts_as_attempt(vzug_api):
+    """A transport error must not restart the loop without incrementing the counter."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = httpx.ReadTimeout("")
+
+        with pytest.raises(httpx.ReadTimeout):
+            await vzug_api._command(
+                "hh", command="getEcoInfo", attempts=3, retry_delay=0.0
+            )
+
+        # without the fix this loops forever because 'continue' skips 'attempt_idx += 1'
+        assert mock_get.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_json_error_body_is_retried(vzug_api):
+    """A json error body with HTTP 200 must not be accepted as valid data."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = [
+            _json_response({"error": {"code": 503.01}}),
+            _json_response({"value": 2}),
+        ]
+
+        result = await vzug_api._command(
+            "hh", command="getZHMode", expected_type=dict, retry_delay=0.0
+        )
+
+        assert result == {"value": 2}
+        assert mock_get.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_json_error_body_falls_back_to_default(vzug_api):
+    """When every attempt returns an error body, 'value_on_err' has to kick in."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _json_response({"error": {"code": 404}})
+
+        result = await vzug_api._command(
+            "hh",
+            command="getZHMode",
+            expected_type=dict,
+            attempts=2,
+            retry_delay=0.0,
+            value_on_err=lambda: {"value": -1},
+        )
+
+        assert result == {"value": -1}
+        assert mock_get.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_get_zh_mode_survives_missing_value_key(vzug_api):
+    """An unexpected body must not raise a KeyError outside of the retry path."""
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        mock_command.return_value = {}
+
+        assert await vzug_api.get_zh_mode() == -1
 
