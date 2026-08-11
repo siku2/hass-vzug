@@ -1,7 +1,11 @@
 import httpx
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-from custom_components.vzug.api import AggCategory, VZugApi
+from custom_components.vzug.api import (
+    ZH_MODE_WARMUP_MAX_FAILURES,
+    AggCategory,
+    VZugApi,
+)
 
 def _json_response(payload):
     """Build a mock httpx response which returns 'payload' from .json()."""
@@ -127,6 +131,85 @@ async def test_json_repair_with_real_broken_device_status():
         assert len(result) == 8
 
 @pytest.mark.asyncio
+async def test_zh_mode_warmup_gives_up_after_repeated_failures(vzug_api):
+    """An appliance which doesn't know 'getZHMode' is written off eventually."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        zh_mode.side_effect = ValueError("device returned an error response")
+        notifications.return_value = []
+        eco_info.return_value = {}
+
+        for _ in range(ZH_MODE_WARMUP_MAX_FAILURES):
+            state = await vzug_api.aggregate_state()
+            assert state.zh_mode == -1
+
+        assert zh_mode.call_count == ZH_MODE_WARMUP_MAX_FAILURES
+
+        # the appliance has told us often enough, stop asking
+        await vzug_api.aggregate_state()
+        assert zh_mode.call_count == ZH_MODE_WARMUP_MAX_FAILURES
+
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_survives_a_single_failure(vzug_api):
+    """These devices fail a request every now and then; that must not be fatal."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        zh_mode.side_effect = [httpx.ReadTimeout(""), 2, httpx.ReadTimeout(""), 2]
+        notifications.return_value = []
+        eco_info.return_value = {}
+
+        assert (await vzug_api.aggregate_state()).zh_mode == -1
+        assert (await vzug_api.aggregate_state()).zh_mode == 2
+
+        # the success reset the counter, so another blip is survivable too
+        assert (await vzug_api.aggregate_state()).zh_mode == -1
+        assert (await vzug_api.aggregate_state()).zh_mode == 2
+        assert zh_mode.call_count == 4
+
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_runs_before_the_state_poll(vzug_api):
+    """The warm-up is only useful if it precedes the other commands."""
+    calls: list[str] = []
+
+    async def _zh_mode(**kwargs):
+        calls.append("getZHMode")
+        return 2
+
+    async def _eco_info(**kwargs):
+        calls.append("getEcoInfo")
+        return {"energy": {"total": 615.7}}
+
+    with (
+        patch.object(vzug_api, "get_zh_mode", side_effect=_zh_mode),
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", side_effect=_eco_info),
+    ):
+        notifications.return_value = []
+
+        state = await vzug_api.aggregate_state()
+
+        assert state.zh_mode == 2
+        assert calls == ["getZHMode", "getEcoInfo"]
+
+
+@pytest.mark.asyncio
 async def test_aggregate_config_retries_empty_categories(vzug_api):
     """An empty 'getCategories' is a glitch and has to be retried."""
     with (
@@ -167,6 +250,9 @@ async def test_aggregate_config_stops_retrying_without_categories(vzug_api):
         categories.reset_mock()
         assert await vzug_api.aggregate_config() == {}
         assert categories.call_count == 1
+
+
+@pytest.mark.asyncio
 async def test_transport_error_counts_as_attempt(vzug_api):
     """A transport error must not restart the loop without incrementing the counter."""
     with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
