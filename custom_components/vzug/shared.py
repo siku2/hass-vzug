@@ -20,6 +20,11 @@ UPDATE_COORD_IDLE_INTERVAL = timedelta(hours=6)
 UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
 
 ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
+# the config tree is a snapshot of the appliance's settings, so it barely ever
+# changes on its own. Polling it every few minutes only widens the window for the
+# transient failures this API is prone to, so it is refreshed on demand instead:
+# whenever the appliance starts or finishes a program, and after every write.
+CONFIG_COORD_INTERVAL = timedelta(hours=1)
 
 # how many consecutive bad updates we cover by keeping the previous data around.
 # the appliance answers '200 []' or fails outright when it's busy and that must not
@@ -71,7 +76,7 @@ class Shared:
             hass,
             _LOGGER,
             name="config",
-            update_interval=timedelta(minutes=5),
+            update_interval=CONFIG_COORD_INTERVAL,
             update_method=self._fetch_config,
         )
 
@@ -81,6 +86,7 @@ class Shared:
         self._first_refresh_done = False
         self._config_stale_count = 0
         self._eco_stale_count = 0
+        self._device_active: bool | None = None
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
@@ -145,7 +151,24 @@ class Shared:
         else:
             self._eco_stale_count = 0
 
+        self._track_activity(state.device)
         return state
+
+    def _track_activity(self, device: api.DeviceStatus) -> None:
+        """Refresh the config tree whenever the appliance starts or finishes."""
+        inactive = device.get("Inactive")
+        if inactive not in ("true", "false"):
+            # unknown state, don't guess
+            return
+
+        active = inactive == "false"
+        if self._device_active is not None and active != self._device_active:
+            # the eco statistics in the config tree ('ecomXstatXtotal' and friends)
+            # are updated when a program completes, and someone standing at the
+            # appliance may have changed settings on its panel
+            _LOGGER.debug("device activity changed to %s, refreshing config", active)
+            self.hass.async_create_task(self.config_coord.async_request_refresh())
+        self._device_active = active
 
     async def _fetch_update(self) -> api.AggUpdateStatus:
         async with detect_auth_failed():
