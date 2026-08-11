@@ -16,6 +16,11 @@ from . import discovery  # noqa: F401 # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 
+# how many consecutive failures it takes before we accept that an appliance doesn't
+# know 'getZHMode'. These devices fail a request every now and then, so a single
+# error is not enough to write the command off.
+ZH_MODE_WARMUP_MAX_FAILURES = 3
+
 DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
 
@@ -266,8 +271,8 @@ class VZugApi:
         )
         self._client = httpx.AsyncClient(auth=auth, transport=transport)
         self._base_url = URL(base_url)
-        # unset once we learn that this appliance doesn't know 'getZHMode'
-        self._zh_mode_warmup = True
+        # consecutive warm-up failures, see ZH_MODE_WARMUP_MAX_FAILURES
+        self._zh_mode_warmup_failures = 0
         # set once we learn that this appliance really doesn't have any categories
         self._categories_may_be_empty = False
 
@@ -385,16 +390,24 @@ class VZugApi:
 
     async def aggregate_state(self, *, default_on_error: bool = True) -> AggState:
         zh_mode = -1
-        if self._zh_mode_warmup:
+        if self._zh_mode_warmup_failures < ZH_MODE_WARMUP_MAX_FAILURES:
             # a cheap 'hh' command before the state poll keeps 'getEcoInfo' from
             # returning zeroed data on some appliances (ex. AdoraWash V6000).
             # Appliances which don't know the command (ex. Adora SLQ) answer with an
-            # error, so we probe once and then stop asking.
+            # error - but so does a healthy one every now and then, so only give up
+            # after it has failed several times in a row.
             try:
                 zh_mode = await self.get_zh_mode(attempts=1)
             except Exception as exc:
-                _LOGGER.debug("zh_mode warm-up unsupported, disabling: %r", exc)
-                self._zh_mode_warmup = False
+                self._zh_mode_warmup_failures += 1
+                _LOGGER.debug(
+                    "zh_mode warm-up failed (%s/%s): %r",
+                    self._zh_mode_warmup_failures,
+                    ZH_MODE_WARMUP_MAX_FAILURES,
+                    exc,
+                )
+            else:
+                self._zh_mode_warmup_failures = 0
 
         async def _device() -> tuple[DeviceStatus, datetime]:
             data = await self.get_device_status(default_on_error=default_on_error)
