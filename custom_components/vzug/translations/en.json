@@ -43,6 +43,9 @@
         "button": {
             "check_update": {
                 "name": "Check for Updates"
+            },
+            "refresh_now": {
+                "name": "Refresh Now"
             }
         },
         "sensor": {

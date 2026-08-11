@@ -43,6 +43,9 @@
     "button": {
       "check_update": {
         "name": "Nach Updates Suchen"
+      },
+      "refresh_now": {
+        "name": "Jetzt Aktualisieren"
       }
     },
     "sensor": {

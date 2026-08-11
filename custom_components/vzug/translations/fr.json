@@ -43,6 +43,9 @@
         "button": {
             "check_update": {
                 "name": "Vérifier les Mises à Jour"
+            },
+            "refresh_now": {
+                "name": "Actualiser Maintenant"
             }
         },
         "sensor": {
