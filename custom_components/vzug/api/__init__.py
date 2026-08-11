@@ -388,9 +388,24 @@ class VZugApi:
 
         raise last_exc
 
-    async def aggregate_state(self, *, default_on_error: bool = True) -> AggState:
+    async def aggregate_state(
+        self,
+        *,
+        default_on_error: bool = True,
+        include_device: bool = True,
+        include_eco: bool = True,
+    ) -> AggState:
+        """Fetch the appliance state.
+
+        'getDeviceStatus' wakes the appliance up, 'getLastPUSHNotifications' is
+        answered by the AI module without touching it. Skipping the former lets the
+        caller keep an eye on the appliance without disturbing it; the skipped
+        values come back empty and are the caller's to carry over.
+        """
         zh_mode = -1
-        if self._zh_mode_warmup_failures < ZH_MODE_WARMUP_MAX_FAILURES:
+        # the warm-up only exists to keep 'getEcoInfo' from returning zeros, so
+        # there is no point in paying for it when we don't ask for eco info
+        if include_eco and self._zh_mode_warmup_failures < ZH_MODE_WARMUP_MAX_FAILURES:
             # a cheap 'hh' command before the state poll keeps 'getEcoInfo' from
             # returning zeroed data on some appliances (ex. AdoraWash V6000).
             # Appliances which don't know the command (ex. Adora SLQ) answer with an
@@ -410,13 +425,20 @@ class VZugApi:
                 self._zh_mode_warmup_failures = 0
 
         async def _device() -> tuple[DeviceStatus, datetime]:
+            if not include_device:
+                return DeviceStatus(), datetime.now(UTC)
             data = await self.get_device_status(default_on_error=default_on_error)
             return data, datetime.now(UTC)
+
+        async def _eco() -> EcoInfo:
+            if not include_eco:
+                return EcoInfo()
+            return await self.get_eco_info(default_on_error=default_on_error)
 
         (device, device_fetched_at), notifications, eco_info = await asyncio.gather(
             _device(),
             self.get_last_push_notifications(default_on_error=default_on_error),
-            self.get_eco_info(default_on_error=default_on_error),
+            _eco(),
         )
 
         return AggState(
