@@ -311,3 +311,30 @@ async def test_get_zh_mode_survives_missing_value_key(vzug_api):
 
         assert await vzug_api.get_zh_mode() == -1
 
+
+@pytest.mark.asyncio
+async def test_aggregate_state_can_skip_the_appliance(vzug_api):
+    """'getDeviceStatus' wakes the appliance, so it has to be skippable."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock) as device,
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        notifications.return_value = [{"date": "2026-08-09T15:14:46Z"}]
+
+        state = await vzug_api.aggregate_state(include_device=False, include_eco=False)
+
+        # the only command that ran is the one served by the AI module
+        notifications.assert_awaited_once()
+        device.assert_not_awaited()
+        eco_info.assert_not_awaited()
+        # the warm-up only exists for getEcoInfo, so it must not run either
+        zh_mode.assert_not_awaited()
+
+        assert state.device == {}
+        assert state.eco_info == {}
+        assert state.notifications == [{"date": "2026-08-09T15:14:46Z"}]
+

@@ -1,6 +1,6 @@
 import contextlib
 import logging
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import yarl
 from homeassistant.core import HomeAssistant
@@ -15,6 +15,15 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 StateCoordinator = DataUpdateCoordinator[api.AggState]
+# 'getDeviceStatus' wakes the appliance and it stays awake for ~20s afterwards, so
+# polling it every 30s keeps the appliance awake around the clock. While a program
+# runs it is awake anyway and polling is free; in standby we only ask the AI module
+# for notifications, which doesn't disturb the appliance at all, and pay for a real
+# status probe every few minutes to catch a program someone started by hand.
+STATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=30)
+STATE_COORD_IDLE_INTERVAL = timedelta(seconds=60)
+STATE_COORD_IDLE_PROBE_INTERVAL = timedelta(minutes=5)
+
 UpdateCoordinator = DataUpdateCoordinator[api.AggUpdateStatus]
 UPDATE_COORD_IDLE_INTERVAL = timedelta(hours=6)
 UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
@@ -62,7 +71,7 @@ class Shared:
             hass,
             _LOGGER,
             name="state",
-            update_interval=timedelta(seconds=30),
+            update_interval=STATE_COORD_ACTIVE_INTERVAL,
             update_method=self._fetch_state,
         )
         self.update_coord = DataUpdateCoordinator(
@@ -87,6 +96,8 @@ class Shared:
         self._config_stale_count = 0
         self._eco_stale_count = 0
         self._device_active: bool | None = None
+        self._last_device_probe: datetime | None = None
+        self._last_notification: str | None = None
 
     async def async_config_entry_first_refresh(self) -> None:
         async with detect_auth_failed():
@@ -130,15 +141,34 @@ class Shared:
         self._first_refresh_done = True
 
     async def _fetch_state(self) -> api.AggState:
+        previous = self.state_coord.data
+        probe = self._device_probe_due()
+
         async with detect_auth_failed():
             state = await self.client.aggregate_state(
-                default_on_error=self._first_refresh_done
+                default_on_error=self._first_refresh_done,
+                include_device=probe,
+                include_eco=probe,
             )
+
+            if self._note_notifications(state.notifications) and not probe:
+                # something happened at the appliance: a program finished, or a
+                # timed one started. It is awake now anyway, so this costs nothing.
+                _LOGGER.debug("new notification, fetching the full state")
+                probe = True
+                state = await self.client.aggregate_state(
+                    default_on_error=self._first_refresh_done
+                )
+                self.hass.async_create_task(self.config_coord.async_request_refresh())
+
+        if not probe:
+            return self._carry_over(state, previous)
+
+        self._last_device_probe = datetime.now(UTC)
 
         # an all-zero 'getEcoInfo' response is mapped to an empty EcoInfo, which would
         # put every eco sensor to 'unknown'. Keep the previous values for a while
         # instead - but not forever, the counters can legitimately be reset to 0.
-        previous = self.state_coord.data
         if not state.eco_info and previous is not None and previous.eco_info:
             if self._eco_stale_count < STATE_MAX_STALE_UPDATES:
                 self._eco_stale_count += 1
@@ -152,6 +182,47 @@ class Shared:
             self._eco_stale_count = 0
 
         self._track_activity(state.device)
+        self.state_coord.update_interval = (
+            STATE_COORD_IDLE_INTERVAL
+            if self._device_active is False
+            else STATE_COORD_ACTIVE_INTERVAL
+        )
+        return state
+
+    def _device_probe_due(self) -> bool:
+        """Whether this poll may wake the appliance up."""
+        if self._device_active is not False:
+            # running, or we don't know yet - either way it isn't asleep
+            return True
+        if self._last_device_probe is None:
+            return True
+        age = datetime.now(UTC) - self._last_device_probe
+        return age >= STATE_COORD_IDLE_PROBE_INTERVAL
+
+    def _note_notifications(self, notifications: list[api.PushNotification]) -> bool:
+        """Remember the most recent notification, reporting whether it is new."""
+        try:
+            latest = notifications[0]["date"]
+        except LookupError:
+            return False
+
+        previous, self._last_notification = self._last_notification, latest
+        return previous is not None and previous != latest
+
+    def _carry_over(
+        self, state: api.AggState, previous: api.AggState | None
+    ) -> api.AggState:
+        """Fill in the values we deliberately didn't ask for."""
+        if previous is None:
+            return state
+
+        # 'device_fetched_at' has to travel with the device data: ProgramEnd computes
+        # the finishing time as 'device_fetched_at + remaining', so a fresh timestamp
+        # on stale data would push the countdown further out on every poll
+        state.device = previous.device
+        state.device_fetched_at = previous.device_fetched_at
+        state.eco_info = previous.eco_info
+        state.zh_mode = previous.zh_mode
         return state
 
     def _track_activity(self, device: api.DeviceStatus) -> None:

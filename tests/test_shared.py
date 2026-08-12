@@ -4,7 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from custom_components.vzug.api import AggState
-from custom_components.vzug.shared import STATE_MAX_STALE_UPDATES, Shared
+from custom_components.vzug.shared import (
+    STATE_COORD_ACTIVE_INTERVAL,
+    STATE_COORD_IDLE_INTERVAL,
+    STATE_COORD_IDLE_PROBE_INTERVAL,
+    STATE_MAX_STALE_UPDATES,
+    Shared,
+)
 
 _ECO_INFO = {"water": {"total": 80085.5}, "energy": {"total": 615.7}}
 
@@ -21,6 +27,8 @@ def shared():
     instance._first_refresh_done = True
     instance._eco_stale_count = 0
     instance._device_active = None
+    instance._last_device_probe = None
+    instance._last_notification = None
     return instance
 
 
@@ -41,6 +49,9 @@ def _state(eco_info):
 async def _poll(shared: Shared, eco_info) -> AggState:
     """Run one update and store the result the way the coordinator would."""
     shared.client.aggregate_state = AsyncMock(return_value=_state(eco_info))
+    # eco info is only fetched on a poll that is allowed to wake the appliance, so
+    # force one - otherwise these tests would pass without reaching the code at all
+    shared._last_device_probe = None
     state = await shared._fetch_state()
     shared.state_coord.data = state
     return state
@@ -130,3 +141,123 @@ def test_unknown_activity_is_ignored(shared):
 
     shared._track_activity({"Inactive": "true"})
     assert _config_refreshes(shared) == 1
+
+
+_NOTIFICATION = "2026-08-09T15:14:46Z"
+
+
+def _full_state(*, inactive: str = "true", notification: str = _NOTIFICATION):
+    """What aggregate_state returns for a poll that asked for everything."""
+    return AggState(
+        zh_mode=2,
+        device={"Inactive": inactive, "Program": ""},
+        device_fetched_at=datetime(2026, 8, 9, 15, 0, tzinfo=UTC),
+        notifications=[{"date": notification, "message": "Programm beendet"}],
+        eco_info=_ECO_INFO,
+    )
+
+
+def _light_state(notification: str = _NOTIFICATION):
+    """What it returns when the device fetch was skipped."""
+    return AggState(
+        zh_mode=-1,
+        device={},
+        device_fetched_at=datetime.now(UTC),
+        notifications=[{"date": notification, "message": "Programm beendet"}],
+        eco_info={},
+    )
+
+
+def _in_standby(shared: Shared) -> None:
+    shared.state_coord.data = _full_state()
+    shared._device_active = False
+    shared._last_device_probe = datetime.now(UTC)
+    shared._last_notification = _NOTIFICATION
+
+
+@pytest.mark.asyncio
+async def test_first_poll_asks_for_everything(shared):
+    """We don't know the appliance's state yet, so we must not skip anything."""
+    shared.client.aggregate_state = AsyncMock(return_value=_full_state())
+
+    await shared._fetch_state()
+
+    kwargs = shared.client.aggregate_state.call_args.kwargs
+    assert kwargs["include_device"] is True
+    assert kwargs["include_eco"] is True
+    assert shared.state_coord.update_interval == STATE_COORD_IDLE_INTERVAL
+
+
+@pytest.mark.asyncio
+async def test_standby_poll_leaves_the_appliance_alone(shared):
+    """In standby only the AI module is asked, which doesn't wake the appliance."""
+    _in_standby(shared)
+    previous = shared.state_coord.data
+    shared.client.aggregate_state = AsyncMock(return_value=_light_state())
+
+    state = await shared._fetch_state()
+
+    kwargs = shared.client.aggregate_state.call_args.kwargs
+    assert kwargs["include_device"] is False
+    assert kwargs["include_eco"] is False
+
+    # the skipped values are carried over, timestamp included - a fresh one would
+    # push the ProgramEnd countdown further out on every poll
+    assert state.device == previous.device
+    assert state.device_fetched_at == previous.device_fetched_at
+    assert state.eco_info == previous.eco_info
+    # a deliberately skipped fetch is not a failure and must not burn the grace period
+    assert shared._eco_stale_count == 0
+
+
+@pytest.mark.asyncio
+async def test_standby_probes_the_device_after_the_interval(shared):
+    _in_standby(shared)
+    shared._last_device_probe = datetime.now(UTC) - STATE_COORD_IDLE_PROBE_INTERVAL
+    shared.client.aggregate_state = AsyncMock(return_value=_full_state())
+
+    await shared._fetch_state()
+
+    assert shared.client.aggregate_state.call_args.kwargs["include_device"] is True
+
+
+@pytest.mark.asyncio
+async def test_running_program_is_polled_in_full(shared):
+    """While a program runs the appliance is awake anyway, so polling is free."""
+    _in_standby(shared)
+    shared._device_active = True
+    shared.client.aggregate_state = AsyncMock(
+        return_value=_full_state(inactive="false")
+    )
+
+    await shared._fetch_state()
+
+    assert shared.client.aggregate_state.call_args.kwargs["include_device"] is True
+    assert shared.state_coord.update_interval == STATE_COORD_ACTIVE_INTERVAL
+
+
+@pytest.mark.asyncio
+async def test_new_notification_triggers_a_full_poll(shared):
+    """A program finished or a timed one started - fetch everything right away."""
+    _in_standby(shared)
+    shared._last_notification = "2026-08-09T09:06:42Z"
+    shared.client.aggregate_state = AsyncMock(
+        side_effect=[_light_state(), _full_state(inactive="false")]
+    )
+
+    state = await shared._fetch_state()
+
+    assert shared.client.aggregate_state.call_count == 2
+    assert "include_device" not in shared.client.aggregate_state.call_args.kwargs
+    assert state.device == {"Inactive": "false", "Program": ""}
+    assert _config_refreshes(shared) >= 1
+
+
+@pytest.mark.asyncio
+async def test_unchanged_notification_does_not_trigger_a_poll(shared):
+    _in_standby(shared)
+    shared.client.aggregate_state = AsyncMock(return_value=_light_state())
+
+    await shared._fetch_state()
+
+    assert shared.client.aggregate_state.call_count == 1
