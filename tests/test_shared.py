@@ -254,6 +254,28 @@ async def test_new_notification_triggers_a_full_poll(shared):
 
 
 @pytest.mark.asyncio
+async def test_probe_request_reaches_the_appliance(shared):
+    """A refresh asked for by hand must not be answered from standby shortcuts."""
+    _in_standby(shared)
+    shared.state_coord.async_request_refresh = AsyncMock()
+    shared.config_coord.async_request_refresh = AsyncMock()
+
+    await shared.async_probe_device()
+
+    # the settings are hourly otherwise, and changing one on the appliance's panel
+    # is exactly what someone would press this for
+    shared.config_coord.async_request_refresh.assert_awaited_once()
+
+    shared.state_coord.async_request_refresh.assert_awaited_once()
+    assert shared._device_probe_due() is True
+
+    # and the update it triggers really does ask for everything
+    shared.client.aggregate_state = AsyncMock(return_value=_full_state())
+    await shared._fetch_state()
+    assert shared.client.aggregate_state.call_args.kwargs["include_device"] is True
+
+
+@pytest.mark.asyncio
 async def test_unchanged_notification_does_not_trigger_a_poll(shared):
     _in_standby(shared)
     shared.client.aggregate_state = AsyncMock(return_value=_light_state())

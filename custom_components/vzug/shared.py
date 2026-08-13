@@ -189,6 +189,20 @@ class Shared:
         )
         return state
 
+    async def async_probe_device(self) -> None:
+        """Bring everything up to date, waking the appliance if necessary.
+
+        In standby the state updates deliberately leave the appliance alone and the
+        config tree is only refreshed hourly, so neither a plain refresh nor waiting
+        gets fresh data. This is the way to ask for it anyway. Both coordinators are
+        included because the appliance is being woken either way, and a settings
+        change made on its panel is exactly the kind of thing someone would press
+        this for.
+        """
+        self._last_device_probe = None
+        await self.state_coord.async_request_refresh()
+        await self.config_coord.async_request_refresh()
+
     def _device_probe_due(self) -> bool:
         """Whether this poll may wake the appliance up."""
         if self._device_active is not False:
