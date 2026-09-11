@@ -100,8 +100,19 @@ class Shared:
         self._last_notification: str | None = None
 
     async def async_config_entry_first_refresh(self) -> None:
-        async with detect_auth_failed():
-            self.meta = await self.client.aggregate_meta()
+        # the appliance may simply be switched off (some turn off completely after a
+        # program). Fail fast and let HA retry the setup with its own backoff instead
+        # of blocking startup with our retries, or ending up in 'setup failed' for good.
+        try:
+            async with detect_auth_failed():
+                self.meta = await self.client.aggregate_meta(attempts=1)
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as exc:
+            # HA only logs the message, not the chained exception
+            raise ConfigEntryNotReady(
+                f"unable to reach the appliance at {self.client.base_url}: {exc!r}"
+            ) from exc
 
         await self.state_coord.async_config_entry_first_refresh()
         await self.update_coord.async_config_entry_first_refresh()

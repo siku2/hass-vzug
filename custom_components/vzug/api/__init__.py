@@ -468,7 +468,9 @@ class VZugApi:
             hh_fw_version=hh_fw_version,
         )
 
-    async def aggregate_meta(self, *, default_on_error: bool = False) -> AggMeta:
+    async def aggregate_meta(
+        self, *, default_on_error: bool = False, attempts: int = 5
+    ) -> AggMeta:
         # First method used in config flow to get details about the device
         (
             mac_address,
@@ -477,14 +479,22 @@ class VZugApi:
             ai_firmware,
         ) = await asyncio.gather(
             # This is all from the AI Module/API
-            self.get_mac_address(default_on_error=default_on_error),
-            self.get_device_status(default_on_error=default_on_error),
-            self.get_model_description(default_on_error=default_on_error),
-            self.get_ai_fw_version(default_on_error=default_on_error),
+            self.get_mac_address(default_on_error=default_on_error, attempts=attempts),
+            self.get_device_status(
+                default_on_error=default_on_error, attempts=attempts
+            ),
+            self.get_model_description(
+                default_on_error=default_on_error, attempts=attempts
+            ),
+            self.get_ai_fw_version(
+                default_on_error=default_on_error, attempts=attempts
+            ),
         )
 
         try:
-            # Only supported on some devices, probably with newer hh module
+            # Only supported on some devices, probably with newer hh module.
+            # 'attempts' is deliberately not passed on: the appliance has answered by
+            # now, and a single failure here would silently switch to the AI data.
             device_info = await self.get_device_info(default_on_error=True)
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == httpx.codes.NOT_FOUND:
@@ -554,29 +564,36 @@ class VZugApi:
             config_tree[category_key] = category
         return config_tree
 
-    async def get_mac_address(self, *, default_on_error: bool = False) -> str:
+    async def get_mac_address(
+        self, *, default_on_error: bool = False, attempts: int = 5
+    ) -> str:
         return await self._command(
             "ai",
             command="getMacAddress",
             raw=True,
+            attempts=attempts,
             value_on_err=(lambda: "") if default_on_error else None,
         )
 
-    async def get_model_description(self, *, default_on_error: bool = False) -> str:
+    async def get_model_description(
+        self, *, default_on_error: bool = False, attempts: int = 5
+    ) -> str:
         return await self._command(
             "ai",
             command="getModelDescription",
             raw=True,
+            attempts=attempts,
             value_on_err=(lambda: "") if default_on_error else None,
         )
 
     async def get_device_status(
-        self, *, default_on_error: bool = False
+        self, *, default_on_error: bool = False, attempts: int = 5
     ) -> DeviceStatus:
         return await self._command(
             "ai",
             command="getDeviceStatus",
             expected_type=dict,
+            attempts=attempts,
             value_on_err=(lambda: DeviceStatus()) if default_on_error else None,
         )
 
@@ -663,11 +680,14 @@ class VZugApi:
             value_on_err=(lambda: HhFwVersion()) if default_on_error else None,
         )
 
-    async def get_ai_fw_version(self, *, default_on_error: bool = False) -> AiFwVersion:
+    async def get_ai_fw_version(
+        self, *, default_on_error: bool = False, attempts: int = 5
+    ) -> AiFwVersion:
         return await self._command(
             "ai",
             command="getFWVersion",
             expected_type=dict,
+            attempts=attempts,
             value_on_err=(lambda: AiFwVersion()) if default_on_error else None,
         )
 

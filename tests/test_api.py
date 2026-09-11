@@ -268,6 +268,19 @@ async def test_transport_error_counts_as_attempt(vzug_api):
 
 
 @pytest.mark.asyncio
+async def test_aggregate_meta_can_fail_fast(vzug_api):
+    """The setup tries every command once, HA retries it with its own backoff."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = httpx.ConnectTimeout("")
+
+        with pytest.raises(httpx.ConnectTimeout):
+            await vzug_api.aggregate_meta(attempts=1)
+
+        # one request per command in the gather, no retries
+        assert mock_get.call_count == 4
+
+
+@pytest.mark.asyncio
 async def test_json_error_body_is_retried(vzug_api):
     """A json error body with HTTP 200 must not be accepted as valid data."""
     with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
