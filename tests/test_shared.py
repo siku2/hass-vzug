@@ -1,9 +1,11 @@
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from custom_components.vzug.api import AggState
+from custom_components.vzug.api import AggState, AuthenticationFailed
 from custom_components.vzug.shared import (
     STATE_COORD_ACTIVE_INTERVAL,
     STATE_COORD_IDLE_INTERVAL,
@@ -283,3 +285,26 @@ async def test_unchanged_notification_does_not_trigger_a_poll(shared):
     await shared._fetch_state()
 
     assert shared.client.aggregate_state.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_unreachable_appliance_retries_the_setup(shared):
+    """Some appliances switch off completely, that must not fail the setup for good."""
+    shared.client.aggregate_meta = AsyncMock(side_effect=httpx.ConnectTimeout(""))
+    shared.state_coord.async_config_entry_first_refresh = AsyncMock()
+
+    with pytest.raises(ConfigEntryNotReady):
+        await shared.async_config_entry_first_refresh()
+
+    # HA retries with its own backoff, our retries would only block the startup
+    shared.client.aggregate_meta.assert_awaited_once_with(attempts=1)
+    shared.state_coord.async_config_entry_first_refresh.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_rejected_credentials_are_not_retried(shared):
+    """Retrying won't fix the credentials, HA has to ask for new ones."""
+    shared.client.aggregate_meta = AsyncMock(side_effect=AuthenticationFailed())
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await shared.async_config_entry_first_refresh()
