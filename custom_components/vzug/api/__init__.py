@@ -266,7 +266,11 @@ class VZugApi:
         )
         transport = httpx.AsyncHTTPTransport(
             verify=False,
-            limits=httpx.Limits(max_connections=3, max_keepalive_connections=1),
+            # The appliances can't handle concurrent requests reliably: an AdoraWash
+            # V6000 answers 'getCommand' with '400.03' far more often when several
+            # requests run at the same time. A 4xx isn't retried, so a single such
+            # answer fails the whole config refresh. One connection at a time.
+            limits=httpx.Limits(max_connections=1, max_keepalive_connections=1),
             retries=5,
         )
         self._client = httpx.AsyncClient(auth=auth, transport=transport)
