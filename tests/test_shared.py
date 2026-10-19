@@ -443,3 +443,25 @@ async def test_failed_request_outside_an_update_is_left_alone(shared):
 
     assert await _poll_update(shared, None, sw=None) == UPDATE_COORD_IDLE_INTERVAL
     assert shared.update_coord.data.update == {}
+
+
+@pytest.mark.asyncio
+async def test_status_is_not_carried_over_past_a_new_firmware(shared):
+    """Otherwise the update that was just installed would be offered once more."""
+    await _poll_update(shared, "installing", available=True)
+
+    await _poll_update(shared, None, sw="1052633-R20")
+
+    data = shared.update_coord.data
+    assert data.ai_fw_version["SW"] == "1052633-R20"
+    assert data.update == {}
+
+
+@pytest.mark.asyncio
+async def test_failed_requests_do_not_extend_the_window(shared):
+    """Only a running update or an install request opens it."""
+    shared._last_update_activity = (
+        datetime.now(UTC) - UPDATE_COORD_SETTLE_PERIOD - timedelta(seconds=1)
+    )
+
+    assert await _poll_update(shared, None, sw=None) == UPDATE_COORD_IDLE_INTERVAL

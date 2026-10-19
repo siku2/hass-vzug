@@ -330,8 +330,15 @@ class Shared:
         """Fill in the parts that came back empty with the previous ones."""
         if previous is None:
             return data
+        update = data.update
+        installed = data.ai_fw_version.get("SW")
+        if not update and installed in (None, previous.ai_fw_version.get("SW")):
+            # the previous status is only worth keeping while it still describes the
+            # installed firmware. Right after the new one is up, it would still offer
+            # the update that was just installed.
+            update = previous.update
         return api.AggUpdateStatus(
-            update=data.update or previous.update,
+            update=update,
             ai_fw_version=data.ai_fw_version or previous.ai_fw_version,
             hh_fw_version=data.hh_fw_version or previous.hh_fw_version,
         )
