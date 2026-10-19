@@ -351,3 +351,43 @@ async def test_aggregate_state_can_skip_the_appliance(vzug_api):
         assert state.eco_info == {}
         assert state.notifications == [{"date": "2026-08-09T15:14:46Z"}]
 
+
+def _status_response(status_code):
+    """Build a mock httpx response whose raise_for_status raises 'status_code'."""
+    request = httpx.Request("GET", "http://example.com/ai")
+    real = httpx.Response(status_code, request=request)
+    response = MagicMock()
+    response.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "client error", request=request, response=real
+    )
+    return response
+
+
+@pytest.mark.asyncio
+async def test_client_error_falls_back_to_default(vzug_api):
+    """A 404 for an optional command has to use 'value_on_err' instead of raising.
+
+    Seen on a CombairSteamer V6000 60 (AI API 1.8.0): 'getLastPUSHNotifications'
+    suddenly answered 404 "unknown command error", which made every entity of the
+    appliance unavailable although the default for this command is an empty list.
+    """
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _status_response(404)
+
+        result = await vzug_api.get_last_push_notifications(default_on_error=True)
+
+        assert result == []
+        # a client error won't change by retrying
+        assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_client_error_without_default_still_raises(vzug_api):
+    """Without 'value_on_err' a 404 keeps surfacing as before."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _status_response(404)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await vzug_api.get_last_push_notifications(default_on_error=False)
+
+        assert mock_get.call_count == 1
