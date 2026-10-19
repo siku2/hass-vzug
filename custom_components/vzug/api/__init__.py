@@ -370,6 +370,16 @@ class VZugApi:
                 if err.response.status_code == httpx.codes.UNAUTHORIZED:
                     raise AuthenticationFailed from err
                 if not err.response.is_server_error:
+                    if value_on_err:
+                        # a client error (e.g. 404 "unknown command") won't go away by
+                        # retrying, but the caller told us what to use instead. Without
+                        # this, an optional command takes down the whole state update.
+                        _LOGGER.debug(
+                            "client error %s for %s, using default",
+                            err.response.status_code,
+                            command,
+                        )
+                        return value_on_err()
                     raise
 
                 last_exc = err
