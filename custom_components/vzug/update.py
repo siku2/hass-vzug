@@ -83,6 +83,9 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
             await self.shared.client.do_hhg_update()
         else:
             raise ValueError("unknown update component", name)
+        # the status may still read 'idle' right after the request, which would
+        # put the coordinator back on its idle interval before the run even starts
+        self.shared.note_update_activity()
         await self.coordinator.async_request_refresh()
 
     @property
