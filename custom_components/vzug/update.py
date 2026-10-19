@@ -91,11 +91,33 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
 
     @property
     def latest_version(self) -> str | None:
-        update = self.coordinator.data.update
-        if update.get("isAIUpdateAvailable") or update.get("isHHGUpdateAvailable"):
-            # we don't have a way to get the newer version, but we know there is one
-            return "new version"
-        return self.installed_version
+        data = self.coordinator.data
+        installed = self.installed_version
+        if not installed:
+            return None
+
+        # we don't have a way to get the newer version, only that there is one. HA
+        # stores whatever this returns when the user presses 'Skip' and releases the
+        # skip once it changes, so the placeholder names what is installed for each
+        # pending component: a new update or a newer firmware ends the skip.
+        pending: list[str] = []
+        if data.update.get("isAIUpdateAvailable"):
+            pending.append(installed)
+        if data.update.get("isHHGUpdateAvailable"):
+            if not data.hh_fw_version:
+                # the request failed. A placeholder without it would differ from the
+                # skipped one and release the skip, so rather report nothing for now
+                return None
+            pending.append(data.hh_fw_version.get("v") or "HHG")
+        if not pending:
+            return installed
+        return "newer than " + ", ".join(pending)
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        # 'latest_version' only differs from the installed one when the appliance
+        # reports an update. Don't rely on AwesomeVersion failing to parse the
+        # placeholder to get there.
+        return latest_version != installed_version
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
