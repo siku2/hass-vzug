@@ -31,6 +31,7 @@ def shared():
     instance.state_coord = MagicMock()
     instance.state_coord.data = None
     instance.update_coord = MagicMock()
+    instance.update_coord.data = None
     instance._first_refresh_done = True
     instance._eco_stale_count = 0
     instance._device_active = None
@@ -316,20 +317,34 @@ async def test_rejected_credentials_are_not_retried(shared):
         await shared.async_config_entry_first_refresh()
 
 
-def _update_status(status: str, *, available: bool) -> AggUpdateStatus:
+def _update_status(
+    status: str | None,
+    *,
+    available: bool = False,
+    hhg_available: bool = False,
+    sw: str | None = "1052633-R19",
+) -> AggUpdateStatus:
+    update = {}
+    if status is not None:
+        update = {
+            "status": status,
+            "isAIUpdateAvailable": available,
+            "isHHGUpdateAvailable": hhg_available,
+        }
     return AggUpdateStatus(
-        update={"status": status, "isAIUpdateAvailable": available},
-        ai_fw_version={"SW": "1052633-R19"},
+        update=update,
+        ai_fw_version={"SW": sw} if sw else {},
         hh_fw_version={},
     )
 
 
-async def _poll_update(shared: Shared, status: str, *, available: bool):
+async def _poll_update(shared: Shared, status: str | None, **kwargs):
+    """Run one update and store the result the way the coordinator would."""
     shared.meta = MagicMock()
     shared.client.aggregate_update_status = AsyncMock(
-        return_value=_update_status(status, available=available)
+        return_value=_update_status(status, **kwargs)
     )
-    await shared._fetch_update()
+    shared.update_coord.data = await shared._fetch_update()
     return shared.update_coord.update_interval
 
 
@@ -352,8 +367,18 @@ async def test_failed_update_keeps_polling_until_it_went_through(shared):
         UPDATE_COORD_SETTLE_INTERVAL
     )
     # the retry went through
-    assert await _poll_update(shared, "idle", available=False) == (
+    assert await _poll_update(shared, "idle", sw="1052633-R20") == (
         UPDATE_COORD_IDLE_INTERVAL
+    )
+    assert shared.update_coord.data.ai_fw_version["SW"] == "1052633-R20"
+
+
+@pytest.mark.asyncio
+async def test_pending_hhg_update_settles_too(shared):
+    shared.note_update_activity()
+
+    assert await _poll_update(shared, "idle", hhg_available=True) == (
+        UPDATE_COORD_SETTLE_INTERVAL
     )
 
 
@@ -377,3 +402,44 @@ async def test_requested_update_settles_even_if_it_has_not_started_yet(shared):
     assert await _poll_update(shared, "idle", available=True) == (
         UPDATE_COORD_SETTLE_INTERVAL
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "before",
+    [
+        pytest.param("installing", id="mid-run"),
+        pytest.param("idle", id="while-settling"),
+        pytest.param(None, id="right-after-the-request"),
+    ],
+)
+async def test_failed_request_keeps_watching_the_update(shared, before):
+    """The AI module restarts into new firmware, so failures are to be expected."""
+    shared.note_update_activity()
+    if before is not None:
+        await _poll_update(shared, before, available=True)
+
+    assert await _poll_update(shared, None, sw=None) == UPDATE_COORD_SETTLE_INTERVAL
+    if before is not None:
+        # and the entity doesn't flip to 'no update' meanwhile
+        data = shared.update_coord.data
+        assert data.update["isAIUpdateAvailable"] is True
+        assert data.ai_fw_version["SW"] == "1052633-R19"
+
+
+@pytest.mark.asyncio
+async def test_failed_firmware_read_keeps_the_installed_version(shared):
+    await _poll_update(shared, "installing", available=True)
+
+    await _poll_update(shared, "idle", available=True, sw=None)
+
+    assert shared.update_coord.data.ai_fw_version["SW"] == "1052633-R19"
+
+
+@pytest.mark.asyncio
+async def test_failed_request_outside_an_update_is_left_alone(shared):
+    """Away from an update run nothing changes: no extra polls, no stale data."""
+    await _poll_update(shared, "idle")
+
+    assert await _poll_update(shared, None, sw=None) == UPDATE_COORD_IDLE_INTERVAL
+    assert shared.update_coord.data.update == {}
