@@ -27,6 +27,14 @@ STATE_COORD_IDLE_PROBE_INTERVAL = timedelta(minutes=5)
 UpdateCoordinator = DataUpdateCoordinator[api.AggUpdateStatus]
 UPDATE_COORD_IDLE_INTERVAL = timedelta(hours=6)
 UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
+# an update run doesn't always end in one go: the status drops back to 'idle' when
+# an installation fails, the update is still available, and the appliance retries
+# on its own a few minutes later. Falling back to the idle interval right there
+# leaves the entity showing the old version for up to 6 hours, so keep an eye on it
+# for a while - but only as long as the update is still pending. This is kept in
+# memory only, after a restart we are back on the idle interval.
+UPDATE_COORD_SETTLE_INTERVAL = timedelta(minutes=1)
+UPDATE_COORD_SETTLE_PERIOD = timedelta(minutes=30)
 
 ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
 # the config tree is a snapshot of the appliance's settings, so it barely ever
@@ -98,6 +106,7 @@ class Shared:
         self._device_active: bool | None = None
         self._last_device_probe: datetime | None = None
         self._last_notification: str | None = None
+        self._last_update_activity: datetime | None = None
 
     async def async_config_entry_first_refresh(self) -> None:
         # the appliance may simply be switched off (some turn off completely after a
@@ -267,16 +276,72 @@ class Shared:
         self._device_active = active
 
     async def _fetch_update(self) -> api.AggUpdateStatus:
+        previous = self.update_coord.data
         async with detect_auth_failed():
             data = await self.client.aggregate_update_status(
                 supports_update_status=self.meta.supports_update_status(),
                 default_on_error=True,  # we allow the update to fail because it's not essential
             )
-        if data.update.get("status") in ("idle", None):
-            self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL
-        else:
+
+        status = data.update.get("status")
+        if status not in ("idle", None):
+            self.note_update_activity()
             self.update_coord.update_interval = UPDATE_COORD_ACTIVE_INTERVAL
+        elif not self._update_window_open():
+            self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL
+        elif status is None:
+            # the request failed - the appliance always sends a status. That is to
+            # be expected while it restarts into new firmware, so keep watching and
+            # don't let the entity flip to 'no update' in the meantime
+            self.update_coord.update_interval = UPDATE_COORD_SETTLE_INTERVAL
+            return self._carry_over_update(data, previous)
+        elif self._update_pending(data.update):
+            self.update_coord.update_interval = UPDATE_COORD_SETTLE_INTERVAL
+        else:
+            # installed, or gone: nothing left to wait for
+            self.update_coord.update_interval = UPDATE_COORD_IDLE_INTERVAL
+
+        if self._update_window_open():
+            # 'getFWVersion' can fail on its own just as well
+            return self._carry_over_update(data, previous)
         return data
+
+    def note_update_activity(self) -> None:
+        """Remember that an update is running, or has just been requested."""
+        self._last_update_activity = datetime.now(UTC)
+
+    def _update_window_open(self) -> bool:
+        """Whether an update was running or requested within the settle period."""
+        if self._last_update_activity is None:
+            return False
+        age = datetime.now(UTC) - self._last_update_activity
+        return age < UPDATE_COORD_SETTLE_PERIOD
+
+    @staticmethod
+    def _update_pending(update: api.UpdateStatus) -> bool:
+        return bool(
+            update.get("isAIUpdateAvailable") or update.get("isHHGUpdateAvailable")
+        )
+
+    @staticmethod
+    def _carry_over_update(
+        data: api.AggUpdateStatus, previous: api.AggUpdateStatus | None
+    ) -> api.AggUpdateStatus:
+        """Fill in the parts that came back empty with the previous ones."""
+        if previous is None:
+            return data
+        update = data.update
+        installed = data.ai_fw_version.get("SW")
+        if not update and installed in (None, previous.ai_fw_version.get("SW")):
+            # the previous status is only worth keeping while it still describes the
+            # installed firmware. Right after the new one is up, it would still offer
+            # the update that was just installed.
+            update = previous.update
+        return api.AggUpdateStatus(
+            update=update,
+            ai_fw_version=data.ai_fw_version or previous.ai_fw_version,
+            hh_fw_version=data.hh_fw_version or previous.hh_fw_version,
+        )
 
     async def _fetch_config(self) -> api.AggConfig:
         previous = self.config_coord.data
