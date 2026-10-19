@@ -13,9 +13,12 @@ def _data(
     *,
     ai_update: bool = False,
     hhg_update: bool = False,
+    status_failed: bool = False,
 ) -> AggUpdateStatus:
     return AggUpdateStatus(
-        update={
+        update={}
+        if status_failed
+        else {
             "status": "idle",
             "isAIUpdateAvailable": ai_update,
             "isHHGUpdateAvailable": hhg_update,
@@ -41,6 +44,7 @@ def _write(entity: VZugUpdate, data: AggUpdateStatus) -> str | None:
     'state_attributes' is where HA releases a skip, so it has to run too.
     """
     entity.coordinator.data = data
+    entity._handle_coordinator_update()
     state = entity.state
     entity.state_attributes
     return state
@@ -104,11 +108,12 @@ async def test_skipped_hhg_update_does_not_hide_an_ai_update():
 @pytest.mark.parametrize(
     "failed",
     [
+        pytest.param(_data(status_failed=True), id="update-status"),
         pytest.param(_data(ai=None, ai_update=True), id="ai-fw-version"),
         pytest.param(_data(hh=None, hhg_update=True), id="hh-fw-version"),
     ],
 )
-async def test_failed_version_read_keeps_the_skip(failed):
+async def test_failed_request_keeps_the_skip(failed):
     """'default_on_error' turns a failed request into an empty response."""
     good = _data(ai_update=True, hhg_update=True)
     entity = _entity(good)
@@ -117,3 +122,27 @@ async def test_failed_version_read_keeps_the_skip(failed):
     _write(entity, failed)
 
     assert _write(entity, good) == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "failed",
+    [
+        pytest.param(_data(status_failed=True), id="update-status"),
+        pytest.param(_data(hh=None, hhg_update=True), id="hh-fw-version"),
+    ],
+)
+def test_failed_request_keeps_the_last_answer(failed):
+    """One failed request shouldn't make the entity unknown until the next poll."""
+    entity = _entity(_data(hhg_update=True))
+
+    assert _write(entity, failed) == STATE_ON
+    assert entity.latest_version == "newer than 1044431-R32"
+
+
+def test_last_answer_is_dropped_with_a_new_firmware():
+    """It would still offer the update that was just installed."""
+    entity = _entity(_data(ai_update=True))
+
+    _write(entity, _data("1052633-R20", status_failed=True))
+
+    assert entity.latest_version is None

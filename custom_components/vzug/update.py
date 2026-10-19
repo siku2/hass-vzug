@@ -6,7 +6,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,7 +43,9 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
 
         self._attr_unique_id = f"{shared.unique_id_prefix}-update"
         self._attr_device_info = shared.device_info
-        self._attr_latest_version = None
+        self._last_installed: str | None = None
+        self._last_latest: str | None = None
+        self._attr_latest_version = self._latest_version()
 
     def get_update_component(self) -> api.UpdateComponent:
         try:
@@ -89,29 +91,41 @@ class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
     def installed_version(self) -> str | None:
         return self.coordinator.data.ai_fw_version.get("SW")
 
-    @property
-    def latest_version(self) -> str | None:
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._attr_latest_version = self._latest_version()
+        super()._handle_coordinator_update()
+
+    def _latest_version(self) -> str | None:
         data = self.coordinator.data
         installed = self.installed_version
         if not installed:
             return None
 
+        if not data.update or (
+            data.update.get("isHHGUpdateAvailable") and not data.hh_fw_version
+        ):
+            # a request failed ('default_on_error' turns it into an empty response).
+            # Answering from what's left would differ from a skipped placeholder and
+            # release the skip, so stick to the last full answer while it still
+            # describes the installed firmware.
+            if installed == self._last_installed:
+                return self._last_latest
+            return None
+
         # we don't have a way to get the newer version, only that there is one. HA
         # stores whatever this returns when the user presses 'Skip' and releases the
         # skip once it changes, so the placeholder names what is installed for each
-        # pending component: a new update or a newer firmware ends the skip.
+        # pending component: a new firmware or another pending component ends it.
         pending: list[str] = []
         if data.update.get("isAIUpdateAvailable"):
             pending.append(installed)
         if data.update.get("isHHGUpdateAvailable"):
-            if not data.hh_fw_version:
-                # the request failed. A placeholder without it would differ from the
-                # skipped one and release the skip, so rather report nothing for now
-                return None
             pending.append(data.hh_fw_version.get("v") or "HHG")
-        if not pending:
-            return installed
-        return "newer than " + ", ".join(pending)
+        latest = "newer than " + ", ".join(pending) if pending else installed
+
+        self._last_installed, self._last_latest = installed, latest
+        return latest
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         # 'latest_version' only differs from the installed one when the appliance
