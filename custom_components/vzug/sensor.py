@@ -11,15 +11,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import api
+from . import api, zones
 from .const import DOMAIN
-from .helpers import UserConfigEntity
+from .helpers import UserConfigEntity, ZoneEntity, snake
 from .shared import Shared, StateCoordinator
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
@@ -118,7 +118,63 @@ async def async_setup_entry(
             continue
         entities.append(Eco(shared, desc, category=category, field=field))
 
+    entities.extend(_zone_entities(shared))
     async_add_entities(entities)
+
+
+def _zone_entities(shared: Shared) -> list[SensorEntity]:
+    if shared.zone_coord is None:
+        return []
+    data = shared.zone_coord.data
+    entities: list[SensorEntity] = []
+    for key in zones.BOOST_KEYS:
+        entities.extend(
+            TimeLeft(shared, zone=zone, key=key)
+            for zone in zones.zones_with(data.zones, key)
+        )
+    if party_zones := zones.zones_with(data.zones, zones.PARTY_KEY):
+        entities.append(TimeLeft(shared, zone=party_zones[0], key=zones.PARTY_KEY))
+    entities.extend(
+        ModeSensor(shared, mode=mode)
+        for mode in zones.SENSOR_MODES
+        if mode in data.modes
+    )
+    return entities
+
+
+class TimeLeft(ZoneEntity, SensorEntity):
+    """Minutes left of a running SuperCool / SuperFreeze / PartyCooling, else 0."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_icon = "mdi:timer-sand"
+
+    def __init__(self, shared: Shared, *, zone: str, key: str) -> None:
+        super().__init__(shared, zone=zone, key=key)
+        self._attr_unique_id = f"{shared.unique_id_prefix}-zone-{zone}-{key}-left"
+        self._attr_translation_key = f"time_left_{snake(key)}"
+
+    @property
+    def native_value(self) -> int:
+        left = zones.remaining_seconds(self.zone_data, self.vzug_key)
+        return -(-left // 60) if left else 0
+
+
+class ModeSensor(ZoneEntity, SensorEntity):
+    """A 'cmd' mode we only show, ex. Sabbath: switching it on turns off the
+    appliance's alarms and buttons, which is not something to do remotely."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["on", "off"]
+
+    def __init__(self, shared: Shared, *, mode: str) -> None:
+        super().__init__(shared, zone="", key=mode)
+        self._attr_translation_key = snake(mode)
+
+    @property
+    def native_value(self) -> str | None:
+        on = zones.mode_is_on(self.coordinator.data.modes.get(self.vzug_key))
+        return None if on is None else ("on" if on else "off")
 
 
 class StateBase(SensorEntity, CoordinatorEntity[StateCoordinator]):

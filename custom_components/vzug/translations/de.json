@@ -46,6 +46,9 @@
       },
       "refresh_now": {
         "name": "Jetzt Aktualisieren"
+      },
+      "send_program": {
+        "name": "An Gerät senden"
       }
     },
     "sensor": {
@@ -85,11 +88,87 @@
       },
       "status": {
         "name": "Zustand"
+      },
+      "time_left_super_cool": {
+        "name": "Schnellkühlen Restzeit"
+      },
+      "time_left_super_freeze": {
+        "name": "Schnellgefrieren Restzeit"
+      },
+      "time_left_party_cooling": {
+        "name": "PartyCooling Restzeit"
+      },
+      "sabbath_mode": {
+        "name": "Sabbatbetrieb",
+        "state": {
+          "on": "Ein",
+          "off": "Aus"
+        }
       }
     },
     "update": {
       "update": {
         "name": "Update"
+      }
+    },
+    "binary_sensor": {
+      "door_fridge": {
+        "name": "Kühlraumtür"
+      },
+      "door_freezer": {
+        "name": "Gefrierraumtür"
+      }
+    },
+    "number": {
+      "temperature_fridge": {
+        "name": "Kühlraumtemperatur"
+      },
+      "temperature_freezer": {
+        "name": "Gefrierraumtemperatur"
+      },
+      "duration_super_cool": {
+        "name": "Schnellkühlen Dauer"
+      },
+      "duration_super_freeze": {
+        "name": "Schnellgefrieren Dauer"
+      },
+      "duration_party_cooling": {
+        "name": "PartyCooling Dauer"
+      },
+      "timer": {
+        "name": "Timer"
+      }
+    },
+    "switch": {
+      "super_cool": {
+        "name": "Schnellkühlen"
+      },
+      "super_freeze": {
+        "name": "Schnellgefrieren"
+      },
+      "party_cooling": {
+        "name": "PartyCooling"
+      },
+      "holiday_mode": {
+        "name": "Ferienbetrieb"
+      },
+      "silent_plus_mode": {
+        "name": "SilentPlus"
+      }
+    },
+    "select": {
+      "program_select": {
+        "name": "Programmwahl",
+        "state": {
+          "eco": "Eco",
+          "automatic": "Automatik",
+          "quick": "Kurz",
+          "intensive": "Intensiv",
+          "glass": "Glas",
+          "fondue_raclette": "Fondue/Raclette",
+          "hygiene": "Hygiene",
+          "pre_rinsing": "Vorspülen"
+        }
       }
     }
   }

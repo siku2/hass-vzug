@@ -46,6 +46,9 @@
             },
             "refresh_now": {
                 "name": "Actualiser Maintenant"
+            },
+            "send_program": {
+                "name": "Envoyer à l'appareil"
             }
         },
         "sensor": {
@@ -85,11 +88,87 @@
             },
             "status": {
                 "name": "État"
+            },
+            "time_left_super_cool": {
+                "name": "Réfrigération rapide temps restant"
+            },
+            "time_left_super_freeze": {
+                "name": "Congélation rapide temps restant"
+            },
+            "time_left_party_cooling": {
+                "name": "PartyCooling temps restant"
+            },
+            "sabbath_mode": {
+                "name": "Mode sabbat",
+                "state": {
+                    "on": "Activé",
+                    "off": "Désactivé"
+                }
             }
         },
         "update": {
             "update": {
                 "name": "Mise à Jour"
+            }
+        },
+        "binary_sensor": {
+            "door_fridge": {
+                "name": "Porte réfrigérateur"
+            },
+            "door_freezer": {
+                "name": "Porte congélateur"
+            }
+        },
+        "number": {
+            "temperature_fridge": {
+                "name": "Température réfrigérateur"
+            },
+            "temperature_freezer": {
+                "name": "Température congélateur"
+            },
+            "duration_super_cool": {
+                "name": "Durée réfrigération rapide"
+            },
+            "duration_super_freeze": {
+                "name": "Durée congélation rapide"
+            },
+            "duration_party_cooling": {
+                "name": "Durée PartyCooling"
+            },
+            "timer": {
+                "name": "Minuterie"
+            }
+        },
+        "switch": {
+            "super_cool": {
+                "name": "Réfrigération rapide"
+            },
+            "super_freeze": {
+                "name": "Congélation rapide"
+            },
+            "party_cooling": {
+                "name": "PartyCooling"
+            },
+            "holiday_mode": {
+                "name": "Mode vacances"
+            },
+            "silent_plus_mode": {
+                "name": "SilentPlus"
+            }
+        },
+        "select": {
+            "program_select": {
+                "name": "Sélection du programme",
+                "state": {
+                    "eco": "Eco",
+                    "automatic": "Automatique",
+                    "quick": "Rapide",
+                    "intensive": "Intensif",
+                    "glass": "Verres",
+                    "fondue_raclette": "Fondue/Raclette",
+                    "hygiene": "Hygiène",
+                    "pre_rinsing": "Prélavage"
+                }
             }
         }
     }

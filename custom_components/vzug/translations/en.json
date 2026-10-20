@@ -46,6 +46,9 @@
             },
             "refresh_now": {
                 "name": "Refresh Now"
+            },
+            "send_program": {
+                "name": "Send to appliance"
             }
         },
         "sensor": {
@@ -85,11 +88,87 @@
             },
             "status": {
                 "name": "Status"
+            },
+            "time_left_super_cool": {
+                "name": "SuperCool time left"
+            },
+            "time_left_super_freeze": {
+                "name": "SuperFreeze time left"
+            },
+            "time_left_party_cooling": {
+                "name": "PartyCooling time left"
+            },
+            "sabbath_mode": {
+                "name": "Sabbath mode",
+                "state": {
+                    "on": "On",
+                    "off": "Off"
+                }
             }
         },
         "update": {
             "update": {
                 "name": "Update"
+            }
+        },
+        "binary_sensor": {
+            "door_fridge": {
+                "name": "Fridge door"
+            },
+            "door_freezer": {
+                "name": "Freezer door"
+            }
+        },
+        "number": {
+            "temperature_fridge": {
+                "name": "Fridge temperature"
+            },
+            "temperature_freezer": {
+                "name": "Freezer temperature"
+            },
+            "duration_super_cool": {
+                "name": "SuperCool duration"
+            },
+            "duration_super_freeze": {
+                "name": "SuperFreeze duration"
+            },
+            "duration_party_cooling": {
+                "name": "PartyCooling duration"
+            },
+            "timer": {
+                "name": "Timer"
+            }
+        },
+        "switch": {
+            "super_cool": {
+                "name": "SuperCool"
+            },
+            "super_freeze": {
+                "name": "SuperFreeze"
+            },
+            "party_cooling": {
+                "name": "PartyCooling"
+            },
+            "holiday_mode": {
+                "name": "Holiday mode"
+            },
+            "silent_plus_mode": {
+                "name": "SilentPlus"
+            }
+        },
+        "select": {
+            "program_select": {
+                "name": "Program selection",
+                "state": {
+                    "eco": "Eco",
+                    "automatic": "Automatic",
+                    "quick": "Quick",
+                    "intensive": "Intensive",
+                    "glass": "Glass",
+                    "fondue_raclette": "Fondue/Raclette",
+                    "hygiene": "Hygiene",
+                    "pre_rinsing": "Pre-rinsing"
+                }
             }
         }
     }
