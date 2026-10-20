@@ -2,11 +2,14 @@ from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import zones
 from .const import DOMAIN
 from .helpers import UserConfigEntity
-from .shared import Shared
+from .shared import ProgramCoordinator, Shared
 
 
 async def async_setup_entry(
@@ -31,7 +34,40 @@ async def async_setup_entry(
                     )
                 )
 
+    if shared.program_coord is not None:
+        entities.append(SendProgram(shared))
+
     async_add_entities(entities)
+
+
+class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
+    """'Send to appliance' in the V-ZUG app: transfer the selected program.
+
+    The appliance starts it once its door is closed. There is no way to start a
+    program remotely without that, the appliance insists on it.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "send_program"
+    _attr_icon = "mdi:send"
+
+    def __init__(self, shared: Shared) -> None:
+        assert shared.program_coord is not None
+        super().__init__(shared.program_coord)
+        self.shared = shared
+        self._attr_unique_id = f"{shared.unique_id_prefix}-send-program"
+        self._attr_device_info = shared.device_info
+
+    async def async_press(self) -> None:
+        # the selection might have been changed on the panel since the last poll
+        await self.coordinator.async_refresh()
+        current = self.coordinator.data.current
+        if current is None or not isinstance(current.get("id"), int):
+            raise HomeAssistantError("Select a program first")
+        await self.shared.client.set_program(
+            current["id"], zones.program_options(current)
+        )
+        await self.coordinator.async_request_refresh()
 
 
 class RefreshNow(ButtonEntity):

@@ -780,6 +780,66 @@ class VZugApi:
             expected_type=list,
         )
 
+    async def get_raw_programs(self, *, attempts: int = 5) -> list[dict[str, Any]]:
+        """'getProgram' as the appliance sends it.
+
+        Refrigerators answer with one entry per zone, ex.
+        {"id":2000,"status":"active","temp":{"set":6.0,"act":6.0,"min":3.0,"max":8.0},
+         "superCool":{"min":0,"max":86400},"partyCooling":{"min":0,"max":172800},
+         "doorClosed":true,"zone":"fridge1"}
+        A running timed function gains 'set' (requested seconds) and 'act' (seconds left).
+        """
+        return await self._command(
+            "hh",
+            command="getProgram",
+            expected_type=list,
+            attempts=attempts,
+        )
+
+    async def get_program_details(self, program_id: int) -> dict[str, Any]:
+        """'getProgram' for one program id, without selecting it.
+
+        This is how the V-ZUG app learns the program names, ex.
+        {"id":51,"name":"Automatic","status":"idle","starttime":{...},...}
+        """
+        raw: list[dict[str, Any]] = await self._command(
+            "hh",
+            command="getProgram",
+            params={"value": _compact_json({"id": program_id})},
+            expected_type=list,
+            attempts=2,
+        )
+        return raw[0] if raw else {}
+
+    async def set_zone_value(self, zone: str, key: str, value: str) -> None:
+        """Change one value of a zone, the way the V-ZUG app does it.
+
+        The appliance addresses zones by name, not by program id, and wants every
+        value as a string: {"zone":"fridge1","temp":"7"} or
+        {"zone":"freezer1","superFreeze":"3600"} (seconds, "0" switches it off).
+        Anything else is refused with error 400.03 / 400.04.
+        """
+        await self._command(
+            "hh",
+            command="setProgram",
+            params={"value": _compact_json({"zone": zone, key: value})},
+            raw=True,
+            attempts=2,
+        )
+
+    async def get_cmd_value(self, name: str, *, attempts: int = 2) -> str:
+        """Read a 'cmd' setting outside the category tree, ex. 'HolidayMode'."""
+        content: str = await self._command(
+            "hh",
+            command=f"getcmd{name}",
+            raw=True,
+            attempts=attempts,
+        )
+        return content.strip()
+
+    async def set_cmd_value(self, name: str, value: str) -> None:
+        await self.set_command(f"cmd{name}", value)
+
 
 class AuthenticationFailed(Exception): ...
 

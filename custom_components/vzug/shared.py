@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import api
+from . import api, zones
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +36,19 @@ UPDATE_COORD_ACTIVE_INTERVAL = timedelta(seconds=5)
 UPDATE_COORD_SETTLE_INTERVAL = timedelta(minutes=1)
 UPDATE_COORD_SETTLE_PERIOD = timedelta(minutes=30)
 
+ZoneCoordinator = DataUpdateCoordinator[zones.ZoneState]
+# refrigerators are always awake, and the remaining time of a running SuperCool /
+# timer is only interesting if it moves along
+ZONE_COORD_INTERVAL = timedelta(seconds=30)
+ZONE_MAX_STALE_UPDATES = 3
+
+ProgramCoordinator = DataUpdateCoordinator[zones.ProgramState]
+# 'getProgram' only tells which program is selected or running. It talks to the
+# appliance itself, so it is polled no more often than the standby status probe: a
+# program picked on the panel shows up within this interval, one picked through
+# Home Assistant right away.
+PROGRAM_COORD_INTERVAL = STATE_COORD_IDLE_PROBE_INTERVAL
+
 ConfigCoordinator = DataUpdateCoordinator[api.AggConfig]
 # the config tree is a snapshot of the appliance's settings, so it barely ever
 # changes on its own. Polling it every few minutes only widens the window for the
@@ -58,6 +71,8 @@ class Shared:
     state_coord: StateCoordinator
     update_coord: UpdateCoordinator
     config_coord: ConfigCoordinator
+    zone_coord: ZoneCoordinator | None
+    program_coord: ProgramCoordinator | None
 
     unique_id_prefix: str
     meta: api.AggMeta
@@ -97,6 +112,16 @@ class Shared:
             update_method=self._fetch_config,
         )
 
+        # only created for appliances that report zones, see '_setup_zones'
+        self.zone_coord = None
+        self.program_coord = None
+        self._program_names: dict[int, str] = {}
+        self._zone_modes: tuple[str, ...] = ()
+        self._zone_stale_count = 0
+        # durations (hours) the SuperCool / SuperFreeze / PartyCooling switches use,
+        # set through their number entities
+        self.boost_hours: dict[str, float] = {}
+
         # the rest will be set on first refresh
         self.unique_id_prefix = ""
         self.device_info = DeviceInfo()
@@ -126,6 +151,7 @@ class Shared:
         await self.state_coord.async_config_entry_first_refresh()
         await self.update_coord.async_config_entry_first_refresh()
         await self.config_coord.async_config_entry_first_refresh()
+        await self._setup_zones()
 
         try:
             await self._post_first_refresh()
@@ -137,6 +163,120 @@ class Shared:
         await self.state_coord.async_shutdown()
         await self.update_coord.async_shutdown()
         await self.config_coord.async_shutdown()
+        if self.zone_coord is not None:
+            await self.zone_coord.async_shutdown()
+        if self.program_coord is not None:
+            await self.program_coord.async_shutdown()
+
+    async def _setup_zones(self) -> None:
+        """Find out whether this appliance has zones, and which modes it knows.
+
+        Dishwashers and washing machines answer 'getProgram' with a single entry
+        without a zone, they get no zone coordinator at all.
+        """
+        try:
+            raw_programs = await self.client.get_raw_programs(attempts=2)
+        except Exception as exc:
+            _LOGGER.debug("'getProgram' failed, assuming no zones: %r", exc)
+            return
+        if not zones.has_zones(raw_programs):
+            await self._setup_programs()
+            return
+
+        supported: list[str] = []
+        for mode in zones.ALL_MODES:
+            try:
+                await self.client.get_cmd_value(mode, attempts=1)
+            except Exception as exc:
+                _LOGGER.debug("mode %s not supported: %r", mode, exc)
+            else:
+                supported.append(mode)
+        self._zone_modes = tuple(supported)
+
+        self.zone_coord = DataUpdateCoordinator(
+            self.hass,
+            _LOGGER,
+            name="zones",
+            update_interval=ZONE_COORD_INTERVAL,
+            update_method=self._fetch_zones,
+        )
+        await self.zone_coord.async_config_entry_first_refresh()
+
+    async def _setup_programs(self) -> None:
+        """Learn the names of the programs this appliance offers (dishwashers)."""
+        try:
+            program_ids = await self.client.get_all_program_ids()
+        except Exception as exc:
+            _LOGGER.debug("'getAllProgramIds' failed, no program select: %r", exc)
+            return
+
+        names: dict[int, str] = {}
+        for program_id in program_ids:
+            try:
+                details = await self.client.get_program_details(program_id)
+            except Exception as exc:
+                _LOGGER.debug("no details for program %s: %r", program_id, exc)
+                continue
+            if name := details.get("name"):
+                names[program_id] = name
+        if not names:
+            return
+
+        self._program_names = names
+        self.program_coord = DataUpdateCoordinator(
+            self.hass,
+            _LOGGER,
+            name="programs",
+            update_interval=PROGRAM_COORD_INTERVAL,
+            update_method=self._fetch_programs,
+        )
+        await self.program_coord.async_config_entry_first_refresh()
+
+    async def _fetch_programs(self) -> zones.ProgramState:
+        previous = self.program_coord.data if self.program_coord else None
+        try:
+            async with detect_auth_failed():
+                raw_programs = await self.client.get_raw_programs(attempts=2)
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as exc:
+            if previous is None:
+                raise UpdateFailed(f"program update failed: {exc!r}") from exc
+            _LOGGER.debug("program update failed, keeping previous data: %r", exc)
+            return previous
+        return zones.ProgramState(
+            names=self._program_names,
+            current=zones.current_program(raw_programs),
+        )
+
+    async def _fetch_zones(self) -> zones.ZoneState:
+        previous = self.zone_coord.data if self.zone_coord else None
+        try:
+            async with detect_auth_failed():
+                raw_programs = await self.client.get_raw_programs(attempts=2)
+                modes = {
+                    mode: await self.client.get_cmd_value(mode)
+                    for mode in self._zone_modes
+                }
+            state = zones.ZoneState(zones=zones.index_zones(raw_programs), modes=modes)
+            if not state.zones:
+                raise UpdateFailed("'getProgram' returned no zones")
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as exc:
+            if previous is None or self._zone_stale_count >= ZONE_MAX_STALE_UPDATES:
+                raise UpdateFailed(f"zone update failed: {exc!r}") from exc
+            self._zone_stale_count += 1
+            _LOGGER.debug(
+                "zone update failed (%s/%s), keeping previous data: %r",
+                self._zone_stale_count,
+                ZONE_MAX_STALE_UPDATES,
+                exc,
+            )
+            return previous
+
+        self._zone_stale_count = 0
+        return state
 
     async def _post_first_refresh(self) -> None:
         mac_addr = dr.format_mac(self.meta.mac_address)
