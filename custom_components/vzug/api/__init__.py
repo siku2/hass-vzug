@@ -767,7 +767,7 @@ class VZugApi:
         return await self._command(
             "hh",
             command="setProgram",
-            params={"value": json.dumps(options)},
+            params={"value": _compact_json(options)},
             raw=True,
             attempts=2,
         )
@@ -782,3 +782,12 @@ class VZugApi:
 
 
 class AuthenticationFailed(Exception): ...
+
+
+def _compact_json(value: Any) -> str:
+    """JSON without spaces.
+
+    The appliance answers 'setProgram' with '{"id": 50}' with 400 Bad Request and
+    only accepts '{"id":50}', which is what the V-ZUG app sends.
+    """
+    return json.dumps(value, separators=(",", ":"))

@@ -391,3 +391,14 @@ async def test_client_error_without_default_still_raises(vzug_api):
             await vzug_api.get_last_push_notifications(default_on_error=False)
 
         assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_set_program_sends_compact_json(vzug_api):
+    """The appliance refuses JSON with spaces after ':' and ','."""
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.set_program(50, {"dryPlus": False, "rinsePlus": False})
+
+    assert mock_command.call_args.kwargs["params"]["value"] == (
+        '{"dryPlus":false,"rinsePlus":false,"id":50}'
+    )
