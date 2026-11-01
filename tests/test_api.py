@@ -1,5 +1,9 @@
+import asyncio
+
+import httpcore
 import httpx
 import pytest
+from httpcore._backends.mock import AsyncMockBackend
 from unittest.mock import patch, AsyncMock, MagicMock
 from custom_components.vzug.api import (
     ZH_MODE_WARMUP_MAX_FAILURES,
@@ -402,3 +406,78 @@ async def test_set_program_sends_compact_json(vzug_api):
     assert mock_command.call_args.kwargs["params"]["value"] == (
         '{"dryPlus":false,"rinsePlus":false,"id":50}'
     )
+
+
+class _FlakyBackend(AsyncMockBackend):
+    """Network backend for httpcore where the appliance can drop off the network.
+
+    While 'down' is set, every connect waits for 'gate' and then fails.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            [
+                b"HTTP/1.1 200 OK\r\n",
+                b"Content-Type: application/json\r\n",
+                b"Content-Length: 2\r\n",
+                b"\r\n",
+                b"{}",
+            ]
+        )
+        self.down = False
+        self.gate = asyncio.Event()
+
+    async def connect_tcp(self, *args, **kwargs):
+        if self.down:
+            await self.gate.wait()
+            raise httpcore.ConnectError("appliance unreachable")
+        return await super().connect_tcp(*args, **kwargs)
+
+
+@pytest.mark.asyncio
+async def test_cancelled_request_does_not_orphan_the_connection(vzug_api):
+    """A request giving up while another one fails must not leave the pool stuck.
+
+    Without serialization the waiting request is handed a fresh connection by the
+    failing one right before it gives up. That connection is never used and never
+    released, so every later request fails with 'PoolTimeout' (#165).
+    """
+    backend = _FlakyBackend()
+    client = vzug_api._client
+    client._transport._pool._network_backend = backend
+    backend.down = True
+
+    first = asyncio.create_task(vzug_api._get("http://example.com/ai"))
+    await asyncio.sleep(0.01)
+    second = asyncio.create_task(vzug_api._get("http://example.com/ai"))
+    await asyncio.sleep(0.01)
+
+    # the first request fails in the same moment the second one gives up
+    backend.gate.set()
+    second.cancel()
+    with pytest.raises(httpx.ConnectError):
+        await first
+    with pytest.raises(asyncio.CancelledError):
+        await second
+
+    backend.down = False
+    resp = await vzug_api._get("http://example.com/ai")
+
+    assert resp.status_code == 200
+    # the pool kept working, there was nothing to recover from
+    assert vzug_api._client is client
+
+
+@pytest.mark.asyncio
+async def test_pool_timeout_recreates_the_client(vzug_api):
+    """A stuck pool is replaced instead of failing until Home Assistant restarts."""
+    old_client = vzug_api._client
+    with patch.object(old_client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = httpx.PoolTimeout("stuck")
+
+        with pytest.raises(httpx.PoolTimeout):
+            await vzug_api._get("http://example.com/ai")
+
+    assert vzug_api._client is not old_client
+    assert old_client.is_closed
+    assert not vzug_api._client.is_closed
