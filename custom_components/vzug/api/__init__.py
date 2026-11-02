@@ -257,13 +257,23 @@ class VZugApi:
         *,
         credentials: Credentials | None = None,
     ) -> None:
-        auth = (
+        self._auth = (
             httpx.DigestAuth(
                 username=credentials.username, password=credentials.password
             )
             if credentials
             else None
         )
+        self._client = self._create_client()
+        # only one request at a time may be inside the client, see '_get'
+        self._request_lock = asyncio.Lock()
+        self._base_url = URL(base_url)
+        # consecutive warm-up failures, see ZH_MODE_WARMUP_MAX_FAILURES
+        self._zh_mode_warmup_failures = 0
+        # set once we learn that this appliance really doesn't have any categories
+        self._categories_may_be_empty = False
+
+    def _create_client(self) -> httpx.AsyncClient:
         transport = httpx.AsyncHTTPTransport(
             verify=False,
             # The appliances can't handle concurrent requests reliably: an AdoraWash
@@ -273,12 +283,29 @@ class VZugApi:
             limits=httpx.Limits(max_connections=1, max_keepalive_connections=1),
             retries=5,
         )
-        self._client = httpx.AsyncClient(auth=auth, transport=transport)
-        self._base_url = URL(base_url)
-        # consecutive warm-up failures, see ZH_MODE_WARMUP_MAX_FAILURES
-        self._zh_mode_warmup_failures = 0
-        # set once we learn that this appliance really doesn't have any categories
-        self._categories_may_be_empty = False
+        return httpx.AsyncClient(auth=self._auth, transport=transport)
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+
+    async def _get(self, url: str) -> httpx.Response:
+        # Requests must not queue up inside httpcore's connection pool. If a request
+        # gives up waiting there (pool timeout or cancellation) in the same moment
+        # the pool hands it a freshly created connection, that connection is never
+        # used and never released. With a single connection the pool is then stuck
+        # for good and every later request fails with 'PoolTimeout' (#165). With
+        # this lock there is never more than one request in the pool, so it can't
+        # happen. It costs nothing since we only allow one connection anyway.
+        async with self._request_lock:
+            try:
+                return await self._client.get(url)
+            except httpx.PoolTimeout:
+                # nobody else is in the pool, so it is broken. Start over with a
+                # fresh client instead of failing until Home Assistant restarts.
+                _LOGGER.warning("connection pool is stuck, recreating the http client")
+                old_client, self._client = self._client, self._create_client()
+                await old_client.aclose()
+                raise
 
     async def _command(
         self,
@@ -314,7 +341,7 @@ class VZugApi:
                 component,
                 self._base_url,
             )
-            resp = await self._client.get(request_url)
+            resp = await self._get(request_url)
             resp.raise_for_status()
 
             if raw:

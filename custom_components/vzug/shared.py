@@ -167,6 +167,7 @@ class Shared:
             await self.zone_coord.async_shutdown()
         if self.program_coord is not None:
             await self.program_coord.async_shutdown()
+        await self.client.aclose()
 
     async def _setup_zones(self) -> None:
         """Find out whether this appliance has zones, and which modes it knows.
