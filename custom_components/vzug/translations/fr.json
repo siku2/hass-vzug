@@ -49,6 +49,9 @@
             },
             "send_program": {
                 "name": "Envoyer à l'appareil"
+            },
+            "stop_program": {
+                "name": "Arrêter"
             }
         },
         "sensor": {
@@ -137,6 +140,9 @@
             },
             "timer": {
                 "name": "Minuterie"
+            },
+            "start_delay": {
+                "name": "Départ différé"
             }
         },
         "switch": {

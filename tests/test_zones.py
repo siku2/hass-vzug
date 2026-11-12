@@ -163,3 +163,35 @@ def test_program_keys_have_translations_and_icons():
         assert zones.program_key(name) in icon_states, name
     assert zones.program_key("Fondue/Raclette") == "fondue_raclette"
     assert zones.program_key("Pre-rinsing") == "pre_rinsing"
+
+
+@pytest.mark.parametrize(
+    ("hours", "expected"),
+    [
+        (0, None),
+        (1, 3600),
+        (2.5, 9000),
+        (0.04, None),  # rounds to 0 at a 600 s step
+        (0.1, 600),
+        (30, 86400),  # capped at the program's max
+    ],
+)
+def test_start_delay_seconds(hours, expected):
+    program = {"id": 86, "starttime": {"min": 0, "max": 86400, "step": 600}}
+    assert zones.start_delay_seconds(program, hours) == expected
+
+
+def test_start_delay_needs_a_program_that_offers_it():
+    assert zones.start_delay_seconds(None, 2) is None
+    assert zones.start_delay_seconds({"id": 2000, "temp": {"set": 6}}, 2) is None
+    assert zones.start_delay_max_hours(None) == 24.0
+
+
+@pytest.mark.asyncio
+async def test_stop_program_sends_what_the_app_sends():
+    """Recorded from the V-ZUG app: Stop is setProgram {"status":"idle"}."""
+    api = VZugApi(base_url="http://example.com")
+    with patch.object(api, "_command", new_callable=AsyncMock) as command:
+        await api.stop_program()
+    assert command.call_args.kwargs["command"] == "setProgram"
+    assert command.call_args.kwargs["params"]["value"] == '{"status":"idle"}'

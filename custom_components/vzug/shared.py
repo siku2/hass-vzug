@@ -121,6 +121,8 @@ class Shared:
         # durations (hours) the SuperCool / SuperFreeze / PartyCooling switches use,
         # set through their number entities
         self.boost_hours: dict[str, float] = {}
+        # delayed start (hours) sent with the next 'Send to appliance', 0 = none
+        self.start_delay_hours = 0.0
 
         # the rest will be set on first refresh
         self.unique_id_prefix = ""

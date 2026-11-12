@@ -152,3 +152,33 @@ def program_options(program: Mapping[str, Any]) -> dict[str, bool]:
         for key, value in program.items()
         if isinstance(value, Mapping) and value.get("options") == [True, False]
     }
+
+
+START_DELAY_KEY = "starttime"
+
+
+def start_delay_seconds(program: Mapping[str, Any] | None, hours: float) -> int | None:
+    """The 'starttime' to send with a program for a delayed start, or None.
+
+    A selected dishwasher program offers it as {"min":0,"max":86400,"step":600}
+    (seconds). The delay is rounded to the step and kept within min and max.
+    """
+    if not program or hours <= 0:
+        return None
+    limits = program.get(START_DELAY_KEY)
+    if not isinstance(limits, Mapping):
+        return None
+    low = int(limits.get("min", 0) or 0)
+    high = int(limits.get("max", 0) or 0)
+    step = int(limits.get("step", 1) or 1)
+    seconds = round(hours * 3600 / step) * step
+    seconds = max(low, min(high, seconds))
+    return seconds or None
+
+
+def start_delay_max_hours(program: Mapping[str, Any] | None) -> float:
+    """The longest delay the selected program allows, 24 h when unknown."""
+    limits = program.get(START_DELAY_KEY) if program else None
+    if isinstance(limits, Mapping) and isinstance(limits.get("max"), (int, float)):
+        return float(limits["max"]) / 3600
+    return 24.0
