@@ -335,6 +335,7 @@ async def test_send_program_sends_what_the_app_sends():
         client=MagicMock(set_program=AsyncMock()),
         unique_id_prefix="fc:1b:ff:06:01:da",
         device_info={},
+        start_delay_hours=0.0,
     )
     await SendProgram(shared).async_press()
     shared.client.set_program.assert_awaited_once_with(
@@ -352,3 +353,74 @@ async def test_send_program_sends_what_the_app_sends():
 
     with pytest.raises(HomeAssistantError):
         await SendProgram(shared).async_press()
+
+
+def _dishwasher_shared(current):
+    coord = MagicMock(
+        async_request_refresh=AsyncMock(),
+        async_refresh=AsyncMock(),
+        last_update_success=True,
+    )
+    coord.data = zones.ProgramState(names=DISHWASHER_NAMES, current=current)
+    return SimpleNamespace(
+        program_coord=coord,
+        client=MagicMock(set_program=AsyncMock(), stop_program=AsyncMock()),
+        unique_id_prefix="fc:1b:ff:06:01:da",
+        device_info={},
+        start_delay_hours=0.0,
+    )
+
+
+QUICK_SELECTED = {
+    "id": 86,
+    "name": "Quick",
+    "status": "selected",
+    "starttime": {"min": 0, "max": 86400, "step": 600},
+    "duration": {"set": 2400},
+    "rinsePlus": {"set": False, "options": [True, False]},
+}
+
+
+@pytest.mark.asyncio
+async def test_send_program_adds_the_start_delay_once():
+    from custom_components.vzug.button import SendProgram
+
+    shared = _dishwasher_shared(QUICK_SELECTED)
+    shared.start_delay_hours = 2.0
+    await SendProgram(shared).async_press()
+    shared.client.set_program.assert_awaited_once_with(
+        86, {"rinsePlus": False, "starttime": 7200}
+    )
+    # the delay was for that program only
+    assert shared.start_delay_hours == 0.0
+    shared.client.set_program.reset_mock()
+    await SendProgram(shared).async_press()
+    shared.client.set_program.assert_awaited_once_with(86, {"rinsePlus": False})
+
+
+@pytest.mark.asyncio
+async def test_stop_program_sends_idle():
+    from custom_components.vzug.button import StopProgram
+
+    shared = _dishwasher_shared({"id": 54, "status": "active"})
+    await StopProgram(shared).async_press()
+    shared.client.stop_program.assert_awaited_once_with()
+    shared.program_coord.async_request_refresh.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_start_delay_number_keeps_the_value_and_follows_the_program_limit():
+    from custom_components.vzug.number import StartDelay
+
+    shared = _dishwasher_shared(QUICK_SELECTED)
+    number = StartDelay(shared)
+    number.async_write_ha_state = MagicMock()
+    assert number.native_value == 0.0
+    assert number.native_max_value == 24.0
+    await number.async_set_native_value(3.0)
+    assert shared.start_delay_hours == 3.0
+    shared.program_coord.data = zones.ProgramState(
+        names=DISHWASHER_NAMES,
+        current={**QUICK_SELECTED, "starttime": {"min": 0, "max": 43200, "step": 600}},
+    )
+    assert number.native_max_value == 12.0

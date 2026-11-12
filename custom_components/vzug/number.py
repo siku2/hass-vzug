@@ -8,11 +8,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
 from .const import DOMAIN
 from .helpers import UserConfigEntity, ZoneEntity, snake, zone_translation
-from .shared import Shared
+from .shared import ProgramCoordinator, Shared
 
 # what the V-ZUG app offers first when a timed function is switched on
 DEFAULT_BOOST_HOURS = 12.0
@@ -39,7 +40,50 @@ async def async_setup_entry(
                 )
 
     entities.extend(_zone_entities(shared))
+    if shared.program_coord is not None:
+        entities.append(StartDelay(shared))
     async_add_entities(entities)
+
+
+class StartDelay(CoordinatorEntity[ProgramCoordinator], NumberEntity):
+    """Delayed start for the next 'Send to appliance', in hours. 0 starts right away.
+
+    Kept by Home Assistant until the program is sent, then sent as 'starttime'
+    and reset to 0. The countdown begins once the door is closed.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "start_delay"
+    _attr_icon = "mdi:clock-start"
+    _attr_device_class = NumberDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_native_min_value = 0.0
+    _attr_native_step = 1.0
+    _attr_mode = NumberMode.BOX
+
+    def __init__(self, shared: Shared) -> None:
+        assert shared.program_coord is not None
+        super().__init__(shared.program_coord)
+        self.shared = shared
+        self._attr_unique_id = f"{shared.unique_id_prefix}-start-delay"
+        self._attr_device_info = shared.device_info
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_max_value(self) -> float:
+        data = self.coordinator.data
+        return zones.start_delay_max_hours(data.current if data else None)
+
+    @property
+    def native_value(self) -> float:
+        return self.shared.start_delay_hours
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.shared.start_delay_hours = value
+        self.async_write_ha_state()
 
 
 def _zone_entities(shared: Shared) -> list[NumberEntity]:

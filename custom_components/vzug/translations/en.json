@@ -49,6 +49,9 @@
             },
             "send_program": {
                 "name": "Send to appliance"
+            },
+            "stop_program": {
+                "name": "Stop"
             }
         },
         "sensor": {
@@ -137,6 +140,9 @@
             },
             "timer": {
                 "name": "Timer"
+            },
+            "start_delay": {
+                "name": "Start delay"
             }
         },
         "switch": {

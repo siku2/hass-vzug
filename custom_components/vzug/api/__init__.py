@@ -799,6 +799,20 @@ class VZugApi:
             attempts=2,
         )
 
+    async def stop_program(self) -> None:
+        """End the running (or waiting) program, like Stop in the V-ZUG app.
+
+        Recorded from the app: setProgram {"status":"idle"}. The appliance goes to
+        standby and skips what is left, the final drying with the door opening too.
+        """
+        await self._command(
+            "hh",
+            command="setProgram",
+            params={"value": _compact_json({"status": "idle"})},
+            raw=True,
+            attempts=2,
+        )
+
     async def get_all_program_ids(self) -> list[int]:
         # TODO: this gives us a nice list of ids that could be used with set_program, but we need a program id to name mapping
         return await self._command(

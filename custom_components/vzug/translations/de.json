@@ -49,6 +49,9 @@
       },
       "send_program": {
         "name": "An Gerät senden"
+      },
+      "stop_program": {
+        "name": "Stopp"
       }
     },
     "sensor": {
@@ -137,6 +140,9 @@
       },
       "timer": {
         "name": "Timer"
+      },
+      "start_delay": {
+        "name": "Startverzögerung"
       }
     },
     "switch": {

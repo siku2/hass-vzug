@@ -1,3 +1,5 @@
+from typing import Any
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -36,8 +38,28 @@ async def async_setup_entry(
 
     if shared.program_coord is not None:
         entities.append(SendProgram(shared))
+        entities.append(StopProgram(shared))
 
     async_add_entities(entities)
+
+
+class StopProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
+    """'Stop' in the V-ZUG app: end the running or waiting program."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "stop_program"
+    _attr_icon = "mdi:stop"
+
+    def __init__(self, shared: Shared) -> None:
+        assert shared.program_coord is not None
+        super().__init__(shared.program_coord)
+        self.shared = shared
+        self._attr_unique_id = f"{shared.unique_id_prefix}-stop-program"
+        self._attr_device_info = shared.device_info
+
+    async def async_press(self) -> None:
+        await self.shared.client.stop_program()
+        await self.coordinator.async_request_refresh()
 
 
 class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
@@ -64,9 +86,13 @@ class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
         current = self.coordinator.data.current
         if current is None or not isinstance(current.get("id"), int):
             raise HomeAssistantError("Select a program first")
-        await self.shared.client.set_program(
-            current["id"], zones.program_options(current)
-        )
+        options: dict[str, Any] = dict(zones.program_options(current))
+        delay = zones.start_delay_seconds(current, self.shared.start_delay_hours)
+        if delay:
+            options[zones.START_DELAY_KEY] = delay
+        await self.shared.client.set_program(current["id"], options)
+        # a delay applies to this one program, the next one starts right away again
+        self.shared.start_delay_hours = 0.0
         await self.coordinator.async_request_refresh()
 
 
