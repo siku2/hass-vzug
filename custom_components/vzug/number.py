@@ -5,7 +5,7 @@ from homeassistant.components.number import (
     RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -40,9 +40,75 @@ async def async_setup_entry(
                 )
 
     entities.extend(_zone_entities(shared))
-    if shared.program_coord is not None:
+    if shared.program_coord is not None and shared.program_zone is None:
         entities.append(StartDelay(shared))
+    elif shared.program_coord is not None:
+        entities.extend(
+            ProgramSetting(shared, key=key) for key in zones.PROGRAM_SETTINGS
+        )
     async_add_entities(entities)
+
+
+class ProgramSetting(CoordinatorEntity[ProgramCoordinator], NumberEntity):
+    """Temperature or duration sent with the next oven program.
+
+    Kept by Home Assistant until 'Send to appliance'. The limits are those of
+    the selected program; a value outside them is not sent.
+    """
+
+    _attr_has_entity_name = True
+    _attr_mode = NumberMode.BOX
+
+    def __init__(self, shared: Shared, *, key: str) -> None:
+        super().__init__(shared.program_coord)
+        self.shared = shared
+        self.vzug_key = key
+        self._attr_unique_id = f"{shared.unique_id_prefix}-program-setting-{key}"
+        self._attr_device_info = shared.device_info
+        if key == "temp":
+            self._attr_translation_key = "program_temperature"
+            self._attr_device_class = NumberDeviceClass.TEMPERATURE
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        else:
+            self._attr_translation_key = "program_duration"
+            self._attr_device_class = NumberDeviceClass.DURATION
+            self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    def _field(self, field: str) -> float | None:
+        data = self.coordinator.data
+        value = zones.value_field(data.current if data else None, self.vzug_key, field)
+        if not isinstance(value, (int, float)):
+            return None
+        return value / 60 if self.vzug_key == "duration" else float(value)
+
+    @property
+    def native_min_value(self) -> float:
+        return self._field("min") or 0.0
+
+    @property
+    def native_max_value(self) -> float:
+        return self._field("max") or (300.0 if self.vzug_key == "temp" else 1440.0)
+
+    @property
+    def native_step(self) -> float:
+        return self._field("step") or 1.0
+
+    @property
+    def native_value(self) -> float | None:
+        wanted = self.shared.program_settings.get(self.vzug_key)
+        if wanted is None:
+            return self._field("set")
+        return wanted / 60 if self.vzug_key == "duration" else wanted
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.shared.program_settings[self.vzug_key] = (
+            value * 60 if self.vzug_key == "duration" else value
+        )
+        self.async_write_ha_state()
 
 
 class StartDelay(CoordinatorEntity[ProgramCoordinator], NumberEntity):

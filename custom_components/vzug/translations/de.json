@@ -267,6 +267,12 @@
       },
       "illumination": {
         "name": "Innenbeleuchtung"
+      },
+      "program_temperature": {
+        "name": "Programmtemperatur"
+      },
+      "program_duration": {
+        "name": "Programmdauer"
       }
     },
     "switch": {

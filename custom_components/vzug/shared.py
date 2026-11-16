@@ -124,6 +124,10 @@ class Shared:
         # durations (hours) the SuperCool / SuperFreeze / PartyCooling switches use,
         # set through their number entities
         self.boost_hours: dict[str, float] = {}
+        # the oven zone programs are selected in, None for dishwashers / washers
+        self.program_zone: str | None = None
+        # temperature (°C) and duration (s) to send with the next oven program
+        self.program_settings: dict[str, float] = {}
         # minutes the warming drawer runs when started, per zone
         self.warming_drawer_minutes: dict[str, float] = {}
         # delayed start (hours) sent with the next 'Send to appliance', 0 = none
@@ -210,6 +214,13 @@ class Shared:
         )
         await self.zone_coord.async_config_entry_first_refresh()
 
+        # ovens and steamers also get a program to pick, for their cooking chamber
+        for name, zone in zones.index_zones(raw_programs).items():
+            if zones.is_oven_zone(name, zone):
+                self.program_zone = name
+                await self._setup_programs()
+                break
+
     async def _setup_programs(self) -> None:
         """Learn the names of the programs this appliance offers (dishwashers)."""
         try:
@@ -220,14 +231,18 @@ class Shared:
 
         names: dict[int, str] = {}
         for program_id in program_ids:
+            # programs the V-ZUG app knows get its name, translated whatever
+            # language the appliance speaks, and save a request each (an oven
+            # offers dozens). Only ask the appliance about the others.
+            if known := zones.PROGRAMS.get(str(program_id), {}).get("key"):
+                names[program_id] = known
+                continue
             try:
                 details = await self.client.get_program_details(program_id)
             except Exception as exc:
                 _LOGGER.debug("no details for program %s: %r", program_id, exc)
-                details = {}
-            # without a name from the appliance, name it like the V-ZUG app does
-            known = zones.PROGRAMS.get(str(program_id), {}).get("key")
-            if name := details.get("name") or known:
+                continue
+            if name := details.get("name"):
                 names[program_id] = name
         if not names:
             return
@@ -256,7 +271,7 @@ class Shared:
             return previous
         return zones.ProgramState(
             names=self._program_names,
-            current=zones.current_program(raw_programs),
+            current=zones.current_program(raw_programs, self.program_zone),
         )
 
     async def _fetch_zones(self) -> zones.ZoneState:

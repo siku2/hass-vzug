@@ -169,6 +169,7 @@ def bare_shared():
     instance.zone_coord = None
     instance._zone_modes = ()
     instance._zone_stale_count = 0
+    instance.program_zone = None
     return instance
 
 
@@ -244,11 +245,12 @@ async def test_setup_programs_learns_the_names(bare_shared, monkeypatch):
     bare_shared.program_coord = None
     bare_shared._program_names = {}
     bare_shared.client.get_raw_programs = AsyncMock(return_value=[{"status": "idle"}])
+    # 9999 is a program the V-ZUG app doesn't know, its name comes from the appliance
     bare_shared.client.get_all_program_ids = AsyncMock(
-        return_value=list(DISHWASHER_NAMES)
+        return_value=[*DISHWASHER_NAMES, 9999]
     )
     bare_shared.client.get_program_details = AsyncMock(
-        side_effect=lambda pid: {"id": pid, "name": DISHWASHER_NAMES[pid]}
+        side_effect=lambda pid: {"id": pid, "name": "Brand new"}
     )
     coordinator = MagicMock(async_config_entry_first_refresh=AsyncMock(), data=None)
     monkeypatch.setattr(
@@ -260,7 +262,11 @@ async def test_setup_programs_learns_the_names(bare_shared, monkeypatch):
 
     assert bare_shared.zone_coord is None
     assert bare_shared.program_coord is coordinator
-    assert bare_shared._program_names == DISHWASHER_NAMES
+    # the app's names, as translation keys, whatever language the appliance speaks
+    assert bare_shared._program_names == {
+        pid: zones.program_key(name) for pid, name in DISHWASHER_NAMES.items()
+    } | {9999: "Brand new"}
+    bare_shared.client.get_program_details.assert_awaited_once_with(9999)
 
     bare_shared.client.get_raw_programs = AsyncMock(
         return_value=[{"id": 50, "name": "Eco", "status": "selected"}]
