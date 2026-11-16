@@ -9,7 +9,9 @@
         "error": {
             "auth_failed": "Authentication failed",
             "cannot_connect": "Failed to connect",
-            "invalid_host": "Invalid host"
+            "invalid_host": "Invalid host",
+            "wifi_credentials": "The appliance couldn't join this network. Check the name and password; it only supports 2.4 GHz Wi-Fi.",
+            "bluetooth_failed": "Bluetooth connection to the appliance failed. Stay close to it, and use a Bluetooth adapter on this machine (proxies may not be able to pair)."
         },
         "step": {
             "user": {
@@ -36,8 +38,17 @@
             },
             "confirm": {
                 "title": "Confirm Config"
+            },
+            "wifi": {
+                "title": "Connect to Wi-Fi",
+                "description": "Appliance {serial} is waiting to be put on your Wi-Fi. Home Assistant sends the network over Bluetooth, the V-ZUG cloud isn't used.",
+                "data": {
+                    "ssid": "Wi-Fi name (SSID)",
+                    "password": "Wi-Fi password"
+                }
             }
-        }
+        },
+        "flow_title": "{name}"
     },
     "entity": {
         "button": {

@@ -2,9 +2,15 @@
   "domain": "vzug",
   "name": "V-ZUG",
   "after_dependencies": [
-    "network"
+    "network",
+    "bluetooth_adapters"
   ],
-  "bluetooth": [],
+  "bluetooth": [
+    {
+      "manufacturer_id": 1486,
+      "connectable": true
+    }
+  ],
   "codeowners": [
     "@siku2"
   ],

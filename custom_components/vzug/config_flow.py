@@ -23,6 +23,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from yarl import URL
 
 from . import api
+from .api import provisioning
 from .const import CONF_BASE_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +37,10 @@ ABORT_DISCOVERY_FINISHED = "discovery_finished"
 ERR_AUTH_FAILED = "auth_failed"
 ERR_INVALID_HOST = "invalid_host"
 ERR_CANNOT_CONNECT = "cannot_connect"
+ERR_WIFI_CREDENTIALS = "wifi_credentials"
+ERR_BLUETOOTH = "bluetooth_failed"
+
+CONF_SSID = "ssid"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -50,6 +55,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._client: api.VZugApi | None = None
         self._meta: api.AggMeta | None = None
+        # a new appliance found over Bluetooth, see 'async_step_bluetooth'
+        self._ble_address: str | None = None
+        self._ble_serial: str | None = None
 
     def _set_client(self) -> None:
         assert self._base_url
@@ -155,6 +163,85 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if res := await self._check_device(needs_confirmation=True, errors={}):
             return res
         return self.async_abort(reason=ABORT_FALSE_DISCOVERY)
+
+    async def async_step_bluetooth(self, discovery_info: Any) -> FlowResult:
+        """An appliance in V-ZUG-Home mode advertising over Bluetooth.
+
+        Configured appliances keep advertising, so those are recognised by their
+        serial number and left alone.
+        """
+        serial = provisioning.serial_from_manufacturer_data(
+            discovery_info.manufacturer_data.get(provisioning.MANUFACTURER_ID)
+        )
+        if serial is None:
+            return self.async_abort(reason=ABORT_FALSE_DISCOVERY)
+        await self.async_set_unique_id(f"ble-{serial}")
+        self._abort_if_unique_id_configured()
+        if dr.async_get(self.hass).async_get_device(identifiers={(DOMAIN, serial)}):
+            return self.async_abort(reason="already_configured")
+
+        self._ble_address = discovery_info.address
+        self._ble_serial = serial
+        self.context["title_placeholders"] = {"name": serial}
+        return await self.async_step_wifi()
+
+    async def async_step_wifi(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Put the appliance on Wi-Fi over Bluetooth, then set it up as usual."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                host = await self._provision(
+                    user_input[CONF_SSID], user_input[CONF_PASSWORD]
+                )
+            except provisioning.WrongCredentials:
+                errors[CONF_BASE] = ERR_WIFI_CREDENTIALS
+            except Exception:
+                _LOGGER.exception("Wi-Fi provisioning over Bluetooth failed")
+                errors[CONF_BASE] = ERR_BLUETOOTH
+            else:
+                self._base_url = URL(f"http://{host}")
+                if res := await self._check_device(
+                    needs_confirmation=False, errors=errors
+                ):
+                    return res
+
+        return self.async_show_form(
+            step_id="wifi",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SSID): str,
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            description_placeholders={"serial": self._ble_serial or ""},
+            errors=errors,
+        )
+
+    async def _provision(self, ssid: str, password: str) -> str:
+        # Bluetooth is optional ('after_dependencies'), appliances on the LAN don't
+        # need it. Without it there is nothing to talk to the appliance with.
+        if "bluetooth" not in self.hass.config.components:
+            raise provisioning.ProvisioningError("Bluetooth isn't set up")
+        # only needed here, and pulls in Home Assistant's Bluetooth stack
+        from bleak import BleakClient
+        from bleak_retry_connector import establish_connection
+        from homeassistant.components import bluetooth
+
+        assert self._ble_address
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self._ble_address, connectable=True
+        )
+        if device is None:
+            raise provisioning.ProvisioningError("appliance out of Bluetooth range")
+        client = await establish_connection(BleakClient, device, self._ble_serial or "")
+        try:
+            return await provisioning.provision(client, ssid, password)
+        finally:
+            await client.disconnect()
 
     async def _check_device(
         self, *, needs_confirmation: bool, errors: dict[str, str]
