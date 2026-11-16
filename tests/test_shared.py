@@ -38,6 +38,8 @@ def shared():
     instance._last_device_probe = None
     instance._last_notification = None
     instance._last_update_activity = None
+    instance._zh_mode = None
+    instance.unique_id_prefix = "fc:1b:ff:06:6e:8e"
     return instance
 
 

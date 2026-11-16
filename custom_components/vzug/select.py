@@ -69,9 +69,13 @@ class ProgramSelect(CoordinatorEntity[ProgramCoordinator], SelectEntity):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         current = self.coordinator.data.current or {}
+        entry = zones.PROGRAMS.get(str(current.get("id")), {})
+        descriptions = entry.get("description", {})
+        language = self.hass.config.language.split("-")[0] if self.hass else "en"
         return {
             "status": current.get("status", "idle"),
             "duration_seconds": zones.value_field(current, "duration", "set"),
+            "description": descriptions.get(language) or descriptions.get("en"),
         }
 
     async def async_select_option(self, option: str) -> None:

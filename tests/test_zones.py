@@ -195,3 +195,33 @@ async def test_stop_program_sends_what_the_app_sends():
         await api.stop_program()
     assert command.call_args.kwargs["command"] == "setProgram"
     assert command.call_args.kwargs["params"]["value"] == '{"status":"idle"}'
+
+
+def test_end_and_start_times_are_seconds_from_the_poll():
+    from datetime import UTC, datetime, timedelta
+
+    fetched = datetime(2026, 11, 16, 12, 0, tzinfo=UTC)
+    running = {"status": "active", "duration": {"set": 3600, "act": 2710}}
+    assert zones.end_time(running, fetched) == fetched + timedelta(seconds=2710)
+    with_end = {"status": "active", "endtime": {"set": 2700, "act": 2710}}
+    assert zones.end_time(with_end, fetched) == fetched + timedelta(seconds=2710)
+    # a selected program isn't counting down yet
+    assert zones.end_time({"status": "selected", "duration": {"set": 60}}, fetched) is None
+    timed = {"status": "timed", "starttime": {"set": 7200, "min": 0, "max": 86400}}
+    assert zones.start_time(timed, fetched) == fetched + timedelta(hours=2)
+    # a dishwasher only lists the limits of 'starttime' until a delay is chosen
+    assert zones.start_time({"starttime": {"min": 0, "max": 86400}}, fetched) is None
+
+
+def test_every_program_has_a_translation():
+    import pathlib
+
+    base = pathlib.Path(zones.__file__).parent
+    for lang in ("en", "de", "fr"):
+        translations = json.loads((base / "translations" / f"{lang}.json").read_text())
+        states = translations["entity"]["select"]["program_select"]["state"]
+        missing = {e["key"] for e in zones.PROGRAMS.values()} - set(states)
+        assert not missing, (lang, missing)
+    for entry in zones.PROGRAMS.values():
+        if "description" in entry:
+            assert set(entry["description"]) == {"en", "de", "fr"}

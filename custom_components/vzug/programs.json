@@ -1,0 +1,2360 @@
+{
+  "2": {
+    "key": "pause"
+  },
+  "3": {
+    "key": "hold"
+  },
+  "4": {
+    "key": "hot_air",
+    "description": {
+      "en": "Bakes cakes, biscuits and small savoury bakes, using more than one shelf when required.",
+      "de": "Backt Kuchen und Guetzli, wenn nötig gleichzeitig auf mehreren Ebenen.",
+      "fr": "Pour cuire gâteaux, biscuits et petites pièces salées, au besoin sur plusieurs étages à la fois."
+    }
+  },
+  "5": {
+    "key": "hot_air_humid",
+    "description": {
+      "en": "Suited to gratins and slow-braised dishes; more of the moisture stays inside the oven.",
+      "de": "Für Gratins und Geschmortes geeignet; die Feuchtigkeit bleibt dabei grösstenteils im Ofen.",
+      "fr": "Convient aux gratins et aux plats braisés : l’humidité reste davantage dans le four."
+    }
+  },
+  "6": {
+    "key": "hot_air_with_steaming",
+    "description": {
+      "en": "Designed for frozen foods: bursts of steam give them an extra-crispy finish.",
+      "de": "Für Tiefgekühltes: Zugeführter Dampf macht die Speisen schön knusprig.",
+      "fr": "Pensé pour les surgelés : des apports de vapeur rendent les aliments bien croustillants."
+    }
+  },
+  "7": {
+    "key": "pizzaplus",
+    "description": {
+      "en": "Gives pizza, quiches and similar dishes a crispy base while the topping stays moist.",
+      "de": "Pizza, Wähen und Ähnliches bekommen einen knusprigen Boden, der Belag bleibt saftig.",
+      "fr": "Pizzas, tartes et préparations semblables : fond bien croustillant, garniture qui reste moelleuse."
+    }
+  },
+  "8": {
+    "key": "top_bottom_heat",
+    "description": {
+      "en": "Traditional baking on a single shelf.",
+      "de": "Herkömmliches Backen auf nur einer Ebene.",
+      "fr": "Cuisson traditionnelle sur un seul étage."
+    }
+  },
+  "9": {
+    "key": "top_bottom_heat_humid",
+    "description": {
+      "en": "Suited to gratins and slow-braised dishes; more of the moisture stays inside the oven.",
+      "de": "Für Gratins und Geschmortes geeignet; die Feuchtigkeit bleibt dabei grösstenteils im Ofen.",
+      "fr": "Convient aux gratins et aux plats braisés : l’humidité reste davantage dans le four."
+    }
+  },
+  "10": {
+    "key": "bottom_heat",
+    "description": {
+      "en": "Gives quiche and pizza bases extra time in the oven to crisp up.",
+      "de": "Sorgt dafür, dass Pizza- und Wähenböden nachträglich noch knuspriger werden.",
+      "fr": "Permet de terminer la cuisson du fond des pizzas et des tartes."
+    }
+  },
+  "11": {
+    "key": "grill",
+    "description": {
+      "en": "For grilling thin cuts and browning the top of dishes.",
+      "de": "Zum Grillieren dünner Stücke und zum Überbacken von Speisen.",
+      "fr": "Pour griller des pièces fines et dorer le dessus des plats."
+    }
+  },
+  "12": {
+    "key": "grill_forced_convection",
+    "description": {
+      "en": "Suits a whole chicken or other tall items on the grill.",
+      "de": "Eignet sich zum Grillieren eines ganzen Poulets oder voluminöser Stücke.",
+      "fr": "Convient à un poulet entier ou à d’autres pièces volumineuses sur le gril."
+    }
+  },
+  "13": {
+    "key": "microwave",
+    "description": {
+      "en": "Warms food up roughly 30% quicker; good for plated meals and fried foods.",
+      "de": "Wärmt Essen etwa 30 % rascher auf – gut für angerichtete Teller und Frittiertes.",
+      "fr": "Réchauffe environ 30 % plus rapidement, parfait pour les plats servis sur assiette et les fritures."
+    }
+  },
+  "14": {
+    "key": "steam",
+    "description": {
+      "en": "Cooks food gently using steam, especially good for fish, potatoes and vegetables.",
+      "de": "Dampfgaren, das die Lebensmittel schont – besonders geeignet für Fisch, Kartoffeln oder Gemüse.",
+      "fr": "Cuisson vapeur qui préserve les aliments, parfaite pour le poisson, les légumes et les pommes de terre."
+    }
+  },
+  "15": {
+    "key": "regeneration",
+    "description": {
+      "en": "Warms up food that has already been cooked.",
+      "de": "Macht bereits gegarte Speisen wieder warm.",
+      "fr": "Pour réchauffer des plats déjà cuits."
+    }
+  },
+  "16": {
+    "key": "powersteam",
+    "description": {
+      "en": "Steam-cooks roughly 30% quicker; good for vegetables and rice.",
+      "de": "Dämpft etwa 30 % rascher – gut geeignet für Gemüse und Reis.",
+      "fr": "Cuisson vapeur environ 30 % plus rapide, parfaite pour le riz et les légumes."
+    }
+  },
+  "17": {
+    "key": "powerregeneration",
+    "description": {
+      "en": "Warms food up roughly 40% quicker; good for plated meals and fried foods.",
+      "de": "Wärmt Essen etwa 40 % rascher auf – gut für angerichtete Teller und Frittiertes.",
+      "fr": "Réchauffe environ 40 % plus rapidement, parfait pour les plats servis sur assiette et les fritures."
+    }
+  },
+  "18": {
+    "key": "bread"
+  },
+  "19": {
+    "key": "plaited_bread"
+  },
+  "20": {
+    "key": "puff_pastry"
+  },
+  "21": {
+    "key": "professional_baking_proofing",
+    "description": {
+      "en": "Handles dough and shaped dough items, regulating temperature and humidity on its own.",
+      "de": "Für Teig und geformte Teiglinge; Temperatur und Feuchte regelt das Gerät selbst.",
+      "fr": "Pour la pâte et les pâtons façonnés, avec température et humidité réglées automatiquement par l’appareil."
+    }
+  },
+  "22": {
+    "key": "steam_40_c"
+  },
+  "23": {
+    "key": "steam_80_c"
+  },
+  "24": {
+    "key": "steam_90_c"
+  },
+  "25": {
+    "key": "steam_100_c"
+  },
+  "27": {
+    "key": "refreshing_towels",
+    "description": {
+      "en": "Prepares oshibori, the damp towels used to freshen up.",
+      "de": "Zum Vorbereiten von Oshibori, den feuchten Tüchern zum Erfrischen.",
+      "fr": "Pour préparer des oshibori, ces petites serviettes humides pour se rafraîchir."
+    }
+  },
+  "28": {
+    "key": "hot_wraps",
+    "description": {
+      "en": "Heats compresses and wraps for hot applications.",
+      "de": "Erwärmt Kompressen und Wickel für warme Anwendungen.",
+      "fr": "Pour chauffer compresses et enveloppements."
+    }
+  },
+  "29": {
+    "key": "hot_massage_stones",
+    "description": {
+      "en": "Heats stones for hot-stone massage.",
+      "de": "Erwärmt Steine für die Hot-Stone-Massage.",
+      "fr": "Chauffe les pierres destinées au massage."
+    }
+  },
+  "30": {
+    "key": "seed_cushions",
+    "description": {
+      "en": "Warms pillows filled with cherry stones or grape seeds.",
+      "de": "Erwärmt Kissen, die mit Kirschsteinen oder Traubenkernen gefüllt sind.",
+      "fr": "Réchauffe les petits coussins remplis de pépins de raisin ou de noyaux de cerise."
+    }
+  },
+  "31": {
+    "key": "sterilize_baby_bottles",
+    "description": {
+      "en": "Sterilises baby bottles.",
+      "de": "Macht Schoppenflaschen keimfrei.",
+      "fr": "Pour la stérilisation des biberons."
+    }
+  },
+  "32": {
+    "key": "sterilize_preserving_jars",
+    "description": {
+      "en": "Sterilises empty jars before you fill them for preserving.",
+      "de": "Macht leere Einmachgläser vor dem Befüllen keimfrei.",
+      "fr": "Stérilise les bocaux de conserve encore vides."
+    }
+  },
+  "33": {
+    "key": "final_sterilization_of_jam_jars",
+    "description": {
+      "en": "Gives jam jars that are already filled a final sterilisation.",
+      "de": "Sorgt bei schon befüllten Konfigläsern für eine abschliessende Entkeimung.",
+      "fr": "Stérilisation finale des pots de confiture une fois remplis."
+    }
+  },
+  "34": {
+    "key": "keep_warm",
+    "description": {
+      "en": "Holds finished dishes at serving temperature.",
+      "de": "Sorgt dafür, dass fertige Gerichte warm bleiben.",
+      "fr": "Garde au chaud les plats une fois cuits."
+    }
+  },
+  "35": {
+    "key": "vacuisine",
+    "description": {
+      "en": "Cooks vacuum-sealed food slowly at a low temperature that is held very precisely.",
+      "de": "Gart vakuumierte Lebensmittel langsam bei tiefer, exakt geregelter Temperatur (Sous-vide).",
+      "fr": "Les aliments mis sous vide cuisent lentement à basse température, maintenue avec précision."
+    }
+  },
+  "40": {
+    "key": "bakeomatic"
+  },
+  "41": {
+    "key": "regenerateomatic"
+  },
+  "42": {
+    "key": "soft_roasting_seared",
+    "description": {
+      "en": "Cooks meat until tender and has it ready at the time you set.",
+      "de": "Macht Fleisch zart und hat es zum eingestellten Zeitpunkt fertig.",
+      "fr": "Prépare une viande tendre, prête à l’heure que vous avez choisie."
+    }
+  },
+  "43": {
+    "key": "pyrolytic_self_cleaning",
+    "description": {
+      "en": "Burns off greasy, baked-on residue inside the oven at 450 °C.",
+      "de": "Entfernt angebrannte Fett- und Schmutzreste im Ofeninnern bei 450 °C.",
+      "fr": "Nettoie le four en brûlant à 450 °C les résidus gras et incrustés."
+    }
+  },
+  "44": {
+    "key": "descale_the_appliance",
+    "description": {
+      "en": "Guides you through descaling with a powerful descaler; use only Durgol Swiss Steamer.",
+      "de": "Führt Sie schrittweise durch die Entkalkung mit einem starken Entkalker. Nur Durgol Swiss Steamer verwenden.",
+      "fr": "Vous guide pas à pas dans le détartrage avec un produit puissant. N’utilisez que du Durgol Swiss Steamer."
+    }
+  },
+  "45": {
+    "key": "defrost"
+  },
+  "46": {
+    "key": "soft_roasting_with_grill",
+    "description": {
+      "en": "Cooks meat until tender and has it ready at the time you set.",
+      "de": "Macht Fleisch zart und hat es zum eingestellten Zeitpunkt fertig.",
+      "fr": "Prépare une viande tendre, prête à l’heure que vous avez choisie."
+    }
+  },
+  "47": {
+    "key": "soft_roasting_with_steam"
+  },
+  "48": {
+    "key": "hot_air_eco",
+    "description": {
+      "en": "Saves energy while cooking food through gently; suits braised dishes and gratins.",
+      "de": "Gart sanft und energiesparend durch – gut für Gratins und Geschmortes.",
+      "fr": "Cuit en douceur jusqu’à cœur en économisant l’énergie, parfait pour gratins et plats braisés."
+    }
+  },
+  "49": {
+    "key": "top_bottom_heat_eco",
+    "description": {
+      "en": "Saves energy while cooking food through gently; suits braised dishes and gratins.",
+      "de": "Gart sanft und energiesparend durch – gut für Gratins und Geschmortes.",
+      "fr": "Cuit en douceur jusqu’à cœur en économisant l’énergie, parfait pour gratins et plats braisés."
+    }
+  },
+  "50": {
+    "key": "eco",
+    "description": {
+      "en": "Uses the least water and energy of all programmes, for dishes with normal soiling.",
+      "de": "Braucht von allen Programmen am wenigsten Wasser und Energie; für normal schmutziges Geschirr.",
+      "fr": "Le plus économe de tous en eau comme en énergie, pour une vaisselle moyennement sale."
+    }
+  },
+  "51": {
+    "key": "automatic",
+    "description": {
+      "en": "Cleans thoroughly using very little water and energy, but can’t handle burnt-on or dried-on residue.",
+      "de": "Gründliche Reinigung bei sehr tiefem Wasser- und Stromverbrauch; ungeeignet für eingebrannte oder stark angetrocknete Reste.",
+      "fr": "Lave efficacement avec très peu d’eau et d’électricité, mais ne vient pas à bout des restes brûlés ou très secs."
+    }
+  },
+  "52": {
+    "key": "daily_quick",
+    "description": {
+      "en": "Short programme with strong spray pressure for everyday dishes with normal soiling.",
+      "de": "Schnelles Programm mit kräftigem Sprühdruck für das tägliche, normal schmutzige Geschirr.",
+      "fr": "Programme rapide à forte pression de jet pour la vaisselle de tous les jours moyennement sale."
+    }
+  },
+  "53": {
+    "key": "sprint",
+    "description": {
+      "en": "For lightly used items like glasses, coffee cups and saucers. Slow-dissolving tabs won’t work.",
+      "de": "Für wenig verschmutztes Geschirr wie Apéro-Gläser oder Kaffeetassen. Langsam lösliche Tabs eignen sich nicht.",
+      "fr": "Pour la vaisselle peu sale, comme les verres de l’apéro ou les tasses à café. Évitez les tablettes qui se dissolvent lentement."
+    }
+  },
+  "54": {
+    "key": "intensive",
+    "description": {
+      "en": "Handles heavily soiled dishes, especially starchy residue such as mashed potato or rice.",
+      "de": "Für stark verschmutztes Geschirr, vor allem mit stärkehaltigen Resten wie Kartoffelstock oder Reis.",
+      "fr": "Pour une vaisselle très encrassée, surtout par des féculents comme la purée ou le riz."
+    }
+  },
+  "55": {
+    "key": "silent",
+    "description": {
+      "en": "Very quiet programme for running overnight, for dishes with normal soiling.",
+      "de": "Sehr leises Programm, damit Sie nachts spülen können; für normal schmutziges Geschirr.",
+      "fr": "Programme très discret pour laver la nuit, adapté à une vaisselle moyennement sale."
+    }
+  },
+  "56": {
+    "key": "party",
+    "description": {
+      "en": "Fast cycle for lightly soiled dishes you need back quickly, e.g. during a party. Don’t use tabs; powder or gel detergent only.",
+      "de": "Rasches Programm für leicht schmutziges Geschirr, das man z. B. an einem Fest schnell wieder braucht. Keine Tabs, nur Pulver oder Gel verwenden.",
+      "fr": "Lavage express pour une vaisselle peu sale dont on a vite besoin, par exemple lors d’une fête. Pas de tablettes : uniquement de la poudre ou du gel."
+    }
+  },
+  "57": {
+    "key": "glass",
+    "description": {
+      "en": "Gentle care for glassware.",
+      "de": "Schonende Behandlung für Gläser.",
+      "fr": "Lavage tout en douceur pour la verrerie."
+    }
+  },
+  "58": {
+    "key": "fondue_raclette",
+    "description": {
+      "en": "For heavily soiled dishes with burnt-on food. Wash only dishwasher-safe items; add detergent to the pre-wash compartment if needed.",
+      "de": "Für stark verschmutztes Geschirr mit eingebrannten Resten. Nur spülmaschinenfeste Teile einräumen und bei Bedarf Reiniger ins Vorspülfach geben.",
+      "fr": "Destiné à la vaisselle fortement encrassée, y compris les résidus brûlés. Ne lavez que des pièces résistant au lave-vaisselle et mettez au besoin du détergent dans le bac de prélavage."
+    }
+  },
+  "59": {
+    "key": "hygiene",
+    "description": {
+      "en": "For items that need extra hygiene, such as baby bottles or chopping boards. Clean the filters first.",
+      "de": "Für Teile mit erhöhtem Hygienebedarf wie Babyflaschen oder Schneidbretter. Zuerst die Siebe reinigen.",
+      "fr": "Pour les objets exigeant une hygiène renforcée, tels que biberons ou planches à découper. Nettoyez d’abord les filtres."
+    }
+  },
+  "60": {
+    "key": "machine_care",
+    "description": {
+      "en": "Gives the machine, especially its storage tank, a hygienic rinse. First clean the filters and add machine cleaner as its manufacturer directs.",
+      "de": "Spült die Maschine samt Speichertank hygienisch durch. Vorher die Siebe reinigen und Maschinenpflegemittel nach Herstellerangabe einfüllen.",
+      "fr": "Rince l’appareil, et en particulier son réservoir, de façon hygiénique. Au préalable, nettoyez les filtres et ajoutez un nettoyant pour lave-vaisselle selon le fabricant."
+    }
+  },
+  "61": {
+    "key": "pre_rinsing",
+    "description": {
+      "en": "Stops residue from drying onto dishes when you plan to run a wash later.",
+      "de": "Damit Speisereste nicht antrocknen, wenn Sie erst später spülen.",
+      "fr": "Évite que les salissures ne sèchent si le lavage ne démarre que plus tard."
+    }
+  },
+  "62": {
+    "key": "hot_pot"
+  },
+  "63": {
+    "key": "installation_close_the_door_to_start"
+  },
+  "70": {
+    "key": "end_of_programme"
+  },
+  "71": {
+    "key": "final_drying"
+  },
+  "72": {
+    "key": "drying"
+  },
+  "73": {
+    "key": "rinsing_the_tank"
+  },
+  "74": {
+    "key": "rinsing_with_rinse_agent"
+  },
+  "75": {
+    "key": "steamfinish"
+  },
+  "76": {
+    "key": "intermediate_rinsing_rinseplus"
+  },
+  "77": {
+    "key": "intermediate_rinsing"
+  },
+  "78": {
+    "key": "intermediate_rinsing"
+  },
+  "79": {
+    "key": "cleaning"
+  },
+  "80": {
+    "key": "soaking"
+  },
+  "81": {
+    "key": "pre_rinsing_rinseplus"
+  },
+  "82": {
+    "key": "pre_rinsing"
+  },
+  "83": {
+    "key": "unload_load_dishes"
+  },
+  "84": {
+    "key": "heating_up"
+  },
+  "85": {
+    "key": "oekomatik",
+    "description": {
+      "en": "Thorough cleaning with very low water and energy use; handles any soiling apart from burnt-on or badly dried-on residue.",
+      "de": "Sehr gutes Reinigungsresultat bei geringem Wasser- und Energiebedarf; für alle Verschmutzungen ausser eingebrannten oder stark angetrockneten.",
+      "fr": "Excellent lavage avec très peu d’eau et d’énergie, pour tout type de salissure sauf les résidus brûlés ou très incrustés."
+    }
+  },
+  "86": {
+    "key": "quick",
+    "description": {
+      "en": "For dishes with light soiling.",
+      "de": "Für wenig verschmutztes Alltagsgeschirr.",
+      "fr": "Pour la vaisselle courante peu sale."
+    }
+  },
+  "87": {
+    "key": "intensiveplus"
+  },
+  "88": {
+    "key": "pre_rinseplus"
+  },
+  "89": {
+    "key": "winedegu"
+  },
+  "90": {
+    "key": "plate_warmer"
+  },
+  "91": {
+    "key": "plastics"
+  },
+  "92": {
+    "key": "toys"
+  },
+  "93": {
+    "key": "beer_glass"
+  },
+  "94": {
+    "key": "wineglassesplus"
+  },
+  "95": {
+    "key": "grease_filters"
+  },
+  "96": {
+    "key": "cleaning"
+  },
+  "97": {
+    "key": "empty_all_close_the_door_to_start"
+  },
+  "98": {
+    "key": "tank_installation_close_the_door_to_start"
+  },
+  "100": {
+    "key": "top_heat"
+  },
+  "101": {
+    "key": "cooking_space_plate_warmer",
+    "description": {
+      "en": "Warms plates and other dishes before serving.",
+      "de": "Bringt Teller und weiteres Geschirr auf Temperatur.",
+      "fr": "Réchauffe les assiettes et le reste de la vaisselle de service."
+    }
+  },
+  "102": {
+    "key": "power_hot_air_with_steaming",
+    "description": {
+      "en": "Cooks about 30% quicker; good for gratins, lasagne and pre-fried food, but not for bread or other yeast doughs.",
+      "de": "Gart etwa 30 % rascher – gut für Vorfrittiertes, Gratins und Lasagne, nicht aber für Hefeteig wie Brot.",
+      "fr": "Cuisson environ 30 % plus rapide, idéale pour gratins, lasagnes et produits préfrits, mais pas pour le pain ni la pâte levée."
+    }
+  },
+  "103": {
+    "key": "plate_warmer_warming_drawer",
+    "description": {
+      "en": "Warms tableware or keeps covered food hot for a short while.",
+      "de": "Zum Vorwärmen von Geschirr oder um zugedeckte Speisen kurz warm zu halten.",
+      "fr": "Pour chauffer la vaisselle ou garder un plat couvert au chaud pendant peu de temps."
+    }
+  },
+  "104": {
+    "key": "grill",
+    "description": {
+      "en": "For grilling thin cuts and browning the top of dishes.",
+      "de": "Zum Grillieren dünner Stücke und zum Überbacken von Speisen.",
+      "fr": "Pour griller des pièces fines et dorer le dessus des plats."
+    }
+  },
+  "105": {
+    "key": "grill_forced_convection",
+    "description": {
+      "en": "Suits a whole chicken or other tall items on the grill.",
+      "de": "Eignet sich zum Grillieren eines ganzen Poulets oder voluminöser Stücke.",
+      "fr": "Convient à un poulet entier ou à d’autres pièces volumineuses sur le gril."
+    }
+  },
+  "106": {
+    "key": "professional_baking_classical",
+    "description": {
+      "en": "Puff pastry and bread get a glossy crust, no glaze needed.",
+      "de": "Sorgt bei Brot und Blätterteig für eine glänzende Kruste – ganz ohne Bestreichen.",
+      "fr": "Donne au pain et à la pâte feuilletée une croûte luisante, sans dorure."
+    }
+  },
+  "107": {
+    "key": "professional_baking_flour_dusted",
+    "description": {
+      "en": "Suits rustic or floured loaves that should have a strong crust.",
+      "de": "Für rustikale oder bemehlte Brote, die eine kräftige Kruste bekommen sollen.",
+      "fr": "Pour les pains rustiques ou farinés à croûte bien marquée."
+    }
+  },
+  "108": {
+    "key": "defrostomatic"
+  },
+  "109": {
+    "key": "steam_cleaning",
+    "description": {
+      "en": "Cleans away light dirt.",
+      "de": "Für leichte Verschmutzungen.",
+      "fr": "Pour nettoyer les salissures légères."
+    }
+  },
+  "110": {
+    "key": "intensive_cleaning",
+    "description": {
+      "en": "Tackles stubborn dirt; requires V-ZUG SteamerCleaner.",
+      "de": "Löst hartnäckigen Schmutz. Dafür wird V-ZUG SteamerCleaner benötigt.",
+      "fr": "Vient à bout des salissures tenaces. Nécessite le nettoyant V-ZUG SteamerCleaner."
+    }
+  },
+  "111": {
+    "key": "sabbath_top_bottom_heat",
+    "description": {
+      "en": "Reheats crispy dishes and baked goods or holds them at serving temperature.",
+      "de": "Um Knuspriges und Backwaren aufzuwärmen oder warm zu halten.",
+      "fr": "Pour réchauffer ou garder au chaud les plats croustillants, le pain et les pâtisseries."
+    }
+  },
+  "112": {
+    "key": "sabbath_top_bottom_heat_humid",
+    "description": {
+      "en": "Reheats or keeps warm food that would otherwise dry out, keeping it moist.",
+      "de": "Wärmt Speisen auf oder hält sie warm, ohne dass sie austrocknen – sie bleiben saftig.",
+      "fr": "Réchauffe ou garde au chaud les plats sensibles au dessèchement en préservant leur humidité."
+    }
+  },
+  "113": {
+    "key": "aperitif_nibbles_fresh",
+    "description": {
+      "en": "Automatic programme for fresh aperitif snacks.",
+      "de": "Bäckt frische Apéro-Häppchen vollautomatisch.",
+      "fr": "Programme automatique pour les feuilletés apéritifs frais."
+    }
+  },
+  "114": {
+    "key": "gratin",
+    "description": {
+      "en": "Automatic programme for gratins and savoury bakes.",
+      "de": "Automatikprogramm für Gratins und salzige Aufläufe.",
+      "fr": "Programme automatique pour gratins et plats salés au four."
+    }
+  },
+  "115": {
+    "key": "souffl",
+    "description": {
+      "en": "Automatic programme for soufflés.",
+      "de": "Automatikprogramm für Soufflés.",
+      "fr": "Programme automatique pour les soufflés."
+    }
+  },
+  "116": {
+    "key": "baked_potatoes",
+    "description": {
+      "en": "Automatic programme for potatoes, whole or cut.",
+      "de": "Automatikprogramm für Kartoffeln, ganz oder geschnitten.",
+      "fr": "Programme automatique pour les pommes de terre, entières ou coupées."
+    }
+  },
+  "117": {
+    "key": "meat_braised",
+    "description": {
+      "en": "Automatic programme for braised dishes.",
+      "de": "Automatikprogramm für Geschmortes.",
+      "fr": "Programme automatique pour les plats mijotés."
+    }
+  },
+  "118": {
+    "key": "pizza_fresh",
+    "description": {
+      "en": "Automatic programme for fresh tarte flambée and pizza.",
+      "de": "Automatikprogramm für frischen Flammkuchen und Pizza.",
+      "fr": "Programme automatique pour pizzas et tartes flambées fraîches."
+    }
+  },
+  "119": {
+    "key": "bread",
+    "description": {
+      "en": "Automatic programme for loaves and bread rolls.",
+      "de": "Automatikprogramm für Brot und Brötchen.",
+      "fr": "Programme automatique pour pains et petits pains."
+    }
+  },
+  "120": {
+    "key": "plaited_bread",
+    "description": {
+      "en": "Automatic programme for plaited loaves.",
+      "de": "Automatikprogramm für Zopf.",
+      "fr": "Programme automatique pour les tresses."
+    }
+  },
+  "121": {
+    "key": "bakeomatic_bread_plaited_bread"
+  },
+  "122": {
+    "key": "flan",
+    "description": {
+      "en": "Automatic programme for flans and quiches.",
+      "de": "Automatikprogramm für Wähen und Quiches.",
+      "fr": "Programme automatique pour tartes et quiches."
+    }
+  },
+  "123": {
+    "key": "yeast_pastries_with_filling",
+    "description": {
+      "en": "Automatic programme for filled yeast pastries.",
+      "de": "Automatikprogramm für gefülltes Hefegebäck.",
+      "fr": "Programme automatique pour les pâtisseries garnies à pâte levée."
+    }
+  },
+  "124": {
+    "key": "loaf_cake",
+    "description": {
+      "en": "Automatic programme for loaf cakes.",
+      "de": "Automatikprogramm für Cakes.",
+      "fr": "Programme automatique pour les cakes."
+    }
+  },
+  "125": {
+    "key": "muffins",
+    "description": {
+      "en": "Automatic programme for muffins and traybakes.",
+      "de": "Automatikprogramm für Muffins und Blechkuchen.",
+      "fr": "Programme automatique pour muffins et gâteaux sur plaque."
+    }
+  },
+  "126": {
+    "key": "regenerateomatic_crispy",
+    "description": {
+      "en": "Best for food that should be crisp, such as pizza, quiches, gratins and baked goods.",
+      "de": "Für alles, was knusprig werden soll: Pizza, Wähen, Gratins und Backwaren.",
+      "fr": "Pour tout ce qui doit être croustillant : pizzas, tartes, gratins, pains et pâtisseries."
+    }
+  },
+  "127": {
+    "key": "regenerateomatic_humid",
+    "description": {
+      "en": "Suits pasta, rice, vegetables and plated meals.",
+      "de": "Geeignet für angerichtete Teller, Pasta, Reis und Gemüse.",
+      "fr": "Convient aux plats sur assiette, aux pâtes, au riz et aux légumes."
+    }
+  },
+  "128": {
+    "key": "stoving"
+  },
+  "129": {
+    "key": "rinse_the_water_system"
+  },
+  "130": {
+    "key": "the_water_system_is_being_emptied"
+  },
+  "131": {
+    "key": "professional_baking_glazed",
+    "description": {
+      "en": "Suits plaited loaves and other yeast bakes brushed with a glaze such as egg wash: they come out glossy and the glaze stays in place.",
+      "de": "Für Zopf und weiteres bestrichenes Hefegebäck: Es glänzt, und der Anstrich, etwa Eigelb, läuft nicht herunter.",
+      "fr": "Pour les tresses et autres pâtes levées dorées : elles ressortent brillantes et la dorure, par ex. au jaune d’œuf, reste en place."
+    }
+  },
+  "132": {
+    "key": "check_water_connection"
+  },
+  "133": {
+    "key": "check_power_connection"
+  },
+  "134": {
+    "key": "aperitif_nibbles_frozen"
+  },
+  "135": {
+    "key": "pizza_frozen"
+  },
+  "136": {
+    "key": "sweet_baked_dish",
+    "description": {
+      "en": "Automatic programme for sweet bakes.",
+      "de": "Automatikprogramm für süsse Aufläufe.",
+      "fr": "Programme automatique pour les desserts cuits au four."
+    }
+  },
+  "137": {
+    "key": "deep_fried_products_frozen"
+  },
+  "138": {
+    "key": "powerregenerateomatic"
+  },
+  "139": {
+    "key": "pizza_stone"
+  },
+  "140": {
+    "key": "desiccate",
+    "description": {
+      "en": "Dries food so it keeps longer; well suited to fruit and vegetables.",
+      "de": "Dörrt Lebensmittel, damit sie länger haltbar sind – besonders Obst und Gemüse.",
+      "fr": "Déshydrate les aliments pour les conserver, idéal pour fruits et légumes."
+    }
+  },
+  "141": {
+    "key": "preheat"
+  },
+  "142": {
+    "key": "preheat",
+    "description": {
+      "en": "Heats the oven up in advance.",
+      "de": "Heizt den Garraum im Voraus auf.",
+      "fr": "Fait chauffer le four à l’avance."
+    }
+  },
+  "143": {
+    "key": "preheat"
+  },
+  "144": {
+    "key": "preheat_pizza_stone"
+  },
+  "145": {
+    "key": "baking_bases"
+  },
+  "146": {
+    "key": "baking_bases"
+  },
+  "147": {
+    "key": "continuation_cook_through_hot_air_humid"
+  },
+  "148": {
+    "key": "continuation_cook_through_hot_air_with_steaming"
+  },
+  "149": {
+    "key": "continuation_cook_through_top_bottom_heat_humid"
+  },
+  "150": {
+    "key": "gratinate"
+  },
+  "151": {
+    "key": "gratinate"
+  },
+  "152": {
+    "key": "hot_air_standard"
+  },
+  "153": {
+    "key": "defrost_bread",
+    "description": {
+      "en": "Thaws bread and baked goods quickly and gently.",
+      "de": "Taut Brot und Backwaren rasch und schonend auf.",
+      "fr": "Décongèle rapidement et délicatement le pain et les pâtisseries."
+    }
+  },
+  "154": {
+    "key": "defrost_general",
+    "description": {
+      "en": "Thaws food quickly yet gently; best for berries, other fruit, fish and seafood.",
+      "de": "Taut Lebensmittel rasch und sanft auf, besonders Beeren, Obst, Fisch und Meeresfrüchte.",
+      "fr": "Décongèle les aliments vite et sans les abîmer, en particulier poisson, fruits de mer, baies et fruits."
+    }
+  },
+  "155": {
+    "key": "defrost_meat",
+    "description": {
+      "en": "Thaws meat quickly and gently.",
+      "de": "Taut Fleisch rasch und sanft auf.",
+      "fr": "Décongèle la viande rapidement et en douceur."
+    }
+  },
+  "156": {
+    "key": "hot_air_with_light_steaming"
+  },
+  "157": {
+    "key": "regeneration_for_frozen_food"
+  },
+  "158": {
+    "key": "preheat"
+  },
+  "159": {
+    "key": "power_hot_air",
+    "description": {
+      "en": "Combines hot air with microwaves to cut cooking time; good for gratins, bakes and loaf cakes.",
+      "de": "Kombiniert Heissluft mit Mikrowelle und verkürzt so die Garzeit – gut für Aufläufe, Gratins und Cakes.",
+      "fr": "Associe air chaud et micro-ondes pour cuire plus vite, idéal pour cakes, gratins et plats au four."
+    }
+  },
+  "160": {
+    "key": "hot_air_with_microwave",
+    "description": {
+      "en": "Cooks gratins and bakes fast, provided they contain enough liquid.",
+      "de": "Gart Gratins und Aufläufe rasch, sofern genug Flüssigkeit drin ist.",
+      "fr": "Cuit rapidement gratins et plats au four, à condition qu’ils contiennent assez de liquide."
+    }
+  },
+  "161": {
+    "key": "pizzaplus_with_microwave",
+    "description": {
+      "en": "Quickly bakes quiches and similar dishes so the base turns crisp and the topping stays moist.",
+      "de": "Backt Wähen und Ähnliches rasch, mit knusprigem Boden und saftigem Belag.",
+      "fr": "Cuit rapidement tartes et préparations similaires : fond croustillant, garniture moelleuse."
+    }
+  },
+  "162": {
+    "key": "grill_with_microwave",
+    "description": {
+      "en": "Fast grilling of thin cuts or browning of dishes.",
+      "de": "Rasches Grillieren dünner Stücke oder Überbacken von Speisen.",
+      "fr": "Pour griller rapidement des pièces fines ou dorer un plat."
+    }
+  },
+  "163": {
+    "key": "grill_forced_convection_with_microwave",
+    "description": {
+      "en": "Fast cooking of a whole chicken or other tall items on the grill.",
+      "de": "Gart ein ganzes Poulet oder voluminöses Grillgut in kurzer Zeit.",
+      "fr": "Cuit rapidement un poulet entier ou d’autres pièces volumineuses à griller."
+    }
+  },
+  "164": {
+    "key": "hot_air_grill_with_microwave",
+    "description": {
+      "en": "Quickly cooks gratins and bakes, and also suits some meat and braised dishes.",
+      "de": "Gart Gratins und Aufläufe in kurzer Zeit und eignet sich auch für manche Fleisch- und Schmorgerichte.",
+      "fr": "Cuit rapidement gratins et plats au four, et convient aussi à certaines viandes et plats braisés."
+    }
+  },
+  "165": {
+    "key": "heat_plated_meals",
+    "description": {
+      "en": "Brings plated meals up to around 70 °C.",
+      "de": "Bringt angerichtete Teller auf rund 70 °C.",
+      "fr": "Porte les plats sur assiette à environ 70 °C."
+    }
+  },
+  "166": {
+    "key": "warm_up_beverages",
+    "description": {
+      "en": "Warms drinks to around 40 °C.",
+      "de": "Wärmt Getränke auf rund 40 °C.",
+      "fr": "Tiédit les boissons à environ 40 °C."
+    }
+  },
+  "167": {
+    "key": "heat_beverages",
+    "description": {
+      "en": "Heats drinks to around 70 °C.",
+      "de": "Macht Getränke auf rund 70 °C heiss.",
+      "fr": "Chauffe les boissons à environ 70 °C."
+    }
+  },
+  "168": {
+    "key": "boil_water",
+    "description": {
+      "en": "Brings water to the boil.",
+      "de": "Bringt Wasser zum Kochen.",
+      "fr": "Porte l’eau à ébullition."
+    }
+  },
+  "169": {
+    "key": "soft_roasting_seared"
+  },
+  "170": {
+    "key": "soft_roasting_seared"
+  },
+  "171": {
+    "key": "soft_roasting_seared"
+  },
+  "172": {
+    "key": "soft_roasting_with_grill"
+  },
+  "173": {
+    "key": "soft_roasting_seared"
+  },
+  "174": {
+    "key": "soft_roasting_seared"
+  },
+  "175": {
+    "key": "soft_roasting_seared"
+  },
+  "176": {
+    "key": "soft_roasting_with_grill"
+  },
+  "177": {
+    "key": "soft_roasting_seared"
+  },
+  "178": {
+    "key": "soft_roasting_with_grill"
+  },
+  "179": {
+    "key": "soft_roasting_seared"
+  },
+  "180": {
+    "key": "soft_roasting_seared"
+  },
+  "181": {
+    "key": "soft_roasting_seared"
+  },
+  "182": {
+    "key": "soft_roasting_seared"
+  },
+  "183": {
+    "key": "soft_roasting_with_grill"
+  },
+  "184": {
+    "key": "soft_roasting_seared"
+  },
+  "185": {
+    "key": "soft_roasting_seared"
+  },
+  "186": {
+    "key": "soft_roasting_seared"
+  },
+  "187": {
+    "key": "soft_roasting_seared"
+  },
+  "188": {
+    "key": "soft_roasting_with_grill"
+  },
+  "189": {
+    "key": "soft_roasting_seared"
+  },
+  "190": {
+    "key": "soft_roasting_seared"
+  },
+  "191": {
+    "key": "soft_roasting_with_grill"
+  },
+  "192": {
+    "key": "soft_roasting_seared"
+  },
+  "193": {
+    "key": "soft_roasting_with_grill"
+  },
+  "194": {
+    "key": "soft_roasting_seared"
+  },
+  "195": {
+    "key": "soft_roasting_seared"
+  },
+  "196": {
+    "key": "blechkuchen"
+  },
+  "197": {
+    "key": "profi_pizza",
+    "description": {
+      "en": "Made for pizza on a homemade base, Neapolitan style for example, which bakes at very high heat. Use it only with the optional Pizza Set accessory.",
+      "de": "Für Pizza aus eigenem Teig, etwa nach neapolitanischer Art, die bei sehr hoher Hitze gebacken wird. Nur mit dem separat erhältlichen Pizza Set verwenden.",
+      "fr": "Pour les pizzas à pâte maison, style napolitain par exemple, cuites à très haute température. À utiliser uniquement avec le kit pizza vendu en accessoire."
+    }
+  },
+  "200": {
+    "key": "persistent_recipe"
+  },
+  "202": {
+    "key": "profiteroles"
+  },
+  "203": {
+    "key": "spring_rolls"
+  },
+  "204": {
+    "key": "terrine"
+  },
+  "205": {
+    "key": "asparagus_strudel"
+  },
+  "206": {
+    "key": "mini_ratatouille"
+  },
+  "207": {
+    "key": "stuffed_pears"
+  },
+  "208": {
+    "key": "mini_pizzas"
+  },
+  "209": {
+    "key": "cheesecake"
+  },
+  "210": {
+    "key": "venison_terrine"
+  },
+  "211": {
+    "key": "jerusalem_artichoke_soup"
+  },
+  "212": {
+    "key": "fennel_soup"
+  },
+  "213": {
+    "key": "roasted_salmon"
+  },
+  "214": {
+    "key": "fish_skewers"
+  },
+  "215": {
+    "key": "fish_rolls"
+  },
+  "216": {
+    "key": "john_dory"
+  },
+  "217": {
+    "key": "savoy_roulades"
+  },
+  "218": {
+    "key": "poultry_breasts"
+  },
+  "219": {
+    "key": "chicken_rolls"
+  },
+  "220": {
+    "key": "lamb_shoulder"
+  },
+  "221": {
+    "key": "lamb_curry"
+  },
+  "222": {
+    "key": "veal_rolls"
+  },
+  "223": {
+    "key": "pork_fillet"
+  },
+  "224": {
+    "key": "beef_swirls"
+  },
+  "225": {
+    "key": "corn_cakes"
+  },
+  "226": {
+    "key": "potato_gratin"
+  },
+  "227": {
+    "key": "chana_masaledar"
+  },
+  "228": {
+    "key": "stuffed_vegetables"
+  },
+  "229": {
+    "key": "spinach_gnocchi"
+  },
+  "230": {
+    "key": "potato_hedgehogs"
+  },
+  "231": {
+    "key": "potato_salad"
+  },
+  "232": {
+    "key": "leeks"
+  },
+  "233": {
+    "key": "vegetable_curry"
+  },
+  "234": {
+    "key": "thyme_souffl"
+  },
+  "235": {
+    "key": "stuffed_pumpkin"
+  },
+  "236": {
+    "key": "vegetable_strudel"
+  },
+  "237": {
+    "key": "aubergines"
+  },
+  "238": {
+    "key": "apple_r_sti"
+  },
+  "239": {
+    "key": "vanilla_bread_rolls"
+  },
+  "240": {
+    "key": "chocolate_surprise"
+  },
+  "241": {
+    "key": "cinnamon_roulade"
+  },
+  "242": {
+    "key": "russian_cheesecake"
+  },
+  "243": {
+    "key": "pears_in_red_wine"
+  },
+  "244": {
+    "key": "japonaise_biscuits"
+  },
+  "245": {
+    "key": "pear_gratin"
+  },
+  "246": {
+    "key": "chocolate_pudding"
+  },
+  "247": {
+    "key": "coffee_pots"
+  },
+  "248": {
+    "key": "chocolate_croissants"
+  },
+  "249": {
+    "key": "calzone"
+  },
+  "250": {
+    "key": "croque_monsieur"
+  },
+  "251": {
+    "key": "potato_bread"
+  },
+  "252": {
+    "key": "spelt_bread"
+  },
+  "253": {
+    "key": "rustic_loaf"
+  },
+  "254": {
+    "key": "fougasse"
+  },
+  "255": {
+    "key": "prawn_bread"
+  },
+  "302": {
+    "key": "zander_terrine"
+  },
+  "303": {
+    "key": "sushi"
+  },
+  "304": {
+    "key": "pot_au_feu"
+  },
+  "305": {
+    "key": "poultry_terrine"
+  },
+  "306": {
+    "key": "vegetable_terrine"
+  },
+  "307": {
+    "key": "raviolo"
+  },
+  "308": {
+    "key": "aperitif_nests"
+  },
+  "309": {
+    "key": "carrot_muffins"
+  },
+  "310": {
+    "key": "pea_soup"
+  },
+  "311": {
+    "key": "courgettes"
+  },
+  "312": {
+    "key": "appetizers"
+  },
+  "313": {
+    "key": "fish_brochette"
+  },
+  "314": {
+    "key": "fish"
+  },
+  "315": {
+    "key": "perch_fillets"
+  },
+  "316": {
+    "key": "monkfish"
+  },
+  "317": {
+    "key": "fish_pralines"
+  },
+  "318": {
+    "key": "chicken_breasts"
+  },
+  "319": {
+    "key": "veal_fillet"
+  },
+  "320": {
+    "key": "roast_beef"
+  },
+  "321": {
+    "key": "loin_fillet_of_lamb"
+  },
+  "322": {
+    "key": "pork_fillets"
+  },
+  "323": {
+    "key": "sweet_and_sour"
+  },
+  "324": {
+    "key": "pork_ragout"
+  },
+  "325": {
+    "key": "chipolata_parcels"
+  },
+  "326": {
+    "key": "momo"
+  },
+  "327": {
+    "key": "polenta"
+  },
+  "328": {
+    "key": "pasta_gratin"
+  },
+  "329": {
+    "key": "oriental_rice"
+  },
+  "330": {
+    "key": "millet_pot"
+  },
+  "331": {
+    "key": "lemon_risotto"
+  },
+  "332": {
+    "key": "vegetable_gratin"
+  },
+  "333": {
+    "key": "wheat_gratin"
+  },
+  "334": {
+    "key": "quinoa_gratin"
+  },
+  "335": {
+    "key": "baked_bread_dish"
+  },
+  "336": {
+    "key": "potato_mash"
+  },
+  "337": {
+    "key": "celery_pur_e"
+  },
+  "338": {
+    "key": "spring_vegetables"
+  },
+  "339": {
+    "key": "kohlrabies"
+  },
+  "340": {
+    "key": "herb_baked_tomatoes"
+  },
+  "341": {
+    "key": "asparagus"
+  },
+  "342": {
+    "key": "chicory_gratin"
+  },
+  "343": {
+    "key": "cauliflower_salad"
+  },
+  "344": {
+    "key": "cannelloni"
+  },
+  "345": {
+    "key": "asparagus_salad"
+  },
+  "346": {
+    "key": "tender_fennel"
+  },
+  "347": {
+    "key": "beans_wrapped_in_bacon"
+  },
+  "348": {
+    "key": "tartar"
+  },
+  "349": {
+    "key": "gingerbread_flan"
+  },
+  "350": {
+    "key": "almond_cakes"
+  },
+  "351": {
+    "key": "truffle_cake"
+  },
+  "352": {
+    "key": "fruit_compote"
+  },
+  "353": {
+    "key": "yeast_dumplings"
+  },
+  "354": {
+    "key": "apple_cr_me"
+  },
+  "355": {
+    "key": "cream_slices"
+  },
+  "356": {
+    "key": "gingerbread"
+  },
+  "357": {
+    "key": "strawberry_gratin"
+  },
+  "358": {
+    "key": "sour_cream_sorbet"
+  },
+  "359": {
+    "key": "praline_mousse"
+  },
+  "360": {
+    "key": "bread_and_butter_pudding"
+  },
+  "361": {
+    "key": "crispy_ice_cream"
+  },
+  "362": {
+    "key": "cr_me_caramel"
+  },
+  "363": {
+    "key": "apple_tart"
+  },
+  "364": {
+    "key": "tarte_flamb_e"
+  },
+  "365": {
+    "key": "wholemeal_bread_rolls"
+  },
+  "366": {
+    "key": "apricot_plaited_bread"
+  },
+  "367": {
+    "key": "cabbage_flan"
+  },
+  "368": {
+    "key": "focaccia"
+  },
+  "369": {
+    "key": "fruit_loaf"
+  },
+  "370": {
+    "key": "seeded_bread_rolls"
+  },
+  "402": {
+    "key": "peppers"
+  },
+  "403": {
+    "key": "spinach_roulade"
+  },
+  "404": {
+    "key": "satay"
+  },
+  "405": {
+    "key": "grissini"
+  },
+  "406": {
+    "key": "mushrooms"
+  },
+  "407": {
+    "key": "nut_nibbles"
+  },
+  "408": {
+    "key": "nut_appetizers"
+  },
+  "409": {
+    "key": "aperitif_tongues"
+  },
+  "410": {
+    "key": "piccantini"
+  },
+  "411": {
+    "key": "zander_fillets"
+  },
+  "412": {
+    "key": "creamed_potatoes"
+  },
+  "413": {
+    "key": "chicken_wings"
+  },
+  "414": {
+    "key": "chicken"
+  },
+  "415": {
+    "key": "meat_loaf"
+  },
+  "416": {
+    "key": "roast_pork"
+  },
+  "417": {
+    "key": "ragout"
+  },
+  "418": {
+    "key": "bread_wrapped_ham"
+  },
+  "419": {
+    "key": "braising_steak"
+  },
+  "420": {
+    "key": "tortilla_baskets"
+  },
+  "421": {
+    "key": "meat_pie"
+  },
+  "422": {
+    "key": "aubergine_gratin"
+  },
+  "423": {
+    "key": "autumn_lasagne"
+  },
+  "424": {
+    "key": "polenta_slices"
+  },
+  "425": {
+    "key": "sweet_potatoes"
+  },
+  "426": {
+    "key": "potato_gratin"
+  },
+  "427": {
+    "key": "lentil_gratin"
+  },
+  "428": {
+    "key": "bread_pudding"
+  },
+  "429": {
+    "key": "pasta_nests"
+  },
+  "430": {
+    "key": "ratatouille"
+  },
+  "431": {
+    "key": "baked_vegetables"
+  },
+  "432": {
+    "key": "vegetable_tray_bake"
+  },
+  "433": {
+    "key": "fennel"
+  },
+  "434": {
+    "key": "stuffed_peppers"
+  },
+  "435": {
+    "key": "pumpkin_papaya"
+  },
+  "436": {
+    "key": "steamed_dumplings"
+  },
+  "437": {
+    "key": "red_wine_cake"
+  },
+  "438": {
+    "key": "macaroons"
+  },
+  "439": {
+    "key": "banana_muffins"
+  },
+  "440": {
+    "key": "peaches"
+  },
+  "441": {
+    "key": "quark_souffl"
+  },
+  "442": {
+    "key": "animal_biscuits"
+  },
+  "443": {
+    "key": "butter_cake"
+  },
+  "444": {
+    "key": "cereal_bars"
+  },
+  "445": {
+    "key": "apple_pots"
+  },
+  "446": {
+    "key": "beer_bread"
+  },
+  "447": {
+    "key": "spiral_bread"
+  },
+  "448": {
+    "key": "carrot_flan"
+  },
+  "449": {
+    "key": "pizza"
+  },
+  "450": {
+    "key": "plaited_bread"
+  },
+  "451": {
+    "key": "garlic_baguette"
+  },
+  "452": {
+    "key": "brioches"
+  },
+  "453": {
+    "key": "pizza_twist"
+  },
+  "502": {
+    "key": "cheese_tuiles"
+  },
+  "503": {
+    "key": "cabbage_salad"
+  },
+  "504": {
+    "key": "savoury_cake"
+  },
+  "505": {
+    "key": "crostini"
+  },
+  "506": {
+    "key": "spinach_fatayer"
+  },
+  "507": {
+    "key": "cream_cheese"
+  },
+  "508": {
+    "key": "pumpkin_tortilla"
+  },
+  "509": {
+    "key": "pea_soup"
+  },
+  "510": {
+    "key": "courgettes"
+  },
+  "511": {
+    "key": "appetizers"
+  },
+  "512": {
+    "key": "onion_soup"
+  },
+  "513": {
+    "key": "cheese_on_toast"
+  },
+  "514": {
+    "key": "fish_rolls"
+  },
+  "515": {
+    "key": "cod_fillets"
+  },
+  "516": {
+    "key": "trout_au_bleu"
+  },
+  "517": {
+    "key": "monkfish"
+  },
+  "518": {
+    "key": "paella"
+  },
+  "519": {
+    "key": "chicken_breasts"
+  },
+  "520": {
+    "key": "roast_beef"
+  },
+  "521": {
+    "key": "fillet_with_topping"
+  },
+  "522": {
+    "key": "pork_fillet"
+  },
+  "523": {
+    "key": "veal_shanks"
+  },
+  "524": {
+    "key": "veal_parcels"
+  },
+  "525": {
+    "key": "savoy_rolls"
+  },
+  "526": {
+    "key": "minced_beef_in_crispy_pastry"
+  },
+  "527": {
+    "key": "potatoes_and_vegetables"
+  },
+  "528": {
+    "key": "chipolata_parcels"
+  },
+  "529": {
+    "key": "turbo_lasagne"
+  },
+  "530": {
+    "key": "stuffed_quinces"
+  },
+  "531": {
+    "key": "potatoes"
+  },
+  "532": {
+    "key": "bacon_apples"
+  },
+  "533": {
+    "key": "wild_garlic_dumplings"
+  },
+  "534": {
+    "key": "quinoa_onions"
+  },
+  "535": {
+    "key": "baked_bread_dish"
+  },
+  "536": {
+    "key": "potato_mash"
+  },
+  "537": {
+    "key": "lentil_gratin"
+  },
+  "538": {
+    "key": "celery_pur_e"
+  },
+  "539": {
+    "key": "aubergines"
+  },
+  "540": {
+    "key": "vegetable_patch"
+  },
+  "541": {
+    "key": "boats"
+  },
+  "542": {
+    "key": "root_vegetables"
+  },
+  "543": {
+    "key": "grilled_asparagus"
+  },
+  "544": {
+    "key": "asparagus_salad"
+  },
+  "545": {
+    "key": "tender_fennel"
+  },
+  "546": {
+    "key": "beans_wrapped_in_bacon"
+  },
+  "547": {
+    "key": "tartar"
+  },
+  "548": {
+    "key": "pineapple_cake"
+  },
+  "549": {
+    "key": "chestnut_cake"
+  },
+  "550": {
+    "key": "apple_cake"
+  },
+  "551": {
+    "key": "profiteroles"
+  },
+  "552": {
+    "key": "cinnamon_flan"
+  },
+  "553": {
+    "key": "quark_torte"
+  },
+  "554": {
+    "key": "cupcakes"
+  },
+  "555": {
+    "key": "brownies"
+  },
+  "556": {
+    "key": "bread_pudding"
+  },
+  "557": {
+    "key": "sour_cream_sorbet"
+  },
+  "558": {
+    "key": "praline_mousse"
+  },
+  "559": {
+    "key": "crispy_ice_cream"
+  },
+  "560": {
+    "key": "leek_feta_flan"
+  },
+  "561": {
+    "key": "fruit_cake"
+  },
+  "562": {
+    "key": "ring_loaf"
+  },
+  "563": {
+    "key": "marshmallow_plaited_bread"
+  },
+  "564": {
+    "key": "beetroot_bread"
+  },
+  "565": {
+    "key": "winemaker_s_bread"
+  },
+  "566": {
+    "key": "wholemeal_bread"
+  },
+  "602": {
+    "key": "zander_terrine"
+  },
+  "603": {
+    "key": "sushi"
+  },
+  "604": {
+    "key": "pot_au_feu"
+  },
+  "605": {
+    "key": "poultry_terrine"
+  },
+  "606": {
+    "key": "vegetable_terrine"
+  },
+  "607": {
+    "key": "raviolo"
+  },
+  "608": {
+    "key": "aperitif_nests"
+  },
+  "609": {
+    "key": "carrot_muffins"
+  },
+  "610": {
+    "key": "pea_soup"
+  },
+  "611": {
+    "key": "courgettes"
+  },
+  "612": {
+    "key": "appetizers"
+  },
+  "613": {
+    "key": "fish_brochette"
+  },
+  "614": {
+    "key": "fish"
+  },
+  "615": {
+    "key": "perch_fillets"
+  },
+  "616": {
+    "key": "monkfish"
+  },
+  "617": {
+    "key": "fish_pralines"
+  },
+  "618": {
+    "key": "chicken_breasts"
+  },
+  "619": {
+    "key": "veal_fillet"
+  },
+  "620": {
+    "key": "roast_beef"
+  },
+  "621": {
+    "key": "loin_fillet_of_lamb"
+  },
+  "622": {
+    "key": "pork_fillets"
+  },
+  "623": {
+    "key": "sweet_and_sour"
+  },
+  "624": {
+    "key": "pork_ragout"
+  },
+  "625": {
+    "key": "chipolata_parcels"
+  },
+  "626": {
+    "key": "momo"
+  },
+  "627": {
+    "key": "polenta"
+  },
+  "628": {
+    "key": "pasta_gratin"
+  },
+  "629": {
+    "key": "oriental_rice"
+  },
+  "630": {
+    "key": "millet_pot"
+  },
+  "631": {
+    "key": "lemon_risotto"
+  },
+  "632": {
+    "key": "vegetable_gratin"
+  },
+  "633": {
+    "key": "wheat_gratin"
+  },
+  "634": {
+    "key": "quinoa_gratin"
+  },
+  "635": {
+    "key": "baked_bread_dish"
+  },
+  "636": {
+    "key": "potato_mash"
+  },
+  "637": {
+    "key": "celery_pur_e"
+  },
+  "638": {
+    "key": "spring_vegetables"
+  },
+  "639": {
+    "key": "kohlrabies"
+  },
+  "640": {
+    "key": "herb_baked_tomatoes"
+  },
+  "641": {
+    "key": "asparagus"
+  },
+  "642": {
+    "key": "chicory_gratin"
+  },
+  "643": {
+    "key": "cauliflower_salad"
+  },
+  "644": {
+    "key": "cannelloni"
+  },
+  "645": {
+    "key": "asparagus_salad"
+  },
+  "646": {
+    "key": "tender_fennel"
+  },
+  "647": {
+    "key": "beans_wrapped_in_bacon"
+  },
+  "648": {
+    "key": "tartar"
+  },
+  "649": {
+    "key": "gingerbread_flan"
+  },
+  "650": {
+    "key": "almond_cakes"
+  },
+  "651": {
+    "key": "truffle_cake"
+  },
+  "652": {
+    "key": "fruit_compote"
+  },
+  "653": {
+    "key": "yeast_dumplings"
+  },
+  "654": {
+    "key": "apple_cr_me"
+  },
+  "655": {
+    "key": "cream_slices"
+  },
+  "656": {
+    "key": "gingerbread"
+  },
+  "657": {
+    "key": "strawberry_gratin"
+  },
+  "658": {
+    "key": "sour_cream_sorbet"
+  },
+  "659": {
+    "key": "praline_mousse"
+  },
+  "660": {
+    "key": "bread_and_butter_pudding"
+  },
+  "661": {
+    "key": "crispy_ice_cream"
+  },
+  "662": {
+    "key": "cr_me_caramel"
+  },
+  "663": {
+    "key": "apple_tart"
+  },
+  "664": {
+    "key": "tarte_flamb_e"
+  },
+  "665": {
+    "key": "wholemeal_bread_rolls"
+  },
+  "666": {
+    "key": "apricot_plaited_bread"
+  },
+  "667": {
+    "key": "cabbage_flan"
+  },
+  "668": {
+    "key": "focaccia"
+  },
+  "669": {
+    "key": "fruit_loaf"
+  },
+  "670": {
+    "key": "seeded_bread_rolls"
+  },
+  "702": {
+    "key": "peppers"
+  },
+  "703": {
+    "key": "spinach_roulade"
+  },
+  "704": {
+    "key": "satay"
+  },
+  "705": {
+    "key": "grissini"
+  },
+  "706": {
+    "key": "mushrooms"
+  },
+  "707": {
+    "key": "nut_nibbles"
+  },
+  "708": {
+    "key": "nut_appetizers"
+  },
+  "709": {
+    "key": "aperitif_tongues"
+  },
+  "710": {
+    "key": "piccantini"
+  },
+  "711": {
+    "key": "zander_fillets"
+  },
+  "712": {
+    "key": "creamed_potatoes"
+  },
+  "713": {
+    "key": "chicken_wings"
+  },
+  "714": {
+    "key": "chicken"
+  },
+  "715": {
+    "key": "meat_loaf"
+  },
+  "716": {
+    "key": "roast_pork"
+  },
+  "717": {
+    "key": "ragout"
+  },
+  "718": {
+    "key": "bread_wrapped_ham"
+  },
+  "719": {
+    "key": "braising_steak"
+  },
+  "720": {
+    "key": "tortilla_baskets"
+  },
+  "721": {
+    "key": "meat_pie"
+  },
+  "722": {
+    "key": "aubergine_gratin"
+  },
+  "723": {
+    "key": "autumn_lasagne"
+  },
+  "724": {
+    "key": "polenta_slices"
+  },
+  "725": {
+    "key": "sweet_potatoes"
+  },
+  "726": {
+    "key": "potato_gratin"
+  },
+  "727": {
+    "key": "lentil_gratin"
+  },
+  "728": {
+    "key": "bread_pudding"
+  },
+  "729": {
+    "key": "pasta_nests"
+  },
+  "730": {
+    "key": "ratatouille"
+  },
+  "731": {
+    "key": "baked_vegetables"
+  },
+  "732": {
+    "key": "vegetable_tray_bake"
+  },
+  "733": {
+    "key": "fennel"
+  },
+  "734": {
+    "key": "stuffed_peppers"
+  },
+  "735": {
+    "key": "pumpkin_papaya"
+  },
+  "736": {
+    "key": "steamed_dumplings"
+  },
+  "737": {
+    "key": "red_wine_cake"
+  },
+  "738": {
+    "key": "macaroons"
+  },
+  "739": {
+    "key": "banana_muffins"
+  },
+  "740": {
+    "key": "peaches"
+  },
+  "741": {
+    "key": "quark_souffl"
+  },
+  "742": {
+    "key": "animal_biscuits"
+  },
+  "743": {
+    "key": "butter_cake"
+  },
+  "744": {
+    "key": "cereal_bars"
+  },
+  "745": {
+    "key": "apple_pots"
+  },
+  "746": {
+    "key": "beer_bread"
+  },
+  "747": {
+    "key": "spiral_bread"
+  },
+  "748": {
+    "key": "carrot_flan"
+  },
+  "749": {
+    "key": "pizza"
+  },
+  "750": {
+    "key": "plaited_bread"
+  },
+  "751": {
+    "key": "garlic_baguette"
+  },
+  "752": {
+    "key": "brioches"
+  },
+  "753": {
+    "key": "pizza_twist"
+  },
+  "802": {
+    "key": "mediterranean_salad"
+  },
+  "803": {
+    "key": "pumpkin_soup"
+  },
+  "804": {
+    "key": "soup_in_bread_pouches"
+  },
+  "805": {
+    "key": "spaghetti_alle_verdure"
+  },
+  "806": {
+    "key": "tikka_masala"
+  },
+  "807": {
+    "key": "veal_rolls"
+  },
+  "808": {
+    "key": "lemon_cheese_pie"
+  },
+  "809": {
+    "key": "chocolate_pear_cake"
+  },
+  "810": {
+    "key": "carrot_soup"
+  },
+  "811": {
+    "key": "capuns"
+  },
+  "812": {
+    "key": "foam_cake"
+  },
+  "1501": {
+    "key": "power_level"
+  },
+  "1502": {
+    "key": "autopowerplus"
+  },
+  "1503": {
+    "key": "professionalmode"
+  },
+  "1504": {
+    "key": "simmer"
+  },
+  "1505": {
+    "key": "melt"
+  },
+  "1506": {
+    "key": "reheat"
+  },
+  "1507": {
+    "key": "fry"
+  },
+  "1508": {
+    "key": "powerplus"
+  },
+  "2000": {
+    "key": "standard_cool"
+  },
+  "2001": {
+    "key": "standard_freeze"
+  },
+  "2002": {
+    "key": "super_cool"
+  },
+  "2003": {
+    "key": "super_freeze"
+  },
+  "2004": {
+    "key": "party_cool"
+  },
+  "2005": {
+    "key": "stand_by"
+  },
+  "2500": {
+    "key": "extra_dry"
+  },
+  "2501": {
+    "key": "cupboard_dry"
+  },
+  "2502": {
+    "key": "iron_dry"
+  },
+  "2503": {
+    "key": "damp"
+  },
+  "2504": {
+    "key": "timed_drying"
+  },
+  "2505": {
+    "key": "woollens"
+  },
+  "2506": {
+    "key": "wetclean_finish"
+  },
+  "2507": {
+    "key": "airing"
+  },
+  "2508": {
+    "key": "silks"
+  },
+  "2509": {
+    "key": "fluffing"
+  },
+  "2510": {
+    "key": "crease_guard"
+  },
+  "2511": {
+    "key": "shirts"
+  },
+  "2512": {
+    "key": "outdoor_garm"
+  },
+  "2513": {
+    "key": "denim"
+  },
+  "2514": {
+    "key": "baby_garments"
+  },
+  "2515": {
+    "key": "thin_down_filling"
+  },
+  "2516": {
+    "key": "thick_down_filling"
+  },
+  "2517": {
+    "key": "hygiene"
+  },
+  "2518": {
+    "key": "towelling"
+  },
+  "2519": {
+    "key": "basket"
+  },
+  "2520": {
+    "key": "cottons_eco"
+  },
+  "2521": {
+    "key": "bed_linen"
+  },
+  "2522": {
+    "key": "moisture_control"
+  },
+  "2523": {
+    "key": "warm_towels"
+  },
+  "2524": {
+    "key": "synthetics"
+  },
+  "2525": {
+    "key": "sportswear"
+  },
+  "2526": {
+    "key": "dry_sanitize"
+  },
+  "2527": {
+    "key": "remove_animal_hair"
+  },
+  "2528": {
+    "key": "cottons"
+  },
+  "3000": {
+    "key": "coloureds"
+  },
+  "3001": {
+    "key": "black_garments"
+  },
+  "3002": {
+    "key": "shirts"
+  },
+  "3003": {
+    "key": "outdoor_garments"
+  },
+  "3004": {
+    "key": "curtains"
+  },
+  "3005": {
+    "key": "denim"
+  },
+  "3006": {
+    "key": "baby_garments"
+  },
+  "3007": {
+    "key": "down"
+  },
+  "3008": {
+    "key": "woollens"
+  },
+  "3009": {
+    "key": "hand_wash"
+  },
+  "3010": {
+    "key": "black_hand_wash"
+  },
+  "3011": {
+    "key": "silks"
+  },
+  "3012": {
+    "key": "underwear"
+  },
+  "3013": {
+    "key": "wetclean"
+  },
+  "3014": {
+    "key": "firstwash"
+  },
+  "3015": {
+    "key": "standard_60_c"
+  },
+  "3016": {
+    "key": "standard_40_c"
+  },
+  "3017": {
+    "key": "steam_anti_crease"
+  },
+  "3018": {
+    "key": "proofing"
+  },
+  "3019": {
+    "key": "appliance_hygiene"
+  },
+  "3020": {
+    "key": "final_spin"
+  },
+  "3021": {
+    "key": "eco_40_60"
+  },
+  "3022": {
+    "key": "plushies"
+  },
+  "3023": {
+    "key": "shoes"
+  },
+  "3024": {
+    "key": "hot_wraps"
+  },
+  "3025": {
+    "key": "warm_moist_towels"
+  },
+  "3026": {
+    "key": "warm_towels"
+  },
+  "3027": {
+    "key": "rinse_and_spin"
+  },
+  "3028": {
+    "key": "device_rinsing"
+  },
+  "3029": {
+    "key": "refreshpro"
+  },
+  "3030": {
+    "key": "sanitisepro"
+  },
+  "3031": {
+    "key": "bed_linen"
+  },
+  "3032": {
+    "key": "towelling"
+  },
+  "3033": {
+    "key": "carpet"
+  },
+  "3034": {
+    "key": "clothing_with_prints"
+  },
+  "3035": {
+    "key": "sequins_and_rivets"
+  },
+  "3036": {
+    "key": "work_clothes"
+  },
+  "3037": {
+    "key": "synthetics"
+  },
+  "3038": {
+    "key": "sportswear"
+  },
+  "3039": {
+    "key": "cottons"
+  },
+  "9000": {
+    "key": "countdown_timer"
+  }
+}
