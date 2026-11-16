@@ -16,6 +16,7 @@ _ICONS = {
     "partyCooling": "mdi:party-popper",
     "HolidayMode": "mdi:beach",
     "SilentPlusMode": "mdi:volume-off",
+    "MonoFridgeMode": "mdi:fridge-outline",
 }
 
 

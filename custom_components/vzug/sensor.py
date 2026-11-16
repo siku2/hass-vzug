@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import api, zones
 from .const import DOMAIN
 from .helpers import UserConfigEntity, ZoneEntity, snake, zone_translation
-from .shared import Shared, StateCoordinator, UpdateCoordinator
+from .shared import ProgramCoordinator, Shared, StateCoordinator, UpdateCoordinator
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -60,6 +60,24 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="energy_program",
+    ),
+    SensorEntityDescription(
+        "energy.lastMonth",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement="kWh",
+        state_class=SensorStateClass.TOTAL,
+        translation_key="energy_last_month",
+    ),
+    SensorEntityDescription(
+        "energy.lastYear",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:lightning-bolt",
+        native_unit_of_measurement="kWh",
+        state_class=SensorStateClass.TOTAL,
+        translation_key="energy_last_year",
     ),
     SensorEntityDescription(
         # This is tricky, because it is not really a measurement, but calculated by the device.
@@ -121,11 +139,24 @@ async def async_setup_entry(
                     )
                 )
 
+    eco_info = shared.state_coord.data.eco_info
     for desc in _ECO_SENSORS:
         category, _, field = desc.key.partition(".")
-        if category not in shared.state_coord.data.eco_info:
+        if category not in eco_info:
+            continue
+        if field in ("lastMonth", "lastYear") and field not in eco_info[category]:
             continue
         entities.append(Eco(shared, desc, category=category, field=field))
+    for index, _ in enumerate(eco_info.get("doorOpenings") or []):
+        entities.extend(
+            DoorOpenings(shared, index=index, period=period)
+            for period in DoorOpenings.PERIODS
+        )
+    if shared.program_coord is not None:
+        entities.extend(
+            ProgramValue(shared, key=key)
+            for key in zones.PROGRAM_VALUES.get(shared.meta.machine_type, ())
+        )
 
     entities.extend(_zone_entities(shared))
     async_add_entities(entities)
@@ -157,12 +188,30 @@ def _zone_entities(shared: Shared) -> list[SensorEntity]:
             ProgramInfo(shared, shared.zone_coord, zone=zone, kind=kind)
             for kind in ProgramInfo.KINDS
         )
+        if zones.is_hob_zone(zone):
+            entities.append(HobLevel(shared, zone=zone))
         if zones.is_oven_zone(zone, zone_data):
             entities.extend(
                 OvenValue(shared, zone=zone, key=key, field=field)
                 for key, field in OvenValue.VALUES
             )
     return entities
+
+
+class HobLevel(ZoneEntity, SensorEntity):
+    """Power level of a hob zone, in steps of 0.5. Read only."""
+
+    _attr_translation_key = "hob_level"
+    _attr_icon = "mdi:stove"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="level")
+        self._attr_translation_placeholders = {"zone": zones.hob_zone_letter(zone)}
+
+    @property
+    def native_value(self) -> StateType:
+        return zones.value(self.zone_data, self.vzug_key)
 
 
 class OvenValue(ZoneEntity, SensorEntity):
@@ -490,3 +539,58 @@ class CloudStatus(SensorEntity, CoordinatorEntity[UpdateCoordinator]):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         cloud = self.coordinator.data.cloud_status
         return {key: cloud.get(key) for key in ("enabled", "claimed")}
+
+
+class DoorOpenings(StateBase):
+    """How often a refrigerator door was opened, from 'getEcoInfo'."""
+
+    PERIODS = ("today", "sevenDayAverage", "thirtyDayAverage")
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:door-open"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, shared: Shared, *, index: int, period: str) -> None:
+        self._attr_translation_key = f"door_openings_{snake(period)}"
+        super().__init__(shared)
+        self.vzug_index = index
+        self.vzug_period = period
+        self._attr_unique_id = (
+            f"{shared.unique_id_prefix}-sensor-door-openings-{index}-{period}"
+        )
+        self._attr_translation_placeholders = {"door": str(index + 1)}
+
+    @property
+    def native_value(self) -> StateType:
+        try:
+            entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
+            return entry[self.vzug_period]["amount"]
+        except (LookupError, TypeError):
+            return None
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        try:
+            entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
+            return {"duration": entry[self.vzug_period]["duration"]}
+        except (LookupError, TypeError):
+            return None
+
+
+class ProgramValue(CoordinatorEntity[ProgramCoordinator], SensorEntity):
+    """A reading of the selected program, ex. an OptiDos tray's fill level."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, shared: Shared, *, key: str) -> None:
+        super().__init__(shared.program_coord)
+        self.vzug_key = key
+        self._attr_unique_id = f"{shared.unique_id_prefix}-program-value-{key}"
+        self._attr_device_info = shared.device_info
+        self._attr_translation_key = snake(key)
+
+    @property
+    def native_value(self) -> StateType:
+        current = self.coordinator.data.current if self.coordinator.data else None
+        value = zones.value(current, self.vzug_key)
+        return value if isinstance(value, (str, int, float)) else None

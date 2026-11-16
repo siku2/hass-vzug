@@ -159,6 +159,36 @@
             },
             "door_status": {
                 "name": "Oven door status"
+            },
+            "energy_last_month": {
+                "name": "Energy last month"
+            },
+            "energy_last_year": {
+                "name": "Energy last year"
+            },
+            "door_openings_today": {
+                "name": "Door {door} openings today"
+            },
+            "door_openings_sevendayaverage": {
+                "name": "Door {door} openings, 7-day average"
+            },
+            "door_openings_thirtydayaverage": {
+                "name": "Door {door} openings, 30-day average"
+            },
+            "hob_level": {
+                "name": "Zone {zone} power level"
+            },
+            "filllevela": {
+                "name": "OptiDos tray A level"
+            },
+            "filllevelb": {
+                "name": "OptiDos tray B level"
+            },
+            "optidoslevela": {
+                "name": "OptiDos tray A level"
+            },
+            "optidoslevelb": {
+                "name": "OptiDos tray B level"
             }
         },
         "update": {
@@ -184,6 +214,30 @@
             },
             "timer_ringing": {
                 "name": "Timer ringing"
+            },
+            "pan_detected": {
+                "name": "Zone {zone} pan detected"
+            },
+            "energysaving": {
+                "name": "EnergySaving"
+            },
+            "partialload": {
+                "name": "Partial load"
+            },
+            "optistart": {
+                "name": "OptiStart"
+            },
+            "steamfinish": {
+                "name": "SteamFinish"
+            },
+            "rinseplus": {
+                "name": "RinsePlus"
+            },
+            "dryplus": {
+                "name": "DryPlus"
+            },
+            "addwash": {
+                "name": "Adding laundry possible"
             }
         },
         "number": {
@@ -210,6 +264,9 @@
             },
             "warming_drawer_duration": {
                 "name": "Warming drawer duration"
+            },
+            "illumination": {
+                "name": "Interior light"
             }
         },
         "switch": {
@@ -230,6 +287,9 @@
             },
             "oven_light": {
                 "name": "Oven light"
+            },
+            "mono_fridge_mode": {
+                "name": "Mono fridge"
             }
         },
         "select": {
@@ -679,6 +739,9 @@
                     "work_clothes": "Work clothes",
                     "countdown_timer": "Countdown timer"
                 }
+            },
+            "temperature_unit": {
+                "name": "Temperature unit"
             }
         }
     },

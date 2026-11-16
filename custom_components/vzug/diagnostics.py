@@ -45,6 +45,10 @@ async def gather_full_api_sample(shared: Shared) -> dict[str, Any]:
         do_one("device_info", shared.client.get_device_info()),
         do_one("program", shared.client.get_program()),
         do_one("all_program_ids", shared.client.get_all_program_ids()),
+        do_one("api_version_ai", shared.client.get_api_version("ai")),
+        do_one("api_version_hh", shared.client.get_api_version("hh")),
+        do_one("errors", shared.client.get_errors()),
+        do_one("installed_features", shared.client.get_installed_features()),
         # config aggregate
         do_one("aggregate_config", shared.client.aggregate_config()),
     )

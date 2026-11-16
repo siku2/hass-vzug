@@ -97,6 +97,8 @@ _SNAKE = {
     "HolidayMode": "holiday_mode",
     "SilentPlusMode": "silent_plus_mode",
     "SabbatMode": "sabbath_mode",
+    "MonoFridgeMode": "mono_fridge_mode",
+    "TemperatureUnit": "temperature_unit",
 }
 # zones we have translations for, anything else gets a generated name
 KNOWN_ZONE_LABELS = ("fridge", "freezer")

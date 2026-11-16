@@ -125,11 +125,16 @@ class EcoInfoMetric(TypedDict, total=False):
     average: float
     program: float
     option: float  # sent by adorawash for water, no idea what it is
+    lastMonth: float
+    lastYear: float
 
 
 class EcoInfo(TypedDict, total=False):
     water: EcoInfoMetric
     energy: EcoInfoMetric
+    doorOpenings: list[dict[str, Any]]
+    """refrigerators, ex. [{"today":{"duration":12,"amount":3},
+    "sevenDayAverage":{...},"thirtyDayAverage":{...}}]"""
 
 
 class Category(TypedDict, total=False):
@@ -222,6 +227,8 @@ class AggMeta:
     """from '/ai getAPIVersion', None if the appliance doesn't answer it"""
     hh_api_version: tuple[int, ...] | None = None
     """from '/hh getAPIVersion', else 'getDeviceInfo', None if neither answers"""
+    machine_type: str = ""
+    """'getDeviceInfo' type: GS dishwasher, WA washer, BO oven, GK hob, KS fridge..."""
 
     def create_name(self) -> str:
         if name := self.device_name.strip():
@@ -286,6 +293,8 @@ class VZugApi:
         # the hh API version, learned in 'aggregate_meta'. Older versions need other
         # commands for the same thing. None = unknown, assume a current appliance.
         self.hh_api_version: tuple[int, ...] | None = None
+        # 'getDeviceInfo' type, learned in 'aggregate_meta'
+        self.machine_type = ""
 
     def hh_supports(self, version: tuple[int, ...]) -> bool:
         """Whether the hh API is at least 'version' (or unknown)."""
@@ -606,6 +615,7 @@ class VZugApi:
                 api_version=info_api_version,
                 ai_api_version=ai_api_version,
                 hh_api_version=hh_api_version or info_api_version or None,
+                machine_type=device_info.get("type", ""),
             )
         else:
             meta = AggMeta(
@@ -621,6 +631,7 @@ class VZugApi:
                 hh_api_version=hh_api_version or (1, 0, 0),
             )
         self.hh_api_version = meta.hh_api_version
+        self.machine_type = meta.machine_type
         return meta
 
     async def aggregate_config(self) -> AggConfig:
@@ -657,7 +668,82 @@ class VZugApi:
                 *(handle_command_key(command_key) for command_key in command_keys)
             )
             config_tree[category_key] = category
+
+        if self.machine_type == "WA" and (optidos := await self.get_optidos()):
+            config_tree[OPTIDOS_CATEGORY] = AggCategory(
+                key=OPTIDOS_CATEGORY, description="OptiDos", commands=optidos
+            )
         return config_tree
+
+    async def get_optidos(self) -> dict[str, Command]:
+        """The OptiDos detergent trays of a washing machine, as config commands.
+
+        They aren't in the category tree, but are read with 'getCommand' (or
+        'getUserSettings' from hh 1.12) and written with 'set<command>' like the
+        rest, so the usual select and number entities handle them.
+        """
+        commands: dict[str, Command] = {}
+        for tray in ("A", "B"):
+            detergent = f"detergent{tray}neutral"
+            dosage = f"dosage{tray}"
+            if self.hh_supports((1, 12, 0)):
+                det = await self._user_setting(f"DETERGENT_{tray}")
+                dos = await self._user_setting(f"DOSAGE_{tray}")
+                det_value = OPTIDOS_DETERGENTS.get(str(det.get("set")))
+                dos_value, low, high = dos.get("set"), dos.get("min"), dos.get("max")
+            else:
+                det = await self._optional_command(detergent)
+                dos = await self._optional_command(dosage)
+                det_value = det.get("value")
+                dos_value = dos.get("value")
+                low, high = sorted(dos.get("minMax") or [0, 0], key=float)[:2]
+            if det_value is not None:
+                commands[detergent] = Command(
+                    type="selection",
+                    description=f"Detergent {tray}",
+                    command=detergent,
+                    value=det_value,
+                    alterable=True,
+                    options=list(OPTIDOS_DETERGENTS.values()),
+                )
+            if dos_value is not None:
+                commands[dosage] = Command(
+                    type="range",
+                    description=f"Dosage {tray}",
+                    command=dosage,
+                    value=str(dos_value),
+                    alterable=True,
+                    minMax=(str(low), str(high)),
+                )
+        return commands
+
+    async def _optional_command(self, name: str) -> dict[str, Any]:
+        return await self._command(
+            "hh",
+            command="getCommand",
+            params={"value": name},
+            expected_type=dict,
+            attempts=2,
+            value_on_err=dict,
+        )
+
+    async def _user_setting(self, setting_id: str) -> dict[str, Any]:
+        data = await self._command(
+            "hh",
+            command="getUserSettings",
+            params={"value": _compact_json({"id": setting_id})},
+            expected_type=dict,
+            attempts=2,
+            value_on_err=dict,
+        )
+        value = data.get("value")
+        return value if isinstance(value, dict) else {}
+
+    async def get_installed_features(self) -> list[str]:
+        """Paid V-ZUG Upgrades installed on the appliance (hh 1.7)."""
+        return await self._command(
+            "hh", command="getInstalledFeatures", expected_type=list, attempts=2
+        )
 
     async def get_api_version(self, component: str) -> tuple[int, ...] | None:
         """'getAPIVersion' of the 'ai' or 'hh' API, ex. {"value":"1.12.0"}.
@@ -841,8 +927,9 @@ class VZugApi:
         energy_total = result.get("energy", {}).get("total", 0)
 
         # If both water and energy totals are 0, we return an empty EcoInfo
-        # This is to handle cases where the API returns 0s for both metrics
-        if water_total == 0 and energy_total == 0:
+        # This is to handle cases where the API returns 0s for both metrics.
+        # Refrigerators have neither, only door openings.
+        if water_total == 0 and energy_total == 0 and not result.get("doorOpenings"):
             return EcoInfo()
 
         return result
@@ -985,6 +1072,21 @@ class VZugApi:
 
 class AuthenticationFailed(Exception): ...
 
+
+OPTIDOS_CATEGORY = "optidos"
+# 'getUserSettings' detergent ids -> the text 'setdetergent<tray>neutral' takes
+OPTIDOS_DETERGENTS = {
+    "BABY": "Baby detergent",
+    "UNIVERSAL": "Universal detergent",
+    "MILD": "Delicates detergent",
+    "SOFTENER": "Fabric conditioner",
+    "COLOR": "Colour detergent",
+    "WOOL": "Woollens detergent",
+    "BLACK": "Detergent for blacks",
+    "WHITE": "Detergent for whites",
+    "OUTDOOR": "Outdoor garm. deterg",
+    "NO_DETERGENT": "No detergent",
+}
 
 # the only 'setProgram' keys appliances before hh 1.5 accept, one per request
 _LEGACY_PROGRAM_KEYS = (

@@ -28,10 +28,17 @@ DOOR_KEY = "doorClosed"
 TIMER_KEY = "duration"
 
 # 'cmd' settings outside the category tree, read with 'getcmd<name>'
-SWITCH_MODES: tuple[str, ...] = ("HolidayMode", "SilentPlusMode")
+SWITCH_MODES: tuple[str, ...] = ("HolidayMode", "SilentPlusMode", "MonoFridgeMode")
 SENSOR_MODES: tuple[str, ...] = ("SabbatMode",)
 UNIT_MODE = "TemperatureUnit"
-ALL_MODES: tuple[str, ...] = (*SWITCH_MODES, *SENSOR_MODES, UNIT_MODE)
+# wine cabinets: interior light, '0' (off) to '5'
+ILLUMINATION_MODE = "Illumination"
+ALL_MODES: tuple[str, ...] = (
+    *SWITCH_MODES,
+    *SENSOR_MODES,
+    UNIT_MODE,
+    ILLUMINATION_MODE,
+)
 
 Zone = Mapping[str, Any]
 
@@ -101,6 +108,49 @@ def is_oven_zone(name: str, zone: Zone) -> bool:
 
 def is_warming_drawer(name: str) -> bool:
     return name.startswith("warmingDrawer")
+
+
+def is_hob_zone(name: str) -> bool:
+    """Hob cooking zones are numbered '1', '2', ... (shown as A, B, ...)."""
+    return name.isdigit()
+
+
+def hob_zone_letter(name: str) -> str:
+    return chr(64 + int(name)) if name.isdigit() and 0 < int(name) < 27 else name
+
+
+def pan_detected(zone: Zone | None) -> bool | None:
+    """The hob reports where a pan stands ('xc', 'yc') and its size."""
+    if zone is None:
+        return None
+    return zone.get("xc") is not None and zone.get("yc") is not None
+
+
+# options and readings of the selected program, by appliance type
+PROGRAM_FLAGS = {
+    "GS": (
+        "energySaving",
+        "partialload",
+        "optiStart",
+        "steamfinish",
+        "rinsePlus",
+        "dryPlus",
+    ),
+    "WA": ("addWash",),
+}
+PROGRAM_VALUES = {
+    "WA": ("fillLevelA", "fillLevelB", "optidosLevelA", "optidosLevelB"),
+}
+
+
+def value(zone: Zone | None, key: str) -> Any:
+    """'act' of a parameter, else 'set'."""
+    if not zone:
+        return None
+    param = zone.get(key)
+    if isinstance(param, Mapping):
+        return param.get("act", param.get("set"))
+    return param
 
 
 def flag(zone: Zone | None, key: str) -> bool | None:

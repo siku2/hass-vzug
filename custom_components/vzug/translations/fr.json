@@ -159,6 +159,36 @@
             },
             "door_status": {
                 "name": "État de la porte du four"
+            },
+            "energy_last_month": {
+                "name": "Énergie le mois dernier"
+            },
+            "energy_last_year": {
+                "name": "Énergie l'année dernière"
+            },
+            "door_openings_today": {
+                "name": "Ouvertures de la porte {door} aujourd'hui"
+            },
+            "door_openings_sevendayaverage": {
+                "name": "Ouvertures de la porte {door}, moyenne 7 jours"
+            },
+            "door_openings_thirtydayaverage": {
+                "name": "Ouvertures de la porte {door}, moyenne 30 jours"
+            },
+            "hob_level": {
+                "name": "Zone {zone} niveau de puissance"
+            },
+            "filllevela": {
+                "name": "Niveau OptiDos réservoir A"
+            },
+            "filllevelb": {
+                "name": "Niveau OptiDos réservoir B"
+            },
+            "optidoslevela": {
+                "name": "Niveau OptiDos réservoir A"
+            },
+            "optidoslevelb": {
+                "name": "Niveau OptiDos réservoir B"
             }
         },
         "update": {
@@ -184,6 +214,30 @@
             },
             "timer_ringing": {
                 "name": "Minuterie qui sonne"
+            },
+            "pan_detected": {
+                "name": "Zone {zone} casserole détectée"
+            },
+            "energysaving": {
+                "name": "EnergySaving"
+            },
+            "partialload": {
+                "name": "Charge partielle"
+            },
+            "optistart": {
+                "name": "OptiStart"
+            },
+            "steamfinish": {
+                "name": "SteamFinish"
+            },
+            "rinseplus": {
+                "name": "RinsePlus"
+            },
+            "dryplus": {
+                "name": "DryPlus"
+            },
+            "addwash": {
+                "name": "Ajout de linge possible"
             }
         },
         "number": {
@@ -210,6 +264,9 @@
             },
             "warming_drawer_duration": {
                 "name": "Durée du tiroir chauffant"
+            },
+            "illumination": {
+                "name": "Éclairage intérieur"
             }
         },
         "switch": {
@@ -230,6 +287,9 @@
             },
             "oven_light": {
                 "name": "Éclairage du four"
+            },
+            "mono_fridge_mode": {
+                "name": "Mono-froid"
             }
         },
         "select": {
@@ -679,6 +739,9 @@
                     "work_clothes": "Vêtements de travail",
                     "countdown_timer": "Countdown timer"
                 }
+            },
+            "temperature_unit": {
+                "name": "Unité de température"
             }
         }
     },
