@@ -117,3 +117,68 @@ def test_running_oven_values():
     temp = OvenValue(shared, zone="cookingChamber1", key="temp", field="act")
     assert temp.native_value == 143
     assert OvenDoor(shared, zone="cookingChamber1").is_on is False
+
+
+def _program_shared(current):
+    coord = MagicMock(async_request_refresh=AsyncMock(), async_refresh=AsyncMock())
+    coord.data = zones.ProgramState(names={4: "hot_air"}, current=current)
+    return SimpleNamespace(
+        program_coord=coord,
+        client=MagicMock(set_program=AsyncMock()),
+        unique_id_prefix="x",
+        device_info={},
+        program_zone="cookingChamber1",
+        program_settings={},
+        start_delay_hours=0.0,
+    )
+
+
+@pytest.mark.asyncio
+async def test_oven_program_is_selected_in_the_cooking_chamber():
+    from custom_components.vzug.select import ProgramSelect
+
+    shared = _program_shared(None)
+    await ProgramSelect(shared).async_select_option("hot_air")
+    shared.client.set_program.assert_awaited_once_with(4, {"zone": "cookingChamber1"})
+
+
+@pytest.mark.asyncio
+async def test_send_oven_program_with_temperature_and_duration():
+    from custom_components.vzug.button import SendProgram
+    from custom_components.vzug.number import ProgramSetting
+
+    selected = {
+        "id": 4,
+        "status": "selected",
+        "zone": "cookingChamber1",
+        "temp": {"set": 180, "min": 30, "max": 250, "step": 5},
+        "duration": {"set": 3600, "min": 60, "max": 86340, "step": 60},
+        "preheat": {"set": False, "options": [True, False]},
+    }
+    shared = _program_shared(selected)
+    temp = ProgramSetting(shared, key="temp")
+    duration = ProgramSetting(shared, key="duration")
+    assert (temp.native_value, duration.native_value) == (180, 60)
+    for entity in (temp, duration):
+        entity.async_write_ha_state = MagicMock()
+    await temp.async_set_native_value(200)
+    await duration.async_set_native_value(45)
+    # out of range, so the oven keeps its own value
+    shared.program_settings["temp"] = 400
+
+    await SendProgram(shared).async_press()
+    shared.client.set_program.assert_awaited_once_with(
+        4, {"preheat": False, "zone": "cookingChamber1", "duration": 2700}
+    )
+
+
+@pytest.mark.asyncio
+async def test_no_new_oven_program_while_one_runs():
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.vzug.button import SendProgram
+
+    shared = _program_shared({"id": 4, "status": "active", "zone": "cookingChamber1"})
+    with pytest.raises(HomeAssistantError):
+        await SendProgram(shared).async_press()
+    shared.client.set_program.assert_not_called()

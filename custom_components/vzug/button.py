@@ -135,6 +135,14 @@ class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
         delay = zones.start_delay_seconds(current, self.shared.start_delay_hours)
         if delay:
             options[zones.START_DELAY_KEY] = delay
+        if zone := getattr(self.shared, "program_zone", None):
+            # like the V-ZUG app, an oven doesn't take a new program while one runs
+            if current.get("status") in ("active", "timed"):
+                raise HomeAssistantError("Stop the running program first")
+            options["zone"] = zone
+            options.update(
+                zones.program_settings(current, self.shared.program_settings)
+            )
         await self.shared.client.set_program(current["id"], options)
         # a delay applies to this one program, the next one starts right away again
         self.shared.start_delay_hours = 0.0

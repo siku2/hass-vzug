@@ -254,12 +254,36 @@ class ProgramState:
 
 
 def current_program(
-    raw_programs: Iterable[Mapping[str, Any]],
+    raw_programs: Iterable[Mapping[str, Any]], zone: str | None = None
 ) -> Mapping[str, Any] | None:
+    """The selected or running program; for ovens, the one in 'zone'."""
     for program in raw_programs:
+        if zone is not None and program.get("zone") != zone:
+            continue
         if isinstance(program.get("id"), int) and program.get("status") != "idle":
             return program
     return None
+
+
+# what an oven program can be sent with, besides its on/off options
+PROGRAM_SETTINGS = ("temp", "duration")
+
+
+def program_settings(
+    program: Mapping[str, Any] | None, wanted: Mapping[str, float]
+) -> dict[str, int]:
+    """The temperature (°C) and duration (s) to send with an oven program.
+
+    Like the V-ZUG app, a value outside the program's min / max is left out and
+    the appliance keeps its own.
+    """
+    settings: dict[str, int] = {}
+    for key, value in wanted.items():
+        low = value_field(program, key, "min")
+        high = value_field(program, key, "max")
+        if value and low is not None and high is not None and low <= value <= high:
+            settings[key] = int(value)
+    return settings
 
 
 def program_key(name: str) -> str:
@@ -285,7 +309,7 @@ def program_options(program: Mapping[str, Any]) -> dict[str, bool]:
     return {
         key: bool(value.get("set", False))
         for key, value in program.items()
-        if isinstance(value, Mapping) and value.get("options") == [True, False]
+        if isinstance(value, Mapping) and can_toggle(program, key)
     }
 
 

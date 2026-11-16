@@ -88,7 +88,11 @@ class ProgramSelect(CoordinatorEntity[ProgramCoordinator], SelectEntity):
         program_id = zones.program_id_by_key(self.coordinator.data.names, option)
         if program_id is None:
             raise ValueError(f"unknown program {option!r}")
-        await self.shared.client.set_program(program_id)
+        # ovens pick the program for their cooking chamber
+        if zone := getattr(self.shared, "program_zone", None):
+            await self.shared.client.set_program(program_id, {"zone": zone})
+        else:
+            await self.shared.client.set_program(program_id)
         await self.coordinator.async_request_refresh()
 
 
