@@ -197,6 +197,8 @@ class AggState:
     device_fetched_at: datetime
     notifications: list[PushNotification]
     eco_info: EcoInfo
+    errors: list[str] = dataclasses.field(default_factory=list)
+    """codes the appliance shows on its display, '/hh getDeviceStatus' (hh 1.5)"""
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -204,6 +206,8 @@ class AggUpdateStatus:
     update: UpdateStatus
     ai_fw_version: AiFwVersion
     hh_fw_version: HhFwVersion
+    cloud_status: dict[str, Any] = dataclasses.field(default_factory=dict)
+    """'/ai getCloudStatus' (ai 1.6), ex. {"enabled":true,"status":"connected"}"""
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -232,6 +236,9 @@ class AggMeta:
 
     def supports_update_status(self) -> bool:
         return self.api_version >= (1, 7, 0)
+
+    def supports_cloud_status(self) -> bool:
+        return self.ai_api_version is not None and self.ai_api_version >= (1, 6, 0)
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -482,15 +489,26 @@ class VZugApi:
             data = await self.get_device_status(default_on_error=default_on_error)
             return data, datetime.now(UTC)
 
+        async def _errors() -> list[str]:
+            if not include_device or not self.hh_supports((1, 5, 0)):
+                return []
+            return await self.get_errors()
+
         async def _eco() -> EcoInfo:
             if not include_eco:
                 return EcoInfo()
             return await self.get_eco_info(default_on_error=default_on_error)
 
-        (device, device_fetched_at), notifications, eco_info = await asyncio.gather(
+        (
+            (device, device_fetched_at),
+            notifications,
+            eco_info,
+            errors,
+        ) = await asyncio.gather(
             _device(),
             self.get_last_push_notifications(default_on_error=default_on_error),
             _eco(),
+            _errors(),
         )
 
         return AggState(
@@ -499,25 +517,43 @@ class VZugApi:
             device_fetched_at=device_fetched_at,
             notifications=notifications,
             eco_info=eco_info,
+            errors=errors,
         )
 
     async def aggregate_update_status(
-        self, *, supports_update_status: bool, default_on_error: bool = True
+        self,
+        *,
+        supports_update_status: bool,
+        supports_cloud_status: bool = False,
+        default_on_error: bool = True,
     ) -> AggUpdateStatus:
         async def _update() -> UpdateStatus:
             if supports_update_status:
                 return await self.get_update_status(default_on_error=default_on_error)
             return UpdateStatus()
 
-        update, ai_fw_version, hh_fw_version = await asyncio.gather(
+        async def _cloud() -> dict[str, Any]:
+            if not supports_cloud_status:
+                return {}
+            return await self._command(
+                "ai",
+                command="getCloudStatus",
+                expected_type=dict,
+                attempts=2,
+                value_on_err=dict,
+            )
+
+        update, ai_fw_version, hh_fw_version, cloud_status = await asyncio.gather(
             _update(),
             self.get_ai_fw_version(default_on_error=default_on_error),
             self.get_hh_fw_version(default_on_error=default_on_error),
+            _cloud(),
         )
         return AggUpdateStatus(
             update=update,
             ai_fw_version=ai_fw_version,
             hh_fw_version=hh_fw_version,
+            cloud_status=cloud_status,
         )
 
     async def aggregate_meta(
@@ -670,6 +706,22 @@ class VZugApi:
             attempts=attempts,
             value_on_err=(lambda: DeviceStatus()) if default_on_error else None,
         )
+
+    async def get_errors(self) -> list[str]:
+        """Error codes shown on the display, '/hh getDeviceStatus' (hh 1.5).
+
+        ex. {"displayedErrors":[...]}, older firmware calls the list 'errors'.
+        Optional: an appliance that doesn't know the command has no errors.
+        """
+        data = await self._command(
+            "hh",
+            command="getDeviceStatus",
+            expected_type=dict,
+            attempts=2,
+            value_on_err=dict,
+        )
+        errors = data.get("displayedErrors") or data.get("errors") or []
+        return [str(error) for error in errors] if isinstance(errors, list) else []
 
     async def get_update_status(
         self, *, default_on_error: bool = False

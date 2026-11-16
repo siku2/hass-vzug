@@ -10,8 +10,11 @@ only read from it and write through 'api.VZugApi.set_zone_value' /
 """
 
 import dataclasses
+import json
+import pathlib
 import re
 from collections.abc import Iterable, Mapping
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 # functions that run for a while and then switch themselves off. The value is the
@@ -32,6 +35,13 @@ ALL_MODES: tuple[str, ...] = (*SWITCH_MODES, *SENSOR_MODES, UNIT_MODE)
 
 Zone = Mapping[str, Any]
 
+# program id -> {"key": translation key, "description": {"en": ..., ...}}, from the
+# V-ZUG app's program names. Loaded on import, which Home Assistant runs in an
+# executor.
+PROGRAMS: dict[str, dict[str, Any]] = json.loads(
+    pathlib.Path(__file__).with_name("programs.json").read_text(encoding="utf-8")
+)
+
 
 @dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
 class ZoneState:
@@ -39,6 +49,8 @@ class ZoneState:
     """'getProgram' entries keyed by their zone name"""
     modes: Mapping[str, str]
     """raw answers to 'getcmd<name>' for the modes this appliance supports"""
+    fetched_at: datetime = dataclasses.field(default_factory=lambda: datetime.now(UTC))
+    """times in 'getProgram' are seconds from this moment"""
 
 
 def index_zones(raw_programs: Iterable[Mapping[str, Any]]) -> dict[str, Zone]:
@@ -106,6 +118,33 @@ def mode_is_on(raw: str | None) -> bool | None:
         return None
 
 
+PROGRAM_STATES = ("active", "paused", "timed", "selected", "idle", "locked")
+
+
+def _seconds(zone: Zone | None, key: str, field: str) -> float | None:
+    value = value_field(zone, key, field)
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+        return None
+    return value
+
+
+def end_time(zone: Zone | None, fetched_at: datetime) -> datetime | None:
+    """When the program ends. 'getProgram' reports seconds from now: 'endtime',
+    or failing that, while running, the remaining 'duration'."""
+    seconds = _seconds(zone, "endtime", "act") or _seconds(zone, "endtime", "set")
+    if seconds is None and zone and zone.get("status") == "active":
+        seconds = _seconds(zone, TIMER_KEY, "act")
+    return None if seconds is None else fetched_at + timedelta(seconds=seconds)
+
+
+def start_time(zone: Zone | None, fetched_at: datetime) -> datetime | None:
+    """When a delayed program starts ('timed' status, seconds from now)."""
+    seconds = _seconds(zone, START_DELAY_KEY, "act") or _seconds(
+        zone, START_DELAY_KEY, "set"
+    )
+    return None if seconds is None else fetched_at + timedelta(seconds=seconds)
+
+
 def temperature_unit(modes: Mapping[str, str]) -> str:
     return "°F" if "F" in modes.get(UNIT_MODE, "") else "°C"
 
@@ -116,6 +155,8 @@ class ProgramState:
     """program id -> name, in the order the appliance lists them"""
     current: Mapping[str, Any] | None
     """the selected or running program, None while idle"""
+    fetched_at: datetime = dataclasses.field(default_factory=lambda: datetime.now(UTC))
+    """times in 'getProgram' are seconds from this moment"""
 
 
 def current_program(

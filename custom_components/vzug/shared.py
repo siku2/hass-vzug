@@ -6,6 +6,7 @@ import yarl
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -116,6 +117,8 @@ class Shared:
         self.zone_coord = None
         self.program_coord = None
         self._program_names: dict[int, str] = {}
+        # the last V-ZUG-Home mode we raised or cleared the repair issue for
+        self._zh_mode: int | None = None
         self._zone_modes: tuple[str, ...] = ()
         self._zone_stale_count = 0
         # durations (hours) the SuperCool / SuperFreeze / PartyCooling switches use,
@@ -219,8 +222,10 @@ class Shared:
                 details = await self.client.get_program_details(program_id)
             except Exception as exc:
                 _LOGGER.debug("no details for program %s: %r", program_id, exc)
-                continue
-            if name := details.get("name"):
+                details = {}
+            # without a name from the appliance, name it like the V-ZUG app does
+            known = zones.PROGRAMS.get(str(program_id), {}).get("key")
+            if name := details.get("name") or known:
                 names[program_id] = name
         if not names:
             return
@@ -345,6 +350,7 @@ class Shared:
             self._eco_stale_count = 0
 
         self._track_activity(state.device)
+        self._update_zh_mode_issue(state.zh_mode)
         self.state_coord.update_interval = (
             STATE_COORD_IDLE_INTERVAL
             if self._device_active is False
@@ -400,7 +406,31 @@ class Shared:
         state.device_fetched_at = previous.device_fetched_at
         state.eco_info = previous.eco_info
         state.zh_mode = previous.zh_mode
+        state.errors = previous.errors
         return state
+
+    def _update_zh_mode_issue(self, zh_mode: int) -> None:
+        """Raise a repair while V-ZUG-Home isn't set to allow remote control.
+
+        0 = off, 1 = display only, 2 = operate and display. With 0 or 1 the
+        appliance can be watched but refuses changes.
+        """
+        if zh_mode not in (0, 1, 2) or zh_mode == self._zh_mode:
+            return  # unknown (the warm-up didn't run or failed), or no change
+        self._zh_mode = zh_mode
+        issue_id = f"zh_mode_{self.unique_id_prefix or self.meta.serial_number}"
+        if zh_mode == 2:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="zh_mode",
+            translation_placeholders={"name": self.meta.create_name()},
+        )
 
     def _track_activity(self, device: api.DeviceStatus) -> None:
         """Refresh the config tree whenever the appliance starts or finishes."""
@@ -423,6 +453,7 @@ class Shared:
         async with detect_auth_failed():
             data = await self.client.aggregate_update_status(
                 supports_update_status=self.meta.supports_update_status(),
+                supports_cloud_status=self.meta.supports_cloud_status(),
                 default_on_error=True,  # we allow the update to fail because it's not essential
             )
 
@@ -484,6 +515,7 @@ class Shared:
             update=update,
             ai_fw_version=data.ai_fw_version or previous.ai_fw_version,
             hh_fw_version=data.hh_fw_version or previous.hh_fw_version,
+            cloud_status=data.cloud_status or previous.cloud_status,
         )
 
     async def _fetch_config(self) -> api.AggConfig:

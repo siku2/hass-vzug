@@ -19,8 +19,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api, zones
 from .const import DOMAIN
-from .helpers import UserConfigEntity, ZoneEntity, snake
-from .shared import Shared, StateCoordinator
+from .helpers import UserConfigEntity, ZoneEntity, snake, zone_translation
+from .shared import Shared, StateCoordinator, UpdateCoordinator
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -100,6 +100,15 @@ async def async_setup_entry(
         Status(shared),
         LastNotification(shared),
     ]
+    if shared.client.hh_supports((1, 2, 0)):
+        entities.append(ZhMode(shared))
+    if shared.meta.supports_cloud_status():
+        entities.append(CloudStatus(shared))
+    if shared.program_coord is not None:
+        entities.extend(
+            ProgramInfo(shared, shared.program_coord, zone="", kind=kind)
+            for kind in ProgramInfo.KINDS
+        )
 
     for category in shared.config_coord.data.values():
         for command in category.commands.values():
@@ -139,7 +148,77 @@ def _zone_entities(shared: Shared) -> list[SensorEntity]:
         for mode in zones.SENSOR_MODES
         if mode in data.modes
     )
+    # zones running programs (ovens, warming drawers, hobs); a fridge zone is
+    # always 'active' and has no end
+    for zone in data.zones:
+        if zones.is_timer_zone(zone) or zone.rstrip("0123456789") in (
+            "fridge",
+            "freezer",
+        ):
+            continue
+        entities.extend(
+            ProgramInfo(shared, shared.zone_coord, zone=zone, kind=kind)
+            for kind in ProgramInfo.KINDS
+        )
     return entities
+
+
+class ProgramInfo(CoordinatorEntity, SensorEntity):
+    """State, end or start of the program in one zone, from 'getProgram'.
+
+    For dishwashers and washers (no zones) this reads the program coordinator.
+    """
+
+    KINDS = ("program_state", "program_end_time", "program_start_time")
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, shared: Shared, coordinator: Any, *, zone: str, kind: str
+    ) -> None:
+        super().__init__(coordinator)
+        self.vzug_zone = zone
+        self.vzug_kind = kind
+        self._attr_unique_id = (
+            f"{shared.unique_id_prefix}-program-{zone or 'main'}-{kind}"
+        )
+        self._attr_device_info = shared.device_info
+        if zone:
+            self._attr_translation_key, name = zone_translation(kind, zone)
+            if name:
+                self._attr_name = name
+        else:
+            self._attr_translation_key = kind
+        if kind == "program_state":
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = list(zones.PROGRAM_STATES)
+            self._attr_icon = "mdi:state-machine"
+        else:
+            self._attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    @property
+    def _program(self) -> Mapping[str, Any] | None:
+        data = self.coordinator.data
+        if data is None:
+            return None
+        if self.vzug_zone:
+            return data.zones.get(self.vzug_zone)
+        return data.current
+
+    @property
+    def native_value(self) -> str | datetime | None:
+        program = self._program
+        fetched_at = self.coordinator.data.fetched_at if program is not None else None
+        if self.vzug_kind == "program_state":
+            # the program coordinator only keeps a program while one is selected
+            status = (program or {}).get(
+                "status", "idle" if not self.vzug_zone else None
+            )
+            return status if status in zones.PROGRAM_STATES else None
+        if program is None:
+            return None
+        if self.vzug_kind == "program_end_time":
+            return zones.end_time(program, fetched_at)
+        return zones.start_time(program, fetched_at)
 
 
 class TimeLeft(ZoneEntity, SensorEntity):
@@ -340,3 +419,44 @@ class UserConfigSensor(SensorEntity, UserConfigEntity):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self.vzug_command.get("value")
+
+
+class ZhMode(StateBase):
+    """The appliance's V-ZUG-Home setting, which decides whether it takes orders."""
+
+    _attr_translation_key = "zh_mode"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["off", "display", "operate"]
+    _attr_icon = "mdi:remote"
+
+    @property
+    def native_value(self) -> str | None:
+        mode = self.coordinator.data.zh_mode
+        return self._attr_options[mode] if mode in (0, 1, 2) else None
+
+
+class CloudStatus(SensorEntity, CoordinatorEntity[UpdateCoordinator]):
+    """Connection to the V-ZUG cloud, '/ai getCloudStatus'."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "cloud_status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:cloud-outline"
+
+    def __init__(self, shared: Shared) -> None:
+        super().__init__(shared.update_coord)
+        self._attr_unique_id = f"{shared.unique_id_prefix}-sensor-cloud_status"
+        self._attr_device_info = shared.device_info
+
+    @property
+    def native_value(self) -> str | None:
+        cloud = self.coordinator.data.cloud_status
+        if not cloud:
+            return None
+        return cloud.get("status") if cloud.get("enabled", True) else "disabled"
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        cloud = self.coordinator.data.cloud_status
+        return {key: cloud.get(key) for key in ("enabled", "claimed")}

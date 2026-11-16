@@ -302,10 +302,11 @@ async def test_program_select():
         current={"id": 50, "status": "selected", "duration": {"set": 21300}},
     )
     assert select.current_option == "eco"
-    assert select.extra_state_attributes == {
-        "status": "selected",
-        "duration_seconds": 21300,
-    }
+    attributes = select.extra_state_attributes
+    assert attributes["status"] == "selected"
+    assert attributes["duration_seconds"] == 21300
+    # descriptions are shown in English when there is no Home Assistant language
+    assert "dishes" in attributes["description"]
 
 
 @pytest.mark.asyncio
@@ -424,3 +425,48 @@ async def test_start_delay_number_keeps_the_value_and_follows_the_program_limit(
         current={**QUICK_SELECTED, "starttime": {"min": 0, "max": 43200, "step": 600}},
     )
     assert number.native_max_value == 12.0
+
+
+def test_program_info_for_an_oven_zone():
+    from datetime import timedelta
+
+    from custom_components.vzug.sensor import ProgramInfo
+
+    raw = [
+        {"id": 4, "status": "active", "zone": "cookingChamber1",
+         "duration": {"set": 3600, "act": 600}},
+        {"status": "idle", "zone": "countdown1", "duration": {"set": 300}},
+    ]
+    shared = _shared(raw=raw, modes={})
+    entities = [e for e in sensor_entities(shared) if isinstance(e, ProgramInfo)]
+    # the timer zone has its own entities
+    assert [(e.vzug_zone, e.vzug_kind) for e in entities] == [
+        ("cookingChamber1", kind) for kind in ProgramInfo.KINDS
+    ]
+    state, end, start = entities
+    assert state.native_value == "active"
+    fetched = shared.zone_coord.data.fetched_at
+    assert end.native_value == fetched + timedelta(seconds=600)
+    assert start.native_value is None
+
+
+def test_program_info_while_a_dishwasher_is_idle():
+    from custom_components.vzug.sensor import ProgramInfo
+
+    coord = MagicMock()
+    coord.data = zones.ProgramState(names=DISHWASHER_NAMES, current=None)
+    shared = SimpleNamespace(unique_id_prefix="x", device_info={})
+    assert ProgramInfo(shared, coord, zone="", kind="program_state").native_value == "idle"
+    assert ProgramInfo(shared, coord, zone="", kind="program_end_time").native_value is None
+
+
+@pytest.mark.asyncio
+async def test_errors_come_from_hh_device_status():
+    from custom_components.vzug.api import VZugApi
+
+    api = VZugApi(base_url="http://example.com")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(api, "_command", AsyncMock(return_value={"displayedErrors": ["E12"]}))
+        assert await api.get_errors() == ["E12"]
+        mp.setattr(api, "_command", AsyncMock(return_value={"errors": []}))
+        assert await api.get_errors() == []
