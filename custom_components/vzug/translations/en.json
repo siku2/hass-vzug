@@ -52,6 +52,12 @@
             },
             "stop_program": {
                 "name": "Stop"
+            },
+            "start_warming_drawer": {
+                "name": "Start warming drawer"
+            },
+            "stop_warming_drawer": {
+                "name": "Stop warming drawer"
             }
         },
         "sensor": {
@@ -135,6 +141,24 @@
             },
             "cloud_status": {
                 "name": "Cloud connection"
+            },
+            "cavity_temperature": {
+                "name": "Oven temperature"
+            },
+            "cavity_target_temperature": {
+                "name": "Oven target temperature"
+            },
+            "probe_temperature": {
+                "name": "Food probe temperature"
+            },
+            "probe_target_temperature": {
+                "name": "Food probe target temperature"
+            },
+            "preheat_status": {
+                "name": "Preheating"
+            },
+            "door_status": {
+                "name": "Oven door status"
             }
         },
         "update": {
@@ -151,6 +175,15 @@
             },
             "errors": {
                 "name": "Errors"
+            },
+            "oven_door": {
+                "name": "Oven door"
+            },
+            "probe_inserted": {
+                "name": "Food probe inserted"
+            },
+            "timer_ringing": {
+                "name": "Timer ringing"
             }
         },
         "number": {
@@ -174,6 +207,9 @@
             },
             "start_delay": {
                 "name": "Start delay"
+            },
+            "warming_drawer_duration": {
+                "name": "Warming drawer duration"
             }
         },
         "switch": {
@@ -191,6 +227,9 @@
             },
             "silent_plus_mode": {
                 "name": "SilentPlus"
+            },
+            "oven_light": {
+                "name": "Oven light"
             }
         },
         "select": {

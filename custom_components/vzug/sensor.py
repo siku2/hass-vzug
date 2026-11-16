@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -150,17 +150,47 @@ def _zone_entities(shared: Shared) -> list[SensorEntity]:
     )
     # zones running programs (ovens, warming drawers, hobs); a fridge zone is
     # always 'active' and has no end
-    for zone in data.zones:
-        if zones.is_timer_zone(zone) or zone.rstrip("0123456789") in (
-            "fridge",
-            "freezer",
-        ):
+    for zone, zone_data in data.zones.items():
+        if not zones.is_program_zone(zone):
             continue
         entities.extend(
             ProgramInfo(shared, shared.zone_coord, zone=zone, kind=kind)
             for kind in ProgramInfo.KINDS
         )
+        if zones.is_oven_zone(zone, zone_data):
+            entities.extend(
+                OvenValue(shared, zone=zone, key=key, field=field)
+                for key, field in OvenValue.VALUES
+            )
     return entities
+
+
+class OvenValue(ZoneEntity, SensorEntity):
+    """A reading of the cooking chamber. Values only show while a program runs."""
+
+    # (key, field) -> translation key
+    VALUES = {
+        ("temp", "act"): "cavity_temperature",
+        ("temp", "set"): "cavity_target_temperature",
+        ("probetemp", "act"): "probe_temperature",
+        ("probetemp", "set"): "probe_target_temperature",
+        ("preheatStatus", "act"): "preheat_status",
+        ("doorStatus", "act"): "door_status",
+    }
+
+    def __init__(self, shared: Shared, *, zone: str, key: str, field: str) -> None:
+        super().__init__(shared, zone=zone, key=key)
+        self.vzug_field = field
+        self._attr_unique_id = f"{shared.unique_id_prefix}-zone-{zone}-{key}-{field}"
+        self._attr_translation_key = self.VALUES[(key, field)]
+        if key in ("temp", "probetemp"):
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_value(self) -> StateType:
+        return zones.value_field(self.zone_data, self.vzug_key, self.vzug_field)
 
 
 class ProgramInfo(CoordinatorEntity, SensorEntity):

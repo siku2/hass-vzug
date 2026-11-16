@@ -24,12 +24,63 @@ async def async_setup_entry(
     if shared.client.hh_supports((1, 5, 0)):
         entities.append(Errors(shared))
     if shared.zone_coord is not None:
+        zone_map = shared.zone_coord.data.zones
         entities.extend(
             Door(shared, zone=name)
-            for name, zone in shared.zone_coord.data.zones.items()
+            for name, zone in zone_map.items()
             if isinstance(zone.get(zones.DOOR_KEY), bool)
         )
+        for name, zone in zone_map.items():
+            if zones.is_oven_zone(name, zone):
+                entities.append(OvenDoor(shared, zone=name))
+                entities.append(ProbeInserted(shared, zone=name))
+            if zones.is_timer_zone(name):
+                entities.append(TimerRinging(shared, zone=name))
     async_add_entities(entities)
+
+
+class OvenDoor(ZoneEntity, BinarySensorEntity):
+    """The oven reports 'doorStatus' as 'open', 'closed' or 'locked'."""
+
+    _attr_device_class = BinarySensorDeviceClass.DOOR
+    _attr_translation_key = "oven_door"
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="doorStatus")
+
+    @property
+    def is_on(self) -> bool | None:
+        status = zones.value_field(self.zone_data, self.vzug_key, "act")
+        return None if status is None else status == "open"
+
+
+class ProbeInserted(ZoneEntity, BinarySensorEntity):
+    _attr_device_class = BinarySensorDeviceClass.PLUG
+    _attr_translation_key = "probe_inserted"
+    _attr_icon = "mdi:thermometer-probe"
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="probeInserted")
+
+    @property
+    def is_on(self) -> bool | None:
+        return zones.flag(self.zone_data, self.vzug_key)
+
+
+class TimerRinging(ZoneEntity, BinarySensorEntity):
+    """The kitchen timer ran out and rings until someone stops it."""
+
+    _attr_translation_key = "timer_ringing"
+    _attr_icon = "mdi:bell-ring"
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="ringing")
+
+    @property
+    def is_on(self) -> bool:
+        zone = self.zone_data or {}
+        left = zones.value_field(zone, zones.TIMER_KEY, "act")
+        return zone.get("status") == "idle" and left == 0
 
 
 class Errors(CoordinatorEntity[StateCoordinator], BinarySensorEntity):
