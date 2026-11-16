@@ -214,6 +214,10 @@ class AggMeta:
     device_name: str
     serial_number: str
     api_version: tuple[int, ...]
+    ai_api_version: tuple[int, ...] | None = None
+    """from '/ai getAPIVersion', None if the appliance doesn't answer it"""
+    hh_api_version: tuple[int, ...] | None = None
+    """from '/hh getAPIVersion', else 'getDeviceInfo', None if neither answers"""
 
     def create_name(self) -> str:
         if name := self.device_name.strip():
@@ -272,6 +276,13 @@ class VZugApi:
         self._zh_mode_warmup_failures = 0
         # set once we learn that this appliance really doesn't have any categories
         self._categories_may_be_empty = False
+        # the hh API version, learned in 'aggregate_meta'. Older versions need other
+        # commands for the same thing. None = unknown, assume a current appliance.
+        self.hh_api_version: tuple[int, ...] | None = None
+
+    def hh_supports(self, version: tuple[int, ...]) -> bool:
+        """Whether the hh API is at least 'version' (or unknown)."""
+        return self.hh_api_version is None or self.hh_api_version >= version
 
     def _create_client(self) -> httpx.AsyncClient:
         transport = httpx.AsyncHTTPTransport(
@@ -532,6 +543,10 @@ class VZugApi:
             ),
         )
 
+        ai_api_version, hh_api_version = await asyncio.gather(
+            self.get_api_version("ai"), self.get_api_version("hh")
+        )
+
         try:
             # Only supported on some devices, probably with newer hh module.
             # 'attempts' is deliberately not passed on: the appliance has answered by
@@ -545,29 +560,32 @@ class VZugApi:
                 raise
 
         if device_info:
-            raw_api_version = device_info.get("apiVersion", "")
-            hh_api_version = tuple(map(int, (raw_api_version.split("."))))
-
-            return AggMeta(
+            info_api_version = parse_version(device_info.get("apiVersion")) or ()
+            meta = AggMeta(
                 mac_address=mac_address,
                 model_id=device_info.get("model", ""),
                 model_name=device_info.get("description", ""),
                 device_name=device_info.get("name", ""),
                 serial_number=device_info.get("serialNumber", ""),
-                api_version=hh_api_version,
+                api_version=info_api_version,
+                ai_api_version=ai_api_version,
+                hh_api_version=hh_api_version or info_api_version or None,
             )
         else:
-            raw_api_version = ai_firmware.get("apiVersion", "")
-            ai_api_version = tuple(map(int, (raw_api_version.split("."))))
-
-            return AggMeta(
+            meta = AggMeta(
                 mac_address=mac_address,
                 model_id="",
                 model_name=model_description,
                 device_name=device_status.get("DeviceName", ""),
                 serial_number=device_status.get("Serial", ""),
-                api_version=ai_api_version,
+                api_version=parse_version(ai_firmware.get("apiVersion")) or (),
+                ai_api_version=ai_api_version,
+                # 'getDeviceInfo' arrived with hh 1.3, so an appliance that knows
+                # neither it nor 'getAPIVersion' is an old 1.0 - 1.2 one
+                hh_api_version=hh_api_version or (1, 0, 0),
             )
+        self.hh_api_version = meta.hh_api_version
+        return meta
 
     async def aggregate_config(self) -> AggConfig:
         category_keys = await self.list_categories()
@@ -604,6 +622,21 @@ class VZugApi:
             )
             config_tree[category_key] = category
         return config_tree
+
+    async def get_api_version(self, component: str) -> tuple[int, ...] | None:
+        """'getAPIVersion' of the 'ai' or 'hh' API, ex. {"value":"1.12.0"}.
+
+        Not every appliance knows it (the V-ZUG app then assumes 1.0.0), so None
+        when it fails.
+        """
+        data = await self._command(
+            component,
+            command="getAPIVersion",
+            expected_type=dict,
+            attempts=1,
+            value_on_err=lambda: {},
+        )
+        return parse_version(data.get("value"))
 
     async def get_mac_address(
         self, *, default_on_error: bool = False, attempts: int = 5
@@ -791,27 +824,43 @@ class VZugApi:
         if not options:
             options = {}
         options["id"] = program_id
-        return await self._command(
-            "hh",
-            command="setProgram",
-            params={"value": _compact_json(options)},
-            raw=True,
-            attempts=2,
-        )
+        return await self.set_program_dto(options)
 
-    async def stop_program(self) -> None:
+    async def set_program_dto(self, dto: dict[str, Any]) -> Any:
+        """'setProgram' with typed values, ex. {"zone":"cookingChamber1","light":true}.
+
+        hh 1.5 and newer take the whole object at once. Older appliances take one
+        value per request and only these keys, in this order, like the V-ZUG app.
+        """
+        if self.hh_supports((1, 5, 0)):
+            dtos = [dto]
+        else:
+            dtos = [{key: dto[key]} for key in _LEGACY_PROGRAM_KEYS if dto.get(key)]
+        result = None
+        for value in dtos:
+            result = await self._command(
+                "hh",
+                command="setProgram",
+                params={"value": _compact_json(value)},
+                raw=True,
+                attempts=2,
+            )
+        return result
+
+    async def stop_program(self, zone: str | None = None) -> None:
         """End the running (or waiting) program, like Stop in the V-ZUG app.
 
         Recorded from the app: setProgram {"status":"idle"}. The appliance goes to
         standby and skips what is left, the final drying with the door opening too.
+        Ovens stop one zone at a time. Before hh 1.3 the app sends 'doTurnOff'.
         """
-        await self._command(
-            "hh",
-            command="setProgram",
-            params={"value": _compact_json({"status": "idle"})},
-            raw=True,
-            attempts=2,
-        )
+        if not self.hh_supports((1, 3, 0)):
+            await self._command("hh", command="doTurnOff", raw=True, attempts=2)
+            return
+        dto = {"status": "idle"}
+        if zone:
+            dto["zone"] = zone
+        await self.set_program_dto(dto)
 
     async def get_all_program_ids(self) -> list[int]:
         # TODO: this gives us a nice list of ids that could be used with set_program, but we need a program id to name mapping
@@ -883,6 +932,27 @@ class VZugApi:
 
 
 class AuthenticationFailed(Exception): ...
+
+
+# the only 'setProgram' keys appliances before hh 1.5 accept, one per request
+_LEGACY_PROGRAM_KEYS = (
+    "id",
+    "duration",
+    "temp",
+    "templevel",
+    "probetemp",
+    "mw",
+    "mwlevel",
+)
+
+
+def parse_version(raw: Any) -> tuple[int, ...] | None:
+    """'1.12.0' -> (1, 12, 0), None if it isn't a version."""
+    try:
+        version = tuple(int(part) for part in str(raw).strip().split("."))
+    except ValueError:
+        return None
+    return version if len(version) >= 2 else None
 
 
 def _compact_json(value: Any) -> str:
