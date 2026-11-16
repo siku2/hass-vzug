@@ -9,7 +9,9 @@
         "error": {
             "auth_failed": "Échec de l'authentification",
             "cannot_connect": "Échec de la connexion",
-            "invalid_host": "Hôte invalide"
+            "invalid_host": "Hôte invalide",
+            "wifi_credentials": "L'appareil n'a pas pu rejoindre ce réseau. Vérifiez le nom et le mot de passe ; seul le Wi-Fi 2,4 GHz est pris en charge.",
+            "bluetooth_failed": "La connexion Bluetooth à l'appareil a échoué. Restez à proximité et utilisez un adaptateur Bluetooth sur cette machine (les proxys ne peuvent peut-être pas s'appairer)."
         },
         "step": {
             "user": {
@@ -36,8 +38,17 @@
             },
             "confirm": {
                 "title": "Confirmer la Configuration"
+            },
+            "wifi": {
+                "title": "Connexion au Wi-Fi",
+                "description": "L'appareil {serial} attend d'être ajouté à votre Wi-Fi. Home Assistant transmet le réseau par Bluetooth, sans passer par le cloud V-ZUG.",
+                "data": {
+                    "ssid": "Nom du Wi-Fi (SSID)",
+                    "password": "Mot de passe Wi-Fi"
+                }
             }
-        }
+        },
+        "flow_title": "{name}"
     },
     "entity": {
         "button": {

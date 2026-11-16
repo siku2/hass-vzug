@@ -9,7 +9,9 @@
     "error": {
       "auth_failed": "Authentifizierung fehlgeschlagen",
       "cannot_connect": "Verbindung Fehlgeschlagen",
-      "invalid_host": "Ungültiger Host"
+      "invalid_host": "Ungültiger Host",
+      "wifi_credentials": "Das Gerät konnte sich nicht mit diesem Netzwerk verbinden. Name und Passwort prüfen; es unterstützt nur 2,4-GHz-WLAN.",
+      "bluetooth_failed": "Die Bluetooth-Verbindung zum Gerät ist fehlgeschlagen. In der Nähe bleiben und einen Bluetooth-Adapter an diesem Rechner verwenden (Proxys können eventuell nicht koppeln)."
     },
     "step": {
       "user": {
@@ -36,8 +38,17 @@
       },
       "confirm": {
         "title": "Konfiguration Bestätigen"
+      },
+      "wifi": {
+        "title": "Mit WLAN verbinden",
+        "description": "Gerät {serial} wartet darauf, ins WLAN aufgenommen zu werden. Home Assistant überträgt das Netzwerk per Bluetooth, die V-ZUG-Cloud wird nicht verwendet.",
+        "data": {
+          "ssid": "WLAN-Name (SSID)",
+          "password": "WLAN-Passwort"
+        }
       }
-    }
+    },
+    "flow_title": "{name}"
   },
   "entity": {
     "button": {
