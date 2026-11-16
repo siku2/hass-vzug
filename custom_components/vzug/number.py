@@ -93,6 +93,8 @@ def _zone_entities(shared: Shared) -> list[NumberEntity]:
     entities: list[NumberEntity] = [
         ZoneTemperature(shared, zone=zone)
         for zone in zones.zones_with(zone_map, zones.TEMP_KEY)
+        # an oven's temperature belongs to its program
+        if not zones.is_oven_zone(zone, zone_map[zone])
     ]
     for key in zones.BOOST_KEYS:
         entities.extend(
@@ -106,7 +108,59 @@ def _zone_entities(shared: Shared) -> list[NumberEntity]:
         for zone in zones.zones_with(zone_map, zones.TIMER_KEY)
         if zones.is_timer_zone(zone)
     )
+    entities.extend(
+        WarmingDrawerDuration(shared, zone=zone)
+        for zone in zone_map
+        if zones.is_warming_drawer(zone) and shared.client.hh_supports((1, 5, 0))
+    )
     return entities
+
+
+class WarmingDrawerDuration(ZoneEntity, NumberEntity):
+    """How long the warming drawer runs when started, in minutes.
+
+    Kept by Home Assistant until 'Start warming drawer' sends it.
+    """
+
+    _attr_translation_key = "warming_drawer_duration"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_device_class = NumberDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_mode = NumberMode.BOX
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key=zones.TIMER_KEY)
+        self._attr_unique_id = f"{shared.unique_id_prefix}-zone-{zone}-duration-setting"
+        seconds = zones.value_field(self.zone_data, self.vzug_key, "set") or 7200
+        shared.warming_drawer_minutes.setdefault(zone, seconds // 60)
+
+    def _limit(self, field: str, default: float) -> float:
+        seconds = zones.value_field(self.zone_data, self.vzug_key, field)
+        return seconds / 60 if isinstance(seconds, (int, float)) else default
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_min_value(self) -> float:
+        return self._limit("min", 30)
+
+    @property
+    def native_max_value(self) -> float:
+        return self._limit("max", 720)
+
+    @property
+    def native_step(self) -> float:
+        return max(self._limit("step", 60), 1)
+
+    @property
+    def native_value(self) -> float:
+        return self.shared.warming_drawer_minutes[self.vzug_zone]
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.shared.warming_drawer_minutes[self.vzug_zone] = value
+        self.async_write_ha_state()
 
 
 class ZoneTemperature(ZoneEntity, NumberEntity):
@@ -218,7 +272,23 @@ class Timer(ZoneEntity, NumberEntity):
         return float(-(-left // 60)) if left else 0.0
 
     async def async_set_native_value(self, value: float) -> None:
-        await self._write_zone(zones.format_value(int(value) * 60))
+        if any(zones.is_cooling_zone(z) for z in self.coordinator.data.zones):
+            # refrigerators: {"zone":"countdown1","duration":"600"}, "0" stops it
+            await self._write_zone(zones.format_value(int(value) * 60))
+            return
+        # ovens, like the V-ZUG app: start with status active, stop like a program
+        if value <= 0:
+            await self.shared.client.stop_program(self.vzug_zone)
+        else:
+            await self.shared.client.set_program_dto(
+                {
+                    "zone": self.vzug_zone,
+                    "id": zones.TIMER_PROGRAM,
+                    "status": "active",
+                    "duration": int(value) * 60,
+                }
+            )
+        await self.coordinator.async_request_refresh()
 
 
 class UserConfig(NumberEntity, UserConfigEntity):

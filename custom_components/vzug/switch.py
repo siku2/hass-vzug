@@ -58,7 +58,36 @@ def _zone_entities(shared: Shared) -> list[SwitchEntity]:
     entities.extend(
         Mode(shared, mode=mode) for mode in zones.SWITCH_MODES if mode in data.modes
     )
+    entities.extend(
+        Light(shared, zone=zone)
+        for zone, zone_data in data.zones.items()
+        if zones.can_toggle(zone_data, "light")
+    )
     return entities
+
+
+class Light(ZoneEntity, SwitchEntity):
+    """The oven light, 'light' in 'setProgram' with real booleans."""
+
+    _attr_translation_key = "oven_light"
+    _attr_icon = "mdi:lightbulb"
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="light")
+
+    @property
+    def is_on(self) -> bool | None:
+        return zones.flag(self.zone_data, self.vzug_key)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self._set(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._set(False)
+
+    async def _set(self, on: bool) -> None:
+        await self.shared.client.set_program_dto({"zone": self.vzug_zone, "light": on})
+        await self.coordinator.async_request_refresh()
 
 
 class TimedFunction(ZoneEntity, SwitchEntity):

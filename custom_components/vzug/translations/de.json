@@ -52,6 +52,12 @@
       },
       "stop_program": {
         "name": "Stopp"
+      },
+      "start_warming_drawer": {
+        "name": "Wärmeschublade starten"
+      },
+      "stop_warming_drawer": {
+        "name": "Wärmeschublade stoppen"
       }
     },
     "sensor": {
@@ -135,6 +141,24 @@
       },
       "cloud_status": {
         "name": "Cloud-Verbindung"
+      },
+      "cavity_temperature": {
+        "name": "Garraumtemperatur"
+      },
+      "cavity_target_temperature": {
+        "name": "Garraum-Solltemperatur"
+      },
+      "probe_temperature": {
+        "name": "Kerntemperatur"
+      },
+      "probe_target_temperature": {
+        "name": "Kern-Solltemperatur"
+      },
+      "preheat_status": {
+        "name": "Vorheizen"
+      },
+      "door_status": {
+        "name": "Status Gerätetür"
       }
     },
     "update": {
@@ -151,6 +175,15 @@
       },
       "errors": {
         "name": "Fehler"
+      },
+      "oven_door": {
+        "name": "Gerätetür"
+      },
+      "probe_inserted": {
+        "name": "Temperaturfühler eingesteckt"
+      },
+      "timer_ringing": {
+        "name": "Kurzzeitwecker klingelt"
       }
     },
     "number": {
@@ -174,6 +207,9 @@
       },
       "start_delay": {
         "name": "Startverzögerung"
+      },
+      "warming_drawer_duration": {
+        "name": "Dauer Wärmeschublade"
       }
     },
     "switch": {
@@ -191,6 +227,9 @@
       },
       "silent_plus_mode": {
         "name": "SilentPlus"
+      },
+      "oven_light": {
+        "name": "Garraumbeleuchtung"
       }
     },
     "select": {

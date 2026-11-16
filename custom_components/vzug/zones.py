@@ -75,6 +75,50 @@ def is_timer_zone(name: str) -> bool:
     return name.startswith("countdown")
 
 
+COOLING_ZONES = ("fridge", "freezer")
+WARMING_DRAWER_PROGRAM = 103
+TIMER_PROGRAM = 9000
+
+
+def is_cooling_zone(name: str) -> bool:
+    return name.rstrip("0123456789") in COOLING_ZONES
+
+
+def is_program_zone(name: str) -> bool:
+    """Zones running programs with a state and an end (ovens, drawers, hobs).
+
+    A fridge zone is always 'active' and never ends, the timer has its own entities.
+    """
+    return not is_timer_zone(name) and not is_cooling_zone(name)
+
+
+def is_oven_zone(name: str, zone: Zone) -> bool:
+    """The cooking chamber of an oven or steamer, ex. 'cookingChamber1'."""
+    return name.startswith("cookingChamber") or any(
+        key in zone for key in ("doorStatus", "preheatStatus", "probeInserted")
+    )
+
+
+def is_warming_drawer(name: str) -> bool:
+    return name.startswith("warmingDrawer")
+
+
+def flag(zone: Zone | None, key: str) -> bool | None:
+    """An on/off value: {"set":false,"options":[...]} or {"act":false}, the
+    appliance's 'act' wins over the requested 'set'."""
+    if not zone:
+        return None
+    value = zone.get(key)
+    if isinstance(value, Mapping):
+        value = value.get("act", value.get("set"))
+    return value if isinstance(value, bool) else None
+
+
+def can_toggle(zone: Zone | None, key: str) -> bool:
+    options = value_field(zone, key, "options")
+    return isinstance(options, list) and True in options and False in options
+
+
 def value_field(zone: Zone | None, key: str, field: str) -> Any:
     """ex. value_field(zone, "temp", "set") -> 6.0, None when missing."""
     if not zone:

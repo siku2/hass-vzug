@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
 from .const import DOMAIN
-from .helpers import UserConfigEntity
+from .helpers import UserConfigEntity, ZoneEntity
 from .shared import ProgramCoordinator, Shared
 
 
@@ -39,6 +39,12 @@ async def async_setup_entry(
     if shared.program_coord is not None:
         entities.append(SendProgram(shared))
         entities.append(StopProgram(shared))
+    if shared.zone_coord is not None:
+        for zone in shared.zone_coord.data.zones:
+            if zones.is_program_zone(zone):
+                entities.append(StopZone(shared, zone=zone))
+            if zones.is_warming_drawer(zone) and shared.client.hh_supports((1, 5, 0)):
+                entities.append(StartWarmingDrawer(shared, zone=zone))
 
     async_add_entities(entities)
 
@@ -59,6 +65,45 @@ class StopProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
 
     async def async_press(self) -> None:
         await self.shared.client.stop_program()
+        await self.coordinator.async_request_refresh()
+
+
+class StopZone(ZoneEntity, ButtonEntity):
+    """Stop the program of one zone (oven, warming drawer)."""
+
+    _attr_icon = "mdi:stop"
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="stop")
+        if zones.is_warming_drawer(zone):
+            self._attr_translation_key = "stop_warming_drawer"
+        else:
+            self._attr_translation_key = "stop_program"
+
+    async def async_press(self) -> None:
+        await self.shared.client.stop_program(self.vzug_zone)
+        await self.coordinator.async_request_refresh()
+
+
+class StartWarmingDrawer(ZoneEntity, ButtonEntity):
+    """Select the warming drawer for the set duration, as the V-ZUG app does."""
+
+    _attr_translation_key = "start_warming_drawer"
+    _attr_icon = "mdi:play"
+
+    def __init__(self, shared: Shared, *, zone: str) -> None:
+        super().__init__(shared, zone=zone, key="start")
+
+    async def async_press(self) -> None:
+        minutes = self.shared.warming_drawer_minutes.get(self.vzug_zone, 120)
+        await self.shared.client.set_program_dto(
+            {
+                "id": zones.WARMING_DRAWER_PROGRAM,
+                "zone": self.vzug_zone,
+                "duration": int(minutes * 60),
+                "status": "selected",
+            }
+        )
         await self.coordinator.async_request_refresh()
 
 

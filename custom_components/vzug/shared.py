@@ -124,6 +124,8 @@ class Shared:
         # durations (hours) the SuperCool / SuperFreeze / PartyCooling switches use,
         # set through their number entities
         self.boost_hours: dict[str, float] = {}
+        # minutes the warming drawer runs when started, per zone
+        self.warming_drawer_minutes: dict[str, float] = {}
         # delayed start (hours) sent with the next 'Send to appliance', 0 = none
         self.start_delay_hours = 0.0
 

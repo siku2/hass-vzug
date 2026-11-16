@@ -52,6 +52,12 @@
             },
             "stop_program": {
                 "name": "Arrêter"
+            },
+            "start_warming_drawer": {
+                "name": "Démarrer le tiroir chauffant"
+            },
+            "stop_warming_drawer": {
+                "name": "Arrêter le tiroir chauffant"
             }
         },
         "sensor": {
@@ -135,6 +141,24 @@
             },
             "cloud_status": {
                 "name": "Connexion cloud"
+            },
+            "cavity_temperature": {
+                "name": "Température de l'enceinte"
+            },
+            "cavity_target_temperature": {
+                "name": "Température de consigne de l'enceinte"
+            },
+            "probe_temperature": {
+                "name": "Température à cœur"
+            },
+            "probe_target_temperature": {
+                "name": "Température à cœur de consigne"
+            },
+            "preheat_status": {
+                "name": "Préchauffage"
+            },
+            "door_status": {
+                "name": "État de la porte du four"
             }
         },
         "update": {
@@ -151,6 +175,15 @@
             },
             "errors": {
                 "name": "Erreurs"
+            },
+            "oven_door": {
+                "name": "Porte du four"
+            },
+            "probe_inserted": {
+                "name": "Sonde thermique branchée"
+            },
+            "timer_ringing": {
+                "name": "Minuterie qui sonne"
             }
         },
         "number": {
@@ -174,6 +207,9 @@
             },
             "start_delay": {
                 "name": "Départ différé"
+            },
+            "warming_drawer_duration": {
+                "name": "Durée du tiroir chauffant"
             }
         },
         "switch": {
@@ -191,6 +227,9 @@
             },
             "silent_plus_mode": {
                 "name": "SilentPlus"
+            },
+            "oven_light": {
+                "name": "Éclairage du four"
             }
         },
         "select": {
