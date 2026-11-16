@@ -58,6 +58,9 @@
       },
       "stop_warming_drawer": {
         "name": "Wärmeschublade stoppen"
+      },
+      "start_program": {
+        "name": "Programm starten (experimentell)"
       }
     },
     "sensor": {

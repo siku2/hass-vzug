@@ -58,6 +58,9 @@
             },
             "stop_warming_drawer": {
                 "name": "Stop warming drawer"
+            },
+            "start_program": {
+                "name": "Start program (experimental)"
             }
         },
         "sensor": {

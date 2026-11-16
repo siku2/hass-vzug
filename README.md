@@ -42,6 +42,8 @@ Don't hesitate to open a new issue or a discussion if you have a V-ZUG device yo
 - All user settings are exposed as entites so you can modify the device settings on the fly.
 - Program and program end sensors.
 - Eco status.
+- Program selection for dishwashers and ovens. Like the V-ZUG app, the program is only sent to the appliance; you start it there (close the dishwasher door, press start on the oven).
+- "Start program (experimental)" is disabled by default. It asks the appliance to start the selected program remotely, which the V-ZUG app never does, and the appliance may refuse. Only enable it if you accept an appliance starting with nobody there. Hobs never get it.
 
 ## Contributions are welcome
 

@@ -182,3 +182,31 @@ async def test_no_new_oven_program_while_one_runs():
     with pytest.raises(HomeAssistantError):
         await SendProgram(shared).async_press()
     shared.client.set_program.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_remote_start_is_opt_in_and_reports_a_refusal():
+    import httpx
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.vzug.button import StartProgram
+
+    shared = _program_shared({"id": 4, "status": "selected", "zone": "cookingChamber1"})
+    shared.client.set_program_dto = AsyncMock()
+    button = StartProgram(shared)
+    assert button.entity_registry_enabled_default is False
+    await button.async_press()
+    shared.client.set_program_dto.assert_awaited_once_with(
+        {"status": "active", "zone": "cookingChamber1"}
+    )
+
+    response = httpx.Response(
+        400, text="400.04", request=httpx.Request("GET", "http://x")
+    )
+    shared.client.set_program_dto = AsyncMock(
+        side_effect=httpx.HTTPStatusError(
+            "", request=response.request, response=response
+        )
+    )
+    with pytest.raises(HomeAssistantError, match="400.04"):
+        await button.async_press()

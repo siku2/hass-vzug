@@ -1,5 +1,6 @@
 from typing import Any
 
+import httpx
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -39,6 +40,8 @@ async def async_setup_entry(
     if shared.program_coord is not None:
         entities.append(SendProgram(shared))
         entities.append(StopProgram(shared))
+        if shared.meta.machine_type != "GK":  # never switch on a hob remotely
+            entities.append(StartProgram(shared))
     if shared.zone_coord is not None:
         for zone in shared.zone_coord.data.zones:
             if zones.is_program_zone(zone):
@@ -146,6 +149,40 @@ class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
         await self.shared.client.set_program(current["id"], options)
         # a delay applies to this one program, the next one starts right away again
         self.shared.start_delay_hours = 0.0
+        await self.coordinator.async_request_refresh()
+
+
+class StartProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
+    """Experimental: start the selected program remotely.
+
+    The V-ZUG app never does this, it leaves starting to someone at the
+    appliance, and appliances may well refuse. Disabled by default: enable it
+    only if you accept an oven or dishwasher starting without anyone there.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "start_program"
+    _attr_icon = "mdi:play"
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, shared: Shared) -> None:
+        assert shared.program_coord is not None
+        super().__init__(shared.program_coord)
+        self.shared = shared
+        self._attr_unique_id = f"{shared.unique_id_prefix}-start-program"
+        self._attr_device_info = shared.device_info
+
+    async def async_press(self) -> None:
+        dto: dict[str, Any] = {"status": "active"}
+        if zone := getattr(self.shared, "program_zone", None):
+            dto["zone"] = zone
+        try:
+            await self.shared.client.set_program_dto(dto)
+        except httpx.HTTPStatusError as err:
+            raise HomeAssistantError(
+                f"The appliance refused to start: {err.response.status_code} "
+                f"{err.response.text.strip()}"
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
