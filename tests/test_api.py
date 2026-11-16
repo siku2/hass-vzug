@@ -481,3 +481,78 @@ async def test_pool_timeout_recreates_the_client(vzug_api):
     assert vzug_api._client is not old_client
     assert old_client.is_closed
     assert not vzug_api._client.is_closed
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("1.12.0", (1, 12, 0)), ("1.8", (1, 8)), ("", None), (None, None), ("x", None)],
+)
+def test_parse_version(raw, expected):
+    from custom_components.vzug.api import parse_version
+
+    assert parse_version(raw) == expected
+
+
+@pytest.mark.asyncio
+async def test_stop_program_for_a_zone(vzug_api):
+    """Ovens stop one zone at a time: {"status":"idle","zone":...}."""
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.stop_program("cookingChamber1")
+    assert mock_command.call_args.kwargs["params"]["value"] == (
+        '{"status":"idle","zone":"cookingChamber1"}'
+    )
+
+
+@pytest.mark.asyncio
+async def test_stop_program_before_hh_1_3_turns_off(vzug_api):
+    """hh 1.0 - 1.2 have no idle status, the V-ZUG app sends 'doTurnOff'."""
+    vzug_api.hh_api_version = (1, 2, 0)
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.stop_program()
+    assert mock_command.call_args.kwargs["command"] == "doTurnOff"
+
+
+@pytest.mark.asyncio
+async def test_set_program_before_hh_1_5_sends_one_value_at_a_time(vzug_api):
+    vzug_api.hh_api_version = (1, 4, 0)
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.set_program_dto(
+            {"temp": 180, "id": 4, "zone": "cookingChamber1", "duration": 2700}
+        )
+    sent = [call.kwargs["params"]["value"] for call in mock_command.call_args_list]
+    assert sent == ['{"id":4}', '{"duration":2700}', '{"temp":180}']
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_reads_the_api_versions(vzug_api):
+    answers = {
+        ("ai", "getAPIVersion"): {"value": "1.8.0"},
+        ("hh", "getAPIVersion"): {"value": "1.12.0"},
+        ("hh", "getDeviceInfo"): {"model": "21045", "apiVersion": "1.12.0"},
+    }
+
+    async def command(component, *, command, **kwargs):
+        if (component, command) in answers:
+            return answers[(component, command)]
+        return "" if kwargs.get("raw") else {}
+
+    with patch.object(vzug_api, "_command", side_effect=command):
+        meta = await vzug_api.aggregate_meta()
+    assert meta.ai_api_version == (1, 8, 0)
+    assert meta.hh_api_version == (1, 12, 0)
+    assert vzug_api.hh_api_version == (1, 12, 0)
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_without_device_info_is_an_old_appliance(vzug_api):
+    async def command(component, *, command, **kwargs):
+        if command == "getDeviceInfo":
+            return kwargs["value_on_err"]()
+        if command == "getAPIVersion":
+            return {}
+        return "" if kwargs.get("raw") else {}
+
+    with patch.object(vzug_api, "_command", side_effect=command):
+        meta = await vzug_api.aggregate_meta()
+    assert meta.hh_api_version == (1, 0, 0)
+    assert not vzug_api.hh_supports((1, 3, 0))
