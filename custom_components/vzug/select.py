@@ -1,4 +1,5 @@
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -6,7 +7,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
 from .const import DOMAIN
-from .helpers import UserConfigEntity
+from .helpers import UserConfigEntity, ZoneEntity
 from .shared import ProgramCoordinator, Shared
 
 
@@ -32,6 +33,11 @@ async def async_setup_entry(
 
     if shared.program_coord is not None:
         entities.append(ProgramSelect(shared))
+    if (
+        shared.zone_coord is not None
+        and zones.UNIT_MODE in shared.zone_coord.data.modes
+    ):
+        entities.append(TemperatureUnit(shared))
 
     async_add_entities(entities)
 
@@ -83,6 +89,26 @@ class ProgramSelect(CoordinatorEntity[ProgramCoordinator], SelectEntity):
         if program_id is None:
             raise ValueError(f"unknown program {option!r}")
         await self.shared.client.set_program(program_id)
+        await self.coordinator.async_request_refresh()
+
+
+class TemperatureUnit(ZoneEntity, SelectEntity):
+    """°C or °F on the appliance's display; Home Assistant follows it."""
+
+    _attr_translation_key = "temperature_unit"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_options = ["°C", "°F"]
+    _attr_icon = "mdi:thermometer"
+
+    def __init__(self, shared: Shared) -> None:
+        super().__init__(shared, zone="", key=zones.UNIT_MODE)
+
+    @property
+    def current_option(self) -> str | None:
+        return zones.temperature_unit(self.coordinator.data.modes)
+
+    async def async_select_option(self, option: str) -> None:
+        await self.shared.client.set_cmd_value(self.vzug_key, option)
         await self.coordinator.async_request_refresh()
 
 

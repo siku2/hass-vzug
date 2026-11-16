@@ -108,12 +108,39 @@ def _zone_entities(shared: Shared) -> list[NumberEntity]:
         for zone in zones.zones_with(zone_map, zones.TIMER_KEY)
         if zones.is_timer_zone(zone)
     )
+    if zones.ILLUMINATION_MODE in shared.zone_coord.data.modes:
+        entities.append(Illumination(shared))
     entities.extend(
         WarmingDrawerDuration(shared, zone=zone)
         for zone in zone_map
         if zones.is_warming_drawer(zone) and shared.client.hh_supports((1, 5, 0))
     )
     return entities
+
+
+class Illumination(ZoneEntity, NumberEntity):
+    """Interior light of a wine cabinet, 0 (off) to 5."""
+
+    _attr_translation_key = "illumination"
+    _attr_icon = "mdi:lightbulb-on-outline"
+    _attr_native_min_value = 0.0
+    _attr_native_max_value = 5.0
+    _attr_native_step = 1.0
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, shared: Shared) -> None:
+        super().__init__(shared, zone="", key=zones.ILLUMINATION_MODE)
+
+    @property
+    def native_value(self) -> float | None:
+        try:
+            return float(self.coordinator.data.modes.get(self.vzug_key, ""))
+        except ValueError:
+            return None
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.shared.client.set_cmd_value(self.vzug_key, str(int(value)))
+        await self.coordinator.async_request_refresh()
 
 
 class WarmingDrawerDuration(ZoneEntity, NumberEntity):

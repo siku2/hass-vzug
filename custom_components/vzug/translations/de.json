@@ -159,6 +159,36 @@
       },
       "door_status": {
         "name": "Status Gerätetür"
+      },
+      "energy_last_month": {
+        "name": "Energie letzter Monat"
+      },
+      "energy_last_year": {
+        "name": "Energie letztes Jahr"
+      },
+      "door_openings_today": {
+        "name": "Türöffnungen {door} heute"
+      },
+      "door_openings_sevendayaverage": {
+        "name": "Türöffnungen {door}, 7-Tage-Schnitt"
+      },
+      "door_openings_thirtydayaverage": {
+        "name": "Türöffnungen {door}, 30-Tage-Schnitt"
+      },
+      "hob_level": {
+        "name": "Kochzone {zone} Leistungsstufe"
+      },
+      "filllevela": {
+        "name": "OptiDos Tank A Füllstand"
+      },
+      "filllevelb": {
+        "name": "OptiDos Tank B Füllstand"
+      },
+      "optidoslevela": {
+        "name": "OptiDos Tank A Füllstand"
+      },
+      "optidoslevelb": {
+        "name": "OptiDos Tank B Füllstand"
       }
     },
     "update": {
@@ -184,6 +214,30 @@
       },
       "timer_ringing": {
         "name": "Kurzzeitwecker klingelt"
+      },
+      "pan_detected": {
+        "name": "Kochzone {zone} Pfanne erkannt"
+      },
+      "energysaving": {
+        "name": "EnergySaving"
+      },
+      "partialload": {
+        "name": "Teilbeladung"
+      },
+      "optistart": {
+        "name": "OptiStart"
+      },
+      "steamfinish": {
+        "name": "SteamFinish"
+      },
+      "rinseplus": {
+        "name": "RinsePlus"
+      },
+      "dryplus": {
+        "name": "DryPlus"
+      },
+      "addwash": {
+        "name": "Wäsche nachlegen möglich"
       }
     },
     "number": {
@@ -210,6 +264,9 @@
       },
       "warming_drawer_duration": {
         "name": "Dauer Wärmeschublade"
+      },
+      "illumination": {
+        "name": "Innenbeleuchtung"
       }
     },
     "switch": {
@@ -230,6 +287,9 @@
       },
       "oven_light": {
         "name": "Garraumbeleuchtung"
+      },
+      "mono_fridge_mode": {
+        "name": "Mono-Kühlen"
       }
     },
     "select": {
@@ -679,6 +739,9 @@
           "work_clothes": "Arbeitskleidung",
           "countdown_timer": "Countdown-Timer"
         }
+      },
+      "temperature_unit": {
+        "name": "Temperatureinheit"
       }
     }
   },
