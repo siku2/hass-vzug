@@ -58,6 +58,9 @@
             },
             "stop_warming_drawer": {
                 "name": "Arrêter le tiroir chauffant"
+            },
+            "start_program": {
+                "name": "Démarrer le programme (expérimental)"
             }
         },
         "sensor": {
