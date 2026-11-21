@@ -177,7 +177,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=ABORT_FALSE_DISCOVERY)
         await self.async_set_unique_id(f"ble-{serial}")
         self._abort_if_unique_id_configured()
-        if dr.async_get(self.hass).async_get_device(identifiers={(DOMAIN, serial)}):
+        device_reg = dr.async_get(self.hass)
+        if device := device_reg.async_get_device(identifiers={(DOMAIN, serial)}):
+            # the appliance's Bluetooth address differs from its Wi-Fi one. Note it
+            # on the device, so anything seeing it over Bluetooth (ex. a presence
+            # integration) ends up on the same device instead of a second one.
+            connection = (
+                dr.CONNECTION_BLUETOOTH,
+                dr.format_mac(discovery_info.address),
+            )
+            if connection not in device.connections:
+                try:
+                    device_reg.async_update_device(
+                        device.id, merge_connections={connection}
+                    )
+                except dr.DeviceConnectionCollisionError:
+                    _LOGGER.debug(
+                        "Bluetooth address %s already belongs to another device",
+                        discovery_info.address,
+                    )
             return self.async_abort(reason="already_configured")
 
         self._ble_address = discovery_info.address
