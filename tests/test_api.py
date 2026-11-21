@@ -239,6 +239,62 @@ async def test_aggregate_config_retries_empty_categories(vzug_api):
 
 
 @pytest.mark.asyncio
+async def test_aggregate_config_skips_a_command_the_appliance_rejects(vzug_api):
+    """A command answered with a client error is left out, the rest is kept.
+
+    Seen on an AdoraWash V6000 in standby: 'getCommand' for 'ecomXstatXtotalXclear'
+    answered 400, which failed the whole config update.
+    """
+    request = httpx.Request("GET", "http://example.com/hh")
+    rejected = httpx.HTTPStatusError(
+        "client error", request=request, response=httpx.Response(400, request=request)
+    )
+
+    async def get_command(command_key):
+        if command_key == "ecomXstatXtotalXclear":
+            raise rejected
+        return {"command": command_key, "value": "50"}
+
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch.object(vzug_api, "get_category", new_callable=AsyncMock) as category,
+        patch.object(vzug_api, "list_commands", new_callable=AsyncMock) as commands,
+        patch.object(vzug_api, "get_command", side_effect=get_command),
+    ):
+        categories.return_value = ["settings"]
+        category.return_value = {"description": "Einstellungen"}
+        commands.return_value = ["brightness", "ecomXstatXtotalXclear"]
+
+        config_tree = await vzug_api.aggregate_config()
+
+        assert config_tree["settings"].commands == {
+            "brightness": {"command": "brightness", "value": "50"}
+        }
+
+
+@pytest.mark.asyncio
+async def test_aggregate_config_still_fails_on_a_server_error(vzug_api):
+    """A server error is not the appliance refusing a command, it still fails."""
+    request = httpx.Request("GET", "http://example.com/hh")
+    error = httpx.HTTPStatusError(
+        "server error", request=request, response=httpx.Response(503, request=request)
+    )
+
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch.object(vzug_api, "get_category", new_callable=AsyncMock) as category,
+        patch.object(vzug_api, "list_commands", new_callable=AsyncMock) as commands,
+        patch.object(vzug_api, "get_command", side_effect=error),
+    ):
+        categories.return_value = ["settings"]
+        category.return_value = {}
+        commands.return_value = ["brightness"]
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await vzug_api.aggregate_config()
+
+
+@pytest.mark.asyncio
 async def test_aggregate_config_stops_retrying_without_categories(vzug_api):
     """Appliances without categories (ex. AdoraWash V4000) must not retry forever."""
     with (
