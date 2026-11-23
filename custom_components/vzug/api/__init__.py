@@ -346,6 +346,7 @@ class VZugApi:
         attempts: int = 5,
         retry_delay: float = 2.0,
         value_on_err: Callable[[], Any] | None = None,
+        value_on_client_err: Callable[[], Any] | None = None,
     ) -> Any:
         if params is None:
             params = {}
@@ -424,7 +425,9 @@ class VZugApi:
                 if err.response.status_code == httpx.codes.UNAUTHORIZED:
                     raise AuthenticationFailed from err
                 if not err.response.is_server_error:
-                    if value_on_err:
+                    # 'value_on_client_err' is for commands an appliance may simply not
+                    # know: that answer is final, even where other errors must surface.
+                    if fallback := value_on_err or value_on_client_err:
                         # a client error (e.g. 404 "unknown command") won't go away by
                         # retrying, but the caller told us what to use instead. Without
                         # this, an optional command takes down the whole state update.
@@ -433,7 +436,7 @@ class VZugApi:
                             err.response.status_code,
                             command,
                         )
-                        return value_on_err()
+                        return fallback()
                     raise
 
                 last_exc = err
@@ -841,6 +844,9 @@ class VZugApi:
             command="getLastPUSHNotifications",
             expected_type=list,
             value_on_err=(lambda: []) if default_on_error else None,
+            # optional: a CombairSteamer V6000 60 dropped the command (404) and an
+            # appliance without it has no notifications, also on the first refresh
+            value_on_client_err=list,
         )
 
     async def list_categories(self) -> list[str]:
