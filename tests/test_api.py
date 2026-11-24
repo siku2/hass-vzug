@@ -392,9 +392,31 @@ async def test_client_error_without_default_still_raises(vzug_api):
         mock_get.return_value = _status_response(404)
 
         with pytest.raises(httpx.HTTPStatusError):
-            await vzug_api.get_last_push_notifications(default_on_error=False)
+            await vzug_api.get_device_status(default_on_error=False)
 
         assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_push_notifications_404_on_first_refresh_is_empty(vzug_api):
+    """An appliance that doesn't know 'getLastPUSHNotifications' has none."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _status_response(404)
+
+        assert await vzug_api.get_last_push_notifications(default_on_error=False) == []
+        assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_push_notifications_server_error_on_first_refresh_raises(vzug_api):
+    with (
+        patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get,
+        patch("custom_components.vzug.api.asyncio.sleep", new_callable=AsyncMock),
+    ):
+        mock_get.return_value = _status_response(503)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await vzug_api.get_last_push_notifications(default_on_error=False)
 
 
 @pytest.mark.asyncio
