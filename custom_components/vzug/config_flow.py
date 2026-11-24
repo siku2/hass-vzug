@@ -179,9 +179,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         device_reg = dr.async_get(self.hass)
         if device := device_reg.async_get_device(identifiers={(DOMAIN, serial)}):
-            # the appliance's Bluetooth address differs from its Wi-Fi one. Note it
-            # on the device, so anything seeing it over Bluetooth (ex. a presence
-            # integration) ends up on the same device instead of a second one.
+            # the Bluetooth address differs from the Wi-Fi one. Without it, HA shows
+            # the appliance as a second device.
             connection = (
                 dr.CONNECTION_BLUETOOTH,
                 dr.format_mac(discovery_info.address),
