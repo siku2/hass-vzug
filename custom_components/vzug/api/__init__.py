@@ -666,10 +666,8 @@ class VZugApi:
                 except httpx.HTTPStatusError as exc:
                     if not exc.response.is_client_error:
                         raise
-                    # some appliances list commands they then refuse to read
-                    # (ex. 'ecomXstatXtotalXclear' on an AdoraWash V6000 in
-                    # standby: 400). Leave that one out instead of failing the
-                    # whole config update.
+                    # some appliances list commands they then refuse to read (ex.
+                    # 'ecomXstatXtotalXclear' on an AdoraWash V6000 in standby)
                     _LOGGER.debug(
                         "skipping command %s: client error %s",
                         command_key,
