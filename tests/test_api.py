@@ -337,17 +337,8 @@ async def test_aggregate_meta_can_fail_fast(vzug_api):
         with pytest.raises(httpx.ConnectTimeout):
             await vzug_api.aggregate_meta(attempts=1)
 
-        # one request per command in the gather, no retries
-        assert mock_get.call_count == 4
-
-
-def _server_error(status_code=503):
-    request = httpx.Request("GET", "http://example.com/ai")
-    return httpx.HTTPStatusError(
-        "server error",
-        request=request,
-        response=httpx.Response(status_code, request=request),
-    )
+        # the wake-up and one request per command in the gather, no retries
+        assert mock_get.call_count == 5
 
 
 @contextlib.contextmanager
@@ -371,42 +362,42 @@ def _patch_meta_commands(vzug_api, device_status):
 
 
 @pytest.mark.asyncio
-async def test_aggregate_meta_wakes_the_appliance_after_a_server_error(vzug_api):
-    """An AdoraWash V2000 answers 'getDeviceStatus' with 503 until 'hh' is used.
+async def test_aggregate_meta_wakes_the_appliance_first(vzug_api):
+    """An AdoraWash V2000 answers 'getDeviceStatus' with 503 until 'hh' is used."""
+    calls = []
 
-    The setup has to wake it with 'getZHMode' and try again, or it never succeeds.
-    """
-    device_status = AsyncMock(
-        side_effect=[_server_error(), {"Serial": "11041 002516"}]
-    )
+    async def zh_mode(**kwargs):
+        calls.append("getZHMode")
+
+    async def device_status(**kwargs):
+        calls.append("getDeviceStatus")
+        return {"Serial": "11041 002516"}
+
     with (
         _patch_meta_commands(vzug_api, device_status),
-        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_zh_mode", side_effect=zh_mode),
     ):
         meta = await vzug_api.aggregate_meta(attempts=1)
 
-    zh_mode.assert_awaited_once_with(attempts=1)
-    assert device_status.await_count == 2
+    assert calls == ["getZHMode", "getDeviceStatus"]
     assert meta.serial_number == "11041 002516"
 
 
 @pytest.mark.asyncio
-async def test_aggregate_meta_raises_when_the_wake_up_fails(vzug_api):
-    """If the appliance can't be woken, the original error is raised."""
-    error = _server_error()
-    device_status = AsyncMock(side_effect=error)
+async def test_aggregate_meta_ignores_a_failed_wake_up(vzug_api):
+    """Appliances that don't know 'getZHMode' (ex. Adora SLQ) still set up."""
+    request = httpx.Request("GET", "http://example.com/hh")
+    unknown = httpx.HTTPStatusError(
+        "unknown command", request=request, response=httpx.Response(404, request=request)
+    )
+    device_status = AsyncMock(return_value={"Serial": "11041 002516"})
     with (
         _patch_meta_commands(vzug_api, device_status),
-        patch.object(
-            vzug_api, "get_zh_mode", side_effect=httpx.ConnectTimeout("")
-        ) as zh_mode,
-        pytest.raises(httpx.HTTPStatusError) as raised,
+        patch.object(vzug_api, "get_zh_mode", side_effect=unknown),
     ):
-        await vzug_api.aggregate_meta(attempts=1)
+        meta = await vzug_api.aggregate_meta(attempts=1)
 
-    assert raised.value is error
-    assert zh_mode.call_count == 1
-    assert device_status.await_count == 1
+    assert meta.serial_number == "11041 002516"
 
 
 @pytest.mark.asyncio
