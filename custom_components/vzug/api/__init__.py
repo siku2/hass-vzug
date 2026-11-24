@@ -425,8 +425,6 @@ class VZugApi:
                 if err.response.status_code == httpx.codes.UNAUTHORIZED:
                     raise AuthenticationFailed from err
                 if not err.response.is_server_error:
-                    # 'value_on_client_err' is for commands an appliance may simply not
-                    # know: that answer is final, even where other errors must surface.
                     if fallback := value_on_err or value_on_client_err:
                         # a client error (e.g. 404 "unknown command") won't go away by
                         # retrying, but the caller told us what to use instead. Without
@@ -844,8 +842,7 @@ class VZugApi:
             command="getLastPUSHNotifications",
             expected_type=list,
             value_on_err=(lambda: []) if default_on_error else None,
-            # optional: a CombairSteamer V6000 60 dropped the command (404) and an
-            # appliance without it has no notifications, also on the first refresh
+            # ex. CombairSteamer V6000 60 answers 404 since a firmware update
             value_on_client_err=list,
         )
 
