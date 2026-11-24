@@ -211,7 +211,8 @@ async def assert_aggregate_meta(vzug_client, expected_result):
 async def assert_aggregate_state( vzug_client, expected_result, expect_energy: bool):
     state = await vzug_client.aggregate_state()
 
-    assert state.zh_mode == -1
+    # appliances which don't know 'getZHMode' disable the warm-up and stay at -1
+    assert state.zh_mode == expected_result.hh_zh_mode
     assert state.device["Serial"] == expected_result.ai_device_status["Serial"]
     assert (datetime.now().astimezone() - state.device_fetched_at).total_seconds() <= 60
     if expect_energy:

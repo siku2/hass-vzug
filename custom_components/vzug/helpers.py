@@ -1,9 +1,29 @@
+import re
+
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import api
-from .coordinator import ConfigCoordinator, Shared
+from . import api, zones
+from .shared import ConfigCoordinator, Shared, ZoneCoordinator
+
+
+_KEY_SEPARATOR = re.compile(r"(?<=[a-z0-9])X(?=[A-Za-z0-9])|_+")
+
+
+def name_from_command_key(command_key: str) -> str:
+    """A readable name for a command the appliance doesn't describe.
+
+    The keys use an 'X' or '_' between words: 'ecomXstatXtotalXclear' becomes
+    'Ecom stat total clear', 'AUTO_DOOR_OPENER' becomes 'Auto door opener'.
+    """
+    words = [word for word in _KEY_SEPARATOR.split(command_key) if word]
+    if not words:
+        return command_key
+    name = " ".join(words)
+    if name.isupper():
+        name = name.lower()
+    return name[0].upper() + name[1:]
 
 
 class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
@@ -38,7 +58,7 @@ class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
     def name(self) -> str | UndefinedType | None:
         name = self.vzug_command.get("description")
         if not name:
-            name = self.vzug_command_key
+            name = name_from_command_key(self.vzug_command_key)
         return name
 
     @property
@@ -48,3 +68,69 @@ class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
             if self.vzug_command.get("alterable", False)
             else EntityCategory.DIAGNOSTIC
         )
+
+
+class ZoneEntity(CoordinatorEntity[ZoneCoordinator]):
+    """An entity reading one key of one zone of a refrigerator.
+
+    'zone' is the appliance's zone name ('fridge1', 'freezer1', 'countdown1'), or ""
+    for entities about the whole appliance (PartyCooling, the 'cmd' modes).
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(self, shared: Shared, *, zone: str, key: str) -> None:
+        assert shared.zone_coord is not None
+        super().__init__(shared.zone_coord)
+        self.shared = shared
+        self.vzug_zone = zone
+        self.vzug_key = key
+
+        self._attr_unique_id = f"{shared.unique_id_prefix}-zone-{zone or 'all'}-{key}"
+        self._attr_device_info = shared.device_info
+
+    @property
+    def zone_data(self) -> zones.Zone | None:
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.zones.get(self.vzug_zone)
+
+    @property
+    def available(self) -> bool:
+        return super().available and (not self.vzug_zone or self.zone_data is not None)
+
+    async def _write_zone(self, value: str) -> None:
+        await self.shared.client.set_zone_value(self.vzug_zone, self.vzug_key, value)
+        await self.coordinator.async_request_refresh()
+
+
+def zone_label(zone: str) -> str:
+    """'fridge1' -> 'fridge', used as translation placeholder"""
+    return zone.rstrip("0123456789")
+
+
+# translation keys must be snake_case
+_SNAKE = {
+    "superCool": "super_cool",
+    "superFreeze": "super_freeze",
+    "partyCooling": "party_cooling",
+    "HolidayMode": "holiday_mode",
+    "SilentPlusMode": "silent_plus_mode",
+    "SabbatMode": "sabbath_mode",
+    "MonoFridgeMode": "mono_fridge_mode",
+    "TemperatureUnit": "temperature_unit",
+}
+# zones we have translations for, anything else gets a generated name
+KNOWN_ZONE_LABELS = ("fridge", "freezer")
+
+
+def zone_translation(prefix: str, zone: str) -> tuple[str | None, str | None]:
+    """(translation_key, fallback name) for an entity about one zone."""
+    label = zone_label(zone)
+    if label in KNOWN_ZONE_LABELS:
+        return f"{prefix}_{label}", None
+    return None, f"{prefix.replace('_', ' ').capitalize()} {zone}"
+
+
+def snake(key: str) -> str:
+    return _SNAKE.get(key, key.lower())

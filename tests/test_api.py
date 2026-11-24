@@ -1,7 +1,23 @@
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
+import asyncio
+import contextlib
 
-from custom_components.vzug.api import VZugApi
+import httpcore
+import httpx
+import pytest
+from httpcore._backends.mock import AsyncMockBackend
+from unittest.mock import patch, AsyncMock, MagicMock
+from custom_components.vzug.api import (
+    ZH_MODE_WARMUP_MAX_FAILURES,
+    AggCategory,
+    VZugApi,
+)
+
+def _json_response(payload):
+    """Build a mock httpx response which returns 'payload' from .json()."""
+    response = MagicMock()
+    response.json.return_value = payload
+    response.raise_for_status.return_value = None
+    return response
 
 
 @pytest.fixture
@@ -118,3 +134,572 @@ async def test_json_repair_with_real_broken_device_status():
 
         assert result is not None
         assert len(result) == 8
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_gives_up_after_repeated_failures(vzug_api):
+    """An appliance which doesn't know 'getZHMode' is written off eventually."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        zh_mode.side_effect = ValueError("device returned an error response")
+        notifications.return_value = []
+        eco_info.return_value = {}
+
+        for _ in range(ZH_MODE_WARMUP_MAX_FAILURES):
+            state = await vzug_api.aggregate_state()
+            assert state.zh_mode == -1
+
+        assert zh_mode.call_count == ZH_MODE_WARMUP_MAX_FAILURES
+
+        # the appliance has told us often enough, stop asking
+        await vzug_api.aggregate_state()
+        assert zh_mode.call_count == ZH_MODE_WARMUP_MAX_FAILURES
+
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_survives_a_single_failure(vzug_api):
+    """These devices fail a request every now and then; that must not be fatal."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        zh_mode.side_effect = [httpx.ReadTimeout(""), 2, httpx.ReadTimeout(""), 2]
+        notifications.return_value = []
+        eco_info.return_value = {}
+
+        assert (await vzug_api.aggregate_state()).zh_mode == -1
+        assert (await vzug_api.aggregate_state()).zh_mode == 2
+
+        # the success reset the counter, so another blip is survivable too
+        assert (await vzug_api.aggregate_state()).zh_mode == -1
+        assert (await vzug_api.aggregate_state()).zh_mode == 2
+        assert zh_mode.call_count == 4
+
+
+@pytest.mark.asyncio
+async def test_zh_mode_warmup_runs_before_the_state_poll(vzug_api):
+    """The warm-up is only useful if it precedes the other commands."""
+    calls: list[str] = []
+
+    async def _zh_mode(**kwargs):
+        calls.append("getZHMode")
+        return 2
+
+    async def _eco_info(**kwargs):
+        calls.append("getEcoInfo")
+        return {"energy": {"total": 615.7}}
+
+    with (
+        patch.object(vzug_api, "get_zh_mode", side_effect=_zh_mode),
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock),
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", side_effect=_eco_info),
+    ):
+        notifications.return_value = []
+
+        state = await vzug_api.aggregate_state()
+
+        assert state.zh_mode == 2
+        assert calls == ["getZHMode", "getEcoInfo"]
+
+
+@pytest.mark.asyncio
+async def test_aggregate_config_retries_empty_categories(vzug_api):
+    """An empty 'getCategories' is a glitch and has to be retried."""
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch.object(vzug_api, "get_category", new_callable=AsyncMock) as category,
+        patch.object(vzug_api, "list_commands", new_callable=AsyncMock) as commands,
+        patch.object(vzug_api, "get_command", new_callable=AsyncMock) as command,
+        patch("custom_components.vzug.api.asyncio.sleep", new_callable=AsyncMock),
+    ):
+        categories.side_effect = [[], ["settings"]]
+        category.return_value = {"description": "Einstellungen"}
+        commands.return_value = ["brightness"]
+        command.return_value = {"command": "brightness", "value": "50"}
+
+        config_tree = await vzug_api.aggregate_config()
+
+        assert categories.call_count == 2
+        assert config_tree["settings"] == AggCategory(
+            key="settings",
+            description="Einstellungen",
+            commands={"brightness": {"command": "brightness", "value": "50"}},
+        )
+
+
+@pytest.mark.asyncio
+async def test_aggregate_config_skips_a_command_the_appliance_rejects(vzug_api):
+    """A command answered with a client error is left out, the rest is kept.
+
+    Seen on an AdoraWash V6000 in standby: 'getCommand' for 'ecomXstatXtotalXclear'
+    answered 400, which failed the whole config update.
+    """
+    request = httpx.Request("GET", "http://example.com/hh")
+    rejected = httpx.HTTPStatusError(
+        "client error", request=request, response=httpx.Response(400, request=request)
+    )
+
+    async def get_command(command_key):
+        if command_key == "ecomXstatXtotalXclear":
+            raise rejected
+        return {"command": command_key, "value": "50"}
+
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch.object(vzug_api, "get_category", new_callable=AsyncMock) as category,
+        patch.object(vzug_api, "list_commands", new_callable=AsyncMock) as commands,
+        patch.object(vzug_api, "get_command", side_effect=get_command),
+    ):
+        categories.return_value = ["settings"]
+        category.return_value = {"description": "Einstellungen"}
+        commands.return_value = ["brightness", "ecomXstatXtotalXclear"]
+
+        config_tree = await vzug_api.aggregate_config()
+
+        assert config_tree["settings"].commands == {
+            "brightness": {"command": "brightness", "value": "50"}
+        }
+
+
+@pytest.mark.asyncio
+async def test_aggregate_config_still_fails_on_a_server_error(vzug_api):
+    """A server error is not the appliance refusing a command, it still fails."""
+    request = httpx.Request("GET", "http://example.com/hh")
+    error = httpx.HTTPStatusError(
+        "server error", request=request, response=httpx.Response(503, request=request)
+    )
+
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch.object(vzug_api, "get_category", new_callable=AsyncMock) as category,
+        patch.object(vzug_api, "list_commands", new_callable=AsyncMock) as commands,
+        patch.object(vzug_api, "get_command", side_effect=error),
+    ):
+        categories.return_value = ["settings"]
+        category.return_value = {}
+        commands.return_value = ["brightness"]
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await vzug_api.aggregate_config()
+
+
+@pytest.mark.asyncio
+async def test_aggregate_config_stops_retrying_without_categories(vzug_api):
+    """Appliances without categories (ex. AdoraWash V4000) must not retry forever."""
+    with (
+        patch.object(vzug_api, "list_categories", new_callable=AsyncMock) as categories,
+        patch("custom_components.vzug.api.asyncio.sleep", new_callable=AsyncMock),
+    ):
+        categories.return_value = []
+
+        assert await vzug_api.aggregate_config() == {}
+        assert categories.call_count == 3
+
+        # the appliance told us three times, we believe it now
+        categories.reset_mock()
+        assert await vzug_api.aggregate_config() == {}
+        assert categories.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_transport_error_counts_as_attempt(vzug_api):
+    """A transport error must not restart the loop without incrementing the counter."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = httpx.ReadTimeout("")
+
+        with pytest.raises(httpx.ReadTimeout):
+            await vzug_api._command(
+                "hh", command="getEcoInfo", attempts=3, retry_delay=0.0
+            )
+
+        # without the fix this loops forever because 'continue' skips 'attempt_idx += 1'
+        assert mock_get.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_can_fail_fast(vzug_api):
+    """The setup tries every command once, HA retries it with its own backoff."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = httpx.ConnectTimeout("")
+
+        with pytest.raises(httpx.ConnectTimeout):
+            await vzug_api.aggregate_meta(attempts=1)
+
+        # one request per command in the gather, no retries
+        assert mock_get.call_count == 4
+
+
+def _server_error(status_code=503):
+    request = httpx.Request("GET", "http://example.com/ai")
+    return httpx.HTTPStatusError(
+        "server error",
+        request=request,
+        response=httpx.Response(status_code, request=request),
+    )
+
+
+@contextlib.contextmanager
+def _patch_meta_commands(vzug_api, device_status):
+    """Patch the commands 'aggregate_meta' uses, with 'device_status' as given."""
+    with contextlib.ExitStack() as stack:
+        for name, value in (
+            ("get_mac_address", "fc1bff"),
+            ("get_model_description", ""),
+            ("get_ai_fw_version", {}),
+            ("get_api_version", None),
+            ("get_device_info", None),
+        ):
+            stack.enter_context(
+                patch.object(vzug_api, name, new_callable=AsyncMock, return_value=value)
+            )
+        stack.enter_context(
+            patch.object(vzug_api, "get_device_status", side_effect=device_status)
+        )
+        yield
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_wakes_the_appliance_after_a_server_error(vzug_api):
+    """An AdoraWash V2000 answers 'getDeviceStatus' with 503 until 'hh' is used.
+
+    The setup has to wake it with 'getZHMode' and try again, or it never succeeds.
+    """
+    device_status = AsyncMock(
+        side_effect=[_server_error(), {"Serial": "11041 002516"}]
+    )
+    with (
+        _patch_meta_commands(vzug_api, device_status),
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+    ):
+        meta = await vzug_api.aggregate_meta(attempts=1)
+
+    zh_mode.assert_awaited_once_with(attempts=1)
+    assert device_status.await_count == 2
+    assert meta.serial_number == "11041 002516"
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_raises_when_the_wake_up_fails(vzug_api):
+    """If the appliance can't be woken, the original error is raised."""
+    error = _server_error()
+    device_status = AsyncMock(side_effect=error)
+    with (
+        _patch_meta_commands(vzug_api, device_status),
+        patch.object(
+            vzug_api, "get_zh_mode", side_effect=httpx.ConnectTimeout("")
+        ) as zh_mode,
+        pytest.raises(httpx.HTTPStatusError) as raised,
+    ):
+        await vzug_api.aggregate_meta(attempts=1)
+
+    assert raised.value is error
+    assert zh_mode.call_count == 1
+    assert device_status.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_json_error_body_is_retried(vzug_api):
+    """A json error body with HTTP 200 must not be accepted as valid data."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = [
+            _json_response({"error": {"code": 503.01}}),
+            _json_response({"value": 2}),
+        ]
+
+        result = await vzug_api._command(
+            "hh", command="getZHMode", expected_type=dict, retry_delay=0.0
+        )
+
+        assert result == {"value": 2}
+        assert mock_get.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_json_error_body_falls_back_to_default(vzug_api):
+    """When every attempt returns an error body, 'value_on_err' has to kick in."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _json_response({"error": {"code": 404}})
+
+        result = await vzug_api._command(
+            "hh",
+            command="getZHMode",
+            expected_type=dict,
+            attempts=2,
+            retry_delay=0.0,
+            value_on_err=lambda: {"value": -1},
+        )
+
+        assert result == {"value": -1}
+        assert mock_get.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_get_zh_mode_survives_missing_value_key(vzug_api):
+    """An unexpected body must not raise a KeyError outside of the retry path."""
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        mock_command.return_value = {}
+
+        assert await vzug_api.get_zh_mode() == -1
+
+
+@pytest.mark.asyncio
+async def test_aggregate_state_can_skip_the_appliance(vzug_api):
+    """'getDeviceStatus' wakes the appliance, so it has to be skippable."""
+    with (
+        patch.object(vzug_api, "get_zh_mode", new_callable=AsyncMock) as zh_mode,
+        patch.object(vzug_api, "get_device_status", new_callable=AsyncMock) as device,
+        patch.object(
+            vzug_api, "get_last_push_notifications", new_callable=AsyncMock
+        ) as notifications,
+        patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
+    ):
+        notifications.return_value = [{"date": "2026-08-09T15:14:46Z"}]
+
+        state = await vzug_api.aggregate_state(include_device=False, include_eco=False)
+
+        # the only command that ran is the one served by the AI module
+        notifications.assert_awaited_once()
+        device.assert_not_awaited()
+        eco_info.assert_not_awaited()
+        # the warm-up only exists for getEcoInfo, so it must not run either
+        zh_mode.assert_not_awaited()
+
+        assert state.device == {}
+        assert state.eco_info == {}
+        assert state.notifications == [{"date": "2026-08-09T15:14:46Z"}]
+
+
+def _status_response(status_code):
+    """Build a mock httpx response whose raise_for_status raises 'status_code'."""
+    request = httpx.Request("GET", "http://example.com/ai")
+    real = httpx.Response(status_code, request=request)
+    response = MagicMock()
+    response.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "client error", request=request, response=real
+    )
+    return response
+
+
+@pytest.mark.asyncio
+async def test_client_error_falls_back_to_default(vzug_api):
+    """A 404 for an optional command has to use 'value_on_err' instead of raising.
+
+    Seen on a CombairSteamer V6000 60 (AI API 1.8.0): 'getLastPUSHNotifications'
+    suddenly answered 404 "unknown command error", which made every entity of the
+    appliance unavailable although the default for this command is an empty list.
+    """
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _status_response(404)
+
+        result = await vzug_api.get_last_push_notifications(default_on_error=True)
+
+        assert result == []
+        # a client error won't change by retrying
+        assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_client_error_without_default_still_raises(vzug_api):
+    """Without 'value_on_err' a 404 keeps surfacing as before."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _status_response(404)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await vzug_api.get_device_status(default_on_error=False)
+
+        assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_push_notifications_404_on_first_refresh_is_empty(vzug_api):
+    """An appliance that doesn't know 'getLastPUSHNotifications' has none."""
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _status_response(404)
+
+        assert await vzug_api.get_last_push_notifications(default_on_error=False) == []
+        assert mock_get.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_push_notifications_server_error_on_first_refresh_raises(vzug_api):
+    with (
+        patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get,
+        patch("custom_components.vzug.api.asyncio.sleep", new_callable=AsyncMock),
+    ):
+        mock_get.return_value = _status_response(503)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await vzug_api.get_last_push_notifications(default_on_error=False)
+
+
+@pytest.mark.asyncio
+async def test_set_program_sends_compact_json(vzug_api):
+    """The appliance refuses JSON with spaces after ':' and ','."""
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.set_program(50, {"dryPlus": False, "rinsePlus": False})
+
+    assert mock_command.call_args.kwargs["params"]["value"] == (
+        '{"dryPlus":false,"rinsePlus":false,"id":50}'
+    )
+
+
+class _FlakyBackend(AsyncMockBackend):
+    """Network backend for httpcore where the appliance can drop off the network.
+
+    While 'down' is set, every connect waits for 'gate' and then fails.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            [
+                b"HTTP/1.1 200 OK\r\n",
+                b"Content-Type: application/json\r\n",
+                b"Content-Length: 2\r\n",
+                b"\r\n",
+                b"{}",
+            ]
+        )
+        self.down = False
+        self.gate = asyncio.Event()
+
+    async def connect_tcp(self, *args, **kwargs):
+        if self.down:
+            await self.gate.wait()
+            raise httpcore.ConnectError("appliance unreachable")
+        return await super().connect_tcp(*args, **kwargs)
+
+
+@pytest.mark.asyncio
+async def test_cancelled_request_does_not_orphan_the_connection(vzug_api):
+    """A request giving up while another one fails must not leave the pool stuck.
+
+    Without serialization the waiting request is handed a fresh connection by the
+    failing one right before it gives up. That connection is never used and never
+    released, so every later request fails with 'PoolTimeout' (#165).
+    """
+    backend = _FlakyBackend()
+    client = vzug_api._client
+    client._transport._pool._network_backend = backend
+    backend.down = True
+
+    first = asyncio.create_task(vzug_api._get("http://example.com/ai"))
+    await asyncio.sleep(0.01)
+    second = asyncio.create_task(vzug_api._get("http://example.com/ai"))
+    await asyncio.sleep(0.01)
+
+    # the first request fails in the same moment the second one gives up
+    backend.gate.set()
+    second.cancel()
+    with pytest.raises(httpx.ConnectError):
+        await first
+    with pytest.raises(asyncio.CancelledError):
+        await second
+
+    backend.down = False
+    resp = await vzug_api._get("http://example.com/ai")
+
+    assert resp.status_code == 200
+    # the pool kept working, there was nothing to recover from
+    assert vzug_api._client is client
+
+
+@pytest.mark.asyncio
+async def test_pool_timeout_recreates_the_client(vzug_api):
+    """A stuck pool is replaced instead of failing until Home Assistant restarts."""
+    old_client = vzug_api._client
+    with patch.object(old_client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.side_effect = httpx.PoolTimeout("stuck")
+
+        with pytest.raises(httpx.PoolTimeout):
+            await vzug_api._get("http://example.com/ai")
+
+    assert vzug_api._client is not old_client
+    assert old_client.is_closed
+    assert not vzug_api._client.is_closed
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("1.12.0", (1, 12, 0)), ("1.8", (1, 8)), ("", None), (None, None), ("x", None)],
+)
+def test_parse_version(raw, expected):
+    from custom_components.vzug.api import parse_version
+
+    assert parse_version(raw) == expected
+
+
+@pytest.mark.asyncio
+async def test_stop_program_for_a_zone(vzug_api):
+    """Ovens stop one zone at a time: {"status":"idle","zone":...}."""
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.stop_program("cookingChamber1")
+    assert mock_command.call_args.kwargs["params"]["value"] == (
+        '{"status":"idle","zone":"cookingChamber1"}'
+    )
+
+
+@pytest.mark.asyncio
+async def test_stop_program_before_hh_1_3_turns_off(vzug_api):
+    """hh 1.0 - 1.2 have no idle status, the V-ZUG app sends 'doTurnOff'."""
+    vzug_api.hh_api_version = (1, 2, 0)
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.stop_program()
+    assert mock_command.call_args.kwargs["command"] == "doTurnOff"
+
+
+@pytest.mark.asyncio
+async def test_set_program_before_hh_1_5_sends_one_value_at_a_time(vzug_api):
+    vzug_api.hh_api_version = (1, 4, 0)
+    with patch.object(vzug_api, "_command", new_callable=AsyncMock) as mock_command:
+        await vzug_api.set_program_dto(
+            {"temp": 180, "id": 4, "zone": "cookingChamber1", "duration": 2700}
+        )
+    sent = [call.kwargs["params"]["value"] for call in mock_command.call_args_list]
+    assert sent == ['{"id":4}', '{"duration":2700}', '{"temp":180}']
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_reads_the_api_versions(vzug_api):
+    answers = {
+        ("ai", "getAPIVersion"): {"value": "1.8.0"},
+        ("hh", "getAPIVersion"): {"value": "1.12.0"},
+        ("hh", "getDeviceInfo"): {"model": "21045", "apiVersion": "1.12.0"},
+    }
+
+    async def command(component, *, command, **kwargs):
+        if (component, command) in answers:
+            return answers[(component, command)]
+        return "" if kwargs.get("raw") else {}
+
+    with patch.object(vzug_api, "_command", side_effect=command):
+        meta = await vzug_api.aggregate_meta()
+    assert meta.ai_api_version == (1, 8, 0)
+    assert meta.hh_api_version == (1, 12, 0)
+    assert vzug_api.hh_api_version == (1, 12, 0)
+
+
+@pytest.mark.asyncio
+async def test_aggregate_meta_without_device_info_is_an_old_appliance(vzug_api):
+    async def command(component, *, command, **kwargs):
+        if command == "getDeviceInfo":
+            return kwargs["value_on_err"]()
+        if command == "getAPIVersion":
+            return {}
+        return "" if kwargs.get("raw") else {}
+
+    with patch.object(vzug_api, "_command", side_effect=command):
+        meta = await vzug_api.aggregate_meta()
+    assert meta.hh_api_version == (1, 0, 0)
+    assert not vzug_api.hh_supports((1, 3, 0))

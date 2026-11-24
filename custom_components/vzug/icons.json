@@ -1,0 +1,19 @@
+{
+    "entity": {
+        "select": {
+            "program_select": {
+                "default": "mdi:dishwasher",
+                "state": {
+                    "eco": "mdi:alpha-e-circle-outline",
+                    "automatic": "mdi:alpha-a-circle-outline",
+                    "quick": "mdi:timer-sand",
+                    "intensive": "mdi:pot-steam-outline",
+                    "glass": "mdi:glass-wine",
+                    "fondue_raclette": "mdi:cheese",
+                    "hygiene": "mdi:shield-check-outline",
+                    "pre_rinsing": "mdi:water-sync"
+                }
+            }
+        }
+    }
+}

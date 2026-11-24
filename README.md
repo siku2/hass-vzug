@@ -36,12 +36,34 @@ Don't hesitate to open a new issue or a discussion if you have a V-ZUG device yo
 3. Restart Home Assistant.
 4. Set up the integration using the UI: [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vzug)
 
+Appliances that are already on your network are found by discovery or DHCP, or added by IP address. They don't need Bluetooth.
+
+Optionally, a new appliance that isn't on your Wi-Fi yet can be set up over Bluetooth: switch on V-ZUG-Home in its user settings and Home Assistant discovers it and asks for your Wi-Fi (2.4 GHz only). This needs Home Assistant's Bluetooth integration with an adapter on the Home Assistant machine; pairing through Bluetooth proxies may not work. Without Bluetooth, everything else works as usual.
+
 ## Features
 
+For every appliance:
+
 - Firmware updates and notifications.
-- All user settings are exposed as entites so you can modify the device settings on the fly.
-- Program and program end sensors.
-- Eco status.
+- All user settings are exposed as entities so you can modify the device settings on the fly.
+- Program, program state and program end sensors.
+- Errors shown on the appliance's display, its V-ZUG-Home mode and its cloud connection.
+- Eco status (water and energy, including last month and last year).
+
+By appliance type:
+
+- **Dishwashers:** program selection with options and a delayed start, the options of the selected program, Stop.
+- **Ovens, steamers and microwaves**[^2]: oven and food probe temperatures, preheating, door, probe inserted, oven light, kitchen timer, warming drawer, and program selection with temperature and duration.
+- **Hobs**[^2]: power level and pan detection for each cooking zone. Read only, like in the V-ZUG app.
+- **Refrigerators and wine cabinets:** zone temperatures, SuperCool / SuperFreeze / PartyCooling, holiday mode, Silent+, mono fridge, °C/°F, the wine cabinet's interior light and door openings.
+- **Washing machines**[^2]: OptiDos detergent and dosage for both trays, tray levels, and whether laundry can still be added.
+- **Washing machines and dryers:** program and status.
+
+Like in the V-ZUG app, a selected program is only sent to the appliance; you start it there (close the dishwasher door, press start on the oven).
+
+"Start program (experimental)" is disabled by default. It asks the appliance to start the selected program remotely, which the V-ZUG app never does, and the appliance may refuse. Only enable it if you accept an appliance starting with nobody there. Hobs never get it.
+
+[^2]: New and not yet confirmed on real appliances. Please report how it works with yours in an issue or a discussion.
 
 ## Contributions are welcome
 
