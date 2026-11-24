@@ -14,8 +14,8 @@ permissions: {}
 
 jobs:
   prepare:
-    name: Prepare release
-    runs-on: ubuntu-latest
+    name: "Prepare release"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: read
     outputs:
@@ -26,52 +26,20 @@ jobs:
       tag_name: ${{ steps.info.outputs.tag_name }}
       release_body: ${{ steps.git-cliff.outputs.content }}
     steps:
-      - uses: actions/checkout@v6
+      - name: "Checkout the repository"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Gather information
+      - name: "Gather information"
         id: info
-        shell: bash
-        run: |
-          {
-            domain="$(yq -r -oj '.domain' custom_components/*/manifest.json)"
-            if [ -z "$domain" ]; then
-              echo >&2 "No domain found in manifest.json. Please check your custom component."
-              exit 1
-            fi
-            hacs_filename="$(yq -r '.filename' hacs.json)"
-            if [ -z "$hacs_filename" ]; then
-              echo >&2 "No filename found in hacs.json. Please check your HACS configuration."
-              exit 1
-            fi
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
+        run: .github/workflows/release-info.sh
 
-            echo "domain=${domain}"
-            echo "component_dir=custom_components/${domain}"
-            echo "hacs_filename=${hacs_filename}"
-
-            if [ -z '${{ inputs.version }}' ]; then
-              echo >&2 "No version provided. Using the tag name as version."
-              tag_name='${{ github.ref_name }}'
-              echo "tag_name=${tag_name}"
-              echo "version=${tag_name#v}" # Remove 'v' prefix if present
-            else
-              echo "version=${{ inputs.version }}"
-              echo "tag_name=v${{ inputs.version }}"
-            fi
-          } | tee "$GITHUB_OUTPUT"
-
-      - name: Sanity check
-        shell: bash
-        run: |
-          # Ensure version matches semver (e.g., 1.2.3, 1.2.3-beta.1)
-          if ! [[ "${{ steps.info.outputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "Error: Version '${{ steps.info.outputs.version }}' does not match SemVer format (e.g., 1.2.3 or 1.2.3-beta.1)."
-            exit 1
-          fi
-
-      - name: Generate changelog
-        uses: orhun/git-cliff-action@v4
+      - name: "Generate changelog"
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
         id: git-cliff
         with:
           config: ""
@@ -83,26 +51,27 @@ jobs:
   release:
     needs: prepare
     name: "Release"
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-26.04"
     permissions:
       contents: write
     steps:
       - name: "Checkout the repository"
-        uses: "actions/checkout@v6"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: "Build the integration"
-        shell: "bash"
+        env:
+          COMPONENT_DIR: ${{ needs.prepare.outputs.component_dir }}
+          HACS_FILENAME: ${{ needs.prepare.outputs.hacs_filename }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          # Update version
-          yq -i -o json '.version="${{ needs.prepare.outputs.version }}"' '${{ needs.prepare.outputs.component_dir }}/manifest.json'
-          # Archive
-          cd '${{ needs.prepare.outputs.component_dir }}'
-          zip '${{ needs.prepare.outputs.hacs_filename }}' -r ./
+          yq -i -o json '.version = strenv(VERSION)' "$COMPONENT_DIR/manifest.json"
+          cd "$COMPONENT_DIR"
+          zip "$HACS_FILENAME" -r ./
 
       - name: "Create release"
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
-          body: '${{ needs.prepare.outputs.release_body }}'
-          tag_name: '${{ needs.prepare.outputs.tag_name }}'
-          target_commitish: '${{ github.sha }}'
+          body: ${{ needs.prepare.outputs.release_body }}
+          tag_name: ${{ needs.prepare.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           files: ${{ needs.prepare.outputs.component_dir }}/${{ needs.prepare.outputs.hacs_filename }}

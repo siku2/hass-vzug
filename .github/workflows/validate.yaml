@@ -11,49 +11,41 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   hassfest: # https://developers.home-assistant.io/blog/2020/04/16/hassfest
     name: "Hassfest Validation"
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-26.04"
     steps:
       - name: "Checkout the repository"
-        uses: "actions/checkout@v6"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: "Run hassfest validation"
-        uses: "home-assistant/actions/hassfest@master"
+        uses: home-assistant/actions/hassfest@07f46fd2e19967768b5fd3000f91f857452b767c # 2026.11.0
 
   hacs: # https://github.com/hacs/action
     name: "HACS Validation"
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-26.04"
     steps:
       - name: "Checkout the repository"
-        uses: "actions/checkout@v6"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: "Run HACS validation"
-        uses: "hacs/action@main"
+        # the last release (22.5.0) is from 2022, HACS recommends main
+        uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main (2026-06-08)
         with:
           category: "integration"
           # Remove this 'ignore' key when you have added brand images for your integration to https://github.com/home-assistant/brands
           ignore: "brands"
 
   misc:
-    name: Misc Validation
-    runs-on: ubuntu-latest
+    name: "Misc Validation"
+    runs-on: "ubuntu-26.04"
     steps:
-      - uses: actions/checkout@v6
+      - name: "Checkout the repository"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Check Home Assistant version consistency
-        shell: bash
-        run: |
-          hacs_req=$(yq -r -oj .homeassistant hacs.json) || exit
-          requirements_req=$(
-            content=$(<requirements.txt) || exit
-            if [[ "$content" =~ homeassistant==([0-9.]+) ]]; then
-              echo "${BASH_REMATCH[1]}"
-            fi
-          )
-
-          if [ "$hacs_req" != "$requirements_req" ]; then
-            echo "::error file=hacs.json::HACS version requirement for HA doesn't match requirement from requirements.txt"
-            exit 1
-          fi
+      - name: "Check Home Assistant version consistency"
+        run: .github/workflows/check-ha-version.sh
