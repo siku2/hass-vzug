@@ -3,6 +3,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 import yarl
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -82,18 +83,23 @@ class Shared:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         base_url: yarl.URL,
         credentials: api.Credentials | None,
     ) -> None:
         self.hass = hass
+        self.config_entry = config_entry
         self.client = api.VZugApi(
             base_url,
             credentials=credentials,
         )
+        # registered before the coordinators, so it runs after their shutdown
+        config_entry.async_on_unload(self.client.aclose)
 
         self.state_coord = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=self.config_entry,
             name="state",
             update_interval=STATE_COORD_ACTIVE_INTERVAL,
             update_method=self._fetch_state,
@@ -101,6 +107,7 @@ class Shared:
         self.update_coord = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=self.config_entry,
             name="update",
             update_interval=UPDATE_COORD_IDLE_INTERVAL,
             update_method=self._fetch_update,
@@ -108,6 +115,7 @@ class Shared:
         self.config_coord = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=self.config_entry,
             name="config",
             update_interval=CONFIG_COORD_INTERVAL,
             update_method=self._fetch_config,
@@ -170,16 +178,6 @@ class Shared:
             _LOGGER.exception("init failed")
             raise ConfigEntryNotReady() from exc
 
-    async def async_shutdown(self) -> None:
-        await self.state_coord.async_shutdown()
-        await self.update_coord.async_shutdown()
-        await self.config_coord.async_shutdown()
-        if self.zone_coord is not None:
-            await self.zone_coord.async_shutdown()
-        if self.program_coord is not None:
-            await self.program_coord.async_shutdown()
-        await self.client.aclose()
-
     async def _setup_zones(self) -> None:
         """Find out whether this appliance has zones, and which modes it knows.
 
@@ -208,6 +206,7 @@ class Shared:
         self.zone_coord = DataUpdateCoordinator(
             self.hass,
             _LOGGER,
+            config_entry=self.config_entry,
             name="zones",
             update_interval=ZONE_COORD_INTERVAL,
             update_method=self._fetch_zones,
@@ -251,6 +250,7 @@ class Shared:
         self.program_coord = DataUpdateCoordinator(
             self.hass,
             _LOGGER,
+            config_entry=self.config_entry,
             name="programs",
             update_interval=PROGRAM_COORD_INTERVAL,
             update_method=self._fetch_programs,
