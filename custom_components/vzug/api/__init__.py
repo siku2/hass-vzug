@@ -587,31 +587,20 @@ class VZugApi:
             )
 
         try:
-            (
-                mac_address,
-                device_status,
-                model_description,
-                ai_firmware,
-            ) = await ai_details()
+            details = await ai_details()
         except httpx.HTTPStatusError as exc:
             if not exc.response.is_server_error:
                 raise
             # some appliances (ex. AdoraWash V2000) answer 'getDeviceStatus' with a
-            # 503 until something has talked to the 'hh' module. The state poll
-            # does that with 'getZHMode', but the setup starts here. Wake the
-            # appliance the same way and try once more.
+            # 503 until something has talked to the 'hh' module
             _LOGGER.debug("server error during setup, waking the appliance: %r", exc)
             try:
                 await self.get_zh_mode(attempts=1)
             except Exception as wake_exc:
                 _LOGGER.debug("wake-up failed: %r", wake_exc)
                 raise exc from None
-            (
-                mac_address,
-                device_status,
-                model_description,
-                ai_firmware,
-            ) = await ai_details()
+            details = await ai_details()
+        mac_address, device_status, model_description, ai_firmware = details
 
         ai_api_version, hh_api_version = await asyncio.gather(
             self.get_api_version("ai"), self.get_api_version("hh")
