@@ -570,24 +570,38 @@ class VZugApi:
         self, *, default_on_error: bool = False, attempts: int = 5
     ) -> AggMeta:
         # First method used in config flow to get details about the device
-        (
-            mac_address,
-            device_status,
-            model_description,
-            ai_firmware,
-        ) = await asyncio.gather(
-            # This is all from the AI Module/API
-            self.get_mac_address(default_on_error=default_on_error, attempts=attempts),
-            self.get_device_status(
-                default_on_error=default_on_error, attempts=attempts
-            ),
-            self.get_model_description(
-                default_on_error=default_on_error, attempts=attempts
-            ),
-            self.get_ai_fw_version(
-                default_on_error=default_on_error, attempts=attempts
-            ),
-        )
+        async def ai_details() -> tuple[str, DeviceStatus, str, AiFwVersion]:
+            return await asyncio.gather(
+                # This is all from the AI Module/API
+                self.get_mac_address(
+                    default_on_error=default_on_error, attempts=attempts
+                ),
+                self.get_device_status(
+                    default_on_error=default_on_error, attempts=attempts
+                ),
+                self.get_model_description(
+                    default_on_error=default_on_error, attempts=attempts
+                ),
+                self.get_ai_fw_version(
+                    default_on_error=default_on_error, attempts=attempts
+                ),
+            )
+
+        try:
+            details = await ai_details()
+        except httpx.HTTPStatusError as exc:
+            if not exc.response.is_server_error:
+                raise
+            # some appliances (ex. AdoraWash V2000) answer 'getDeviceStatus' with a
+            # 503 until something has talked to the 'hh' module
+            _LOGGER.debug("server error during setup, waking the appliance: %r", exc)
+            try:
+                await self.get_zh_mode(attempts=1)
+            except Exception as wake_exc:
+                _LOGGER.debug("wake-up failed: %r", wake_exc)
+                raise exc from None
+            details = await ai_details()
+        mac_address, device_status, model_description, ai_firmware = details
 
         ai_api_version, hh_api_version = await asyncio.gather(
             self.get_api_version("ai"), self.get_api_version("hh")
