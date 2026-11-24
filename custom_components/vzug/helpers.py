@@ -1,9 +1,29 @@
+import re
+
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api, zones
 from .shared import ConfigCoordinator, Shared, ZoneCoordinator
+
+
+_KEY_SEPARATOR = re.compile(r"(?<=[a-z0-9])X(?=[A-Za-z0-9])|_+")
+
+
+def name_from_command_key(command_key: str) -> str:
+    """A readable name for a command the appliance doesn't describe.
+
+    The keys use an 'X' or '_' between words: 'ecomXstatXtotalXclear' becomes
+    'Ecom stat total clear', 'AUTO_DOOR_OPENER' becomes 'Auto door opener'.
+    """
+    words = [word for word in _KEY_SEPARATOR.split(command_key) if word]
+    if not words:
+        return command_key
+    name = " ".join(words)
+    if name.isupper():
+        name = name.lower()
+    return name[0].upper() + name[1:]
 
 
 class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
@@ -38,7 +58,7 @@ class UserConfigEntity(CoordinatorEntity[ConfigCoordinator]):
     def name(self) -> str | UndefinedType | None:
         name = self.vzug_command.get("description")
         if not name:
-            name = self.vzug_command_key
+            name = name_from_command_key(self.vzug_command_key)
         return name
 
     @property
