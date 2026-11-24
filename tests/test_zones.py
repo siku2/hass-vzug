@@ -206,7 +206,9 @@ def test_end_and_start_times_are_seconds_from_the_poll():
     with_end = {"status": "active", "endtime": {"set": 2700, "act": 2710}}
     assert zones.end_time(with_end, fetched) == fetched + timedelta(seconds=2710)
     # a selected program isn't counting down yet
-    assert zones.end_time({"status": "selected", "duration": {"set": 60}}, fetched) is None
+    assert (
+        zones.end_time({"status": "selected", "duration": {"set": 60}}, fetched) is None
+    )
     timed = {"status": "timed", "starttime": {"set": 7200, "min": 0, "max": 86400}}
     assert zones.start_time(timed, fetched) == fetched + timedelta(hours=2)
     # a dishwasher only lists the limits of 'starttime' until a delay is chosen

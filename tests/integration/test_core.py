@@ -2,7 +2,6 @@ from datetime import datetime
 import re
 
 
-
 async def assert_ai_get_device_status_core(vzug_client, expected_result):
     device_status = await vzug_client.get_device_status()
 
@@ -208,7 +207,7 @@ async def assert_aggregate_meta(vzug_client, expected_result):
     assert meta.api_version == expected_result.aggregate_meta.api_version
 
 
-async def assert_aggregate_state( vzug_client, expected_result, expect_energy: bool):
+async def assert_aggregate_state(vzug_client, expected_result, expect_energy: bool):
     state = await vzug_client.aggregate_state()
 
     # appliances which don't know 'getZHMode' disable the warm-up and stay at -1
@@ -216,8 +215,14 @@ async def assert_aggregate_state( vzug_client, expected_result, expect_energy: b
     assert state.device["Serial"] == expected_result.ai_device_status["Serial"]
     assert (datetime.now().astimezone() - state.device_fetched_at).total_seconds() <= 60
     if expect_energy:
-        assert state.eco_info["energy"]["total"] == expected_result.hh_eco_info["energy"]["total"]
-    assert state.notifications[0]["date"] == expected_result.ai_last_push_notifications[0]["date"]
+        assert (
+            state.eco_info["energy"]["total"]
+            == expected_result.hh_eco_info["energy"]["total"]
+        )
+    assert (
+        state.notifications[0]["date"]
+        == expected_result.ai_last_push_notifications[0]["date"]
+    )
 
 
 # async def assert_hh_get_program(vzug_client, expected_result):

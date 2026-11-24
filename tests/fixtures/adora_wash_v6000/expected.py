@@ -140,4 +140,3 @@ aggregate_meta = api.AggMeta(
     serial_number="33147 536171",
     api_version=(1, 7, 0),
 )
-

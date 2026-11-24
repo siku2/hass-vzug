@@ -12,6 +12,7 @@ from custom_components.vzug.api import (
     VZugApi,
 )
 
+
 def _json_response(payload):
     """Build a mock httpx response which returns 'payload' from .json()."""
     response = MagicMock()
@@ -134,6 +135,7 @@ async def test_json_repair_with_real_broken_device_status():
 
         assert result is not None
         assert len(result) == 8
+
 
 @pytest.mark.asyncio
 async def test_zh_mode_warmup_gives_up_after_repeated_failures(vzug_api):
@@ -388,7 +390,9 @@ async def test_aggregate_meta_ignores_a_failed_wake_up(vzug_api):
     """Appliances that don't know 'getZHMode' (ex. Adora SLQ) still set up."""
     request = httpx.Request("GET", "http://example.com/hh")
     unknown = httpx.HTTPStatusError(
-        "unknown command", request=request, response=httpx.Response(404, request=request)
+        "unknown command",
+        request=request,
+        response=httpx.Response(404, request=request),
     )
     device_status = AsyncMock(return_value={"Serial": "11041 002516"})
     with (

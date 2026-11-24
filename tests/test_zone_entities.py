@@ -440,8 +440,12 @@ def test_program_info_for_an_oven_zone():
     from custom_components.vzug.sensor import ProgramInfo
 
     raw = [
-        {"id": 4, "status": "active", "zone": "cookingChamber1",
-         "duration": {"set": 3600, "act": 600}},
+        {
+            "id": 4,
+            "status": "active",
+            "zone": "cookingChamber1",
+            "duration": {"set": 3600, "act": 600},
+        },
         {"status": "idle", "zone": "countdown1", "duration": {"set": 300}},
     ]
     shared = _shared(raw=raw, modes={})
@@ -463,8 +467,13 @@ def test_program_info_while_a_dishwasher_is_idle():
     coord = MagicMock()
     coord.data = zones.ProgramState(names=DISHWASHER_NAMES, current=None)
     shared = SimpleNamespace(unique_id_prefix="x", device_info={})
-    assert ProgramInfo(shared, coord, zone="", kind="program_state").native_value == "idle"
-    assert ProgramInfo(shared, coord, zone="", kind="program_end_time").native_value is None
+    assert (
+        ProgramInfo(shared, coord, zone="", kind="program_state").native_value == "idle"
+    )
+    assert (
+        ProgramInfo(shared, coord, zone="", kind="program_end_time").native_value
+        is None
+    )
 
 
 @pytest.mark.asyncio
@@ -473,7 +482,9 @@ async def test_errors_come_from_hh_device_status():
 
     api = VZugApi(base_url="http://example.com")
     with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(api, "_command", AsyncMock(return_value={"displayedErrors": ["E12"]}))
+        mp.setattr(
+            api, "_command", AsyncMock(return_value={"displayedErrors": ["E12"]})
+        )
         assert await api.get_errors() == ["E12"]
         mp.setattr(api, "_command", AsyncMock(return_value={"errors": []}))
         assert await api.get_errors() == []
