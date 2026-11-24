@@ -74,7 +74,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_reg = er.async_get(hass)
         entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
 
-        # setup coordinator to get required data for unique_id
         try:
             credentials = api.Credentials(
                 username=new_data[CONF_USERNAME],
@@ -82,14 +81,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         except KeyError:
             credentials = None
-        base_url = URL(new_data[CONF_BASE_URL])
-        shared = Shared(hass, entry, base_url, credentials)
-        await shared.async_config_entry_first_refresh()
+        client = api.VZugApi(URL(new_data[CONF_BASE_URL]), credentials=credentials)
+        try:
+            meta = await client.aggregate_meta()
+            device = await client.get_device_status()
+        finally:
+            await client.aclose()
 
-        old_prefix = shared.state_coord.data.device.get(
-            "deviceUuid", ""
-        ) or shared.state_coord.data.device.get("Serial", "")
-        mac_addr = dr.format_mac(shared.meta.mac_address)
+        old_prefix = device.get("deviceUuid", "") or device.get("Serial", "")
+        mac_addr = dr.format_mac(meta.mac_address)
 
         for entity in entities:
             # migrate unique_id_prefix from 'device_uuid' or 'device_serial' to 'mac_addr'
