@@ -27,3 +27,6 @@ jobs:
 
       - name: "Run"
         run: python3 -m ruff check --output-format=github .
+
+      - name: "Check formatting"
+        run: python3 -m ruff format --check .
