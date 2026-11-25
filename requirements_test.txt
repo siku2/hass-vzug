@@ -1,0 +1,5 @@
+-r requirements.txt
+# pins pytest and its plugins to the versions of the Home Assistant release above
+pytest-homeassistant-custom-component==0.13.251
+# the emulator in 'tests/fixtures' and the tests in 'tests/integration'
+flask==3.1.3

@@ -1,9 +1,9 @@
+# Everything needed to run and develop the integration. The test tools are in
+# 'requirements_test.txt'.
 coloredlogs==15.0.1
 homeassistant==2025.6.0
+# Home Assistant pins aiodns, but not pycares, and pycares 5 breaks aiodns 3.4
+pycares==4.8.0
 ruff==0.17.6
-flask==3.1.3
 isort==9.0.2
-pytest==9.2.0
-pytest-asyncio==1.5.0
-pytest_socket==0.8.1
 json-repair==0.46.2

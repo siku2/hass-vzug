@@ -48,7 +48,7 @@ People *love* thorough bug reports. I'm not even kidding.
 - The devcontainer is setup like this
   - A python base image
   - HomeAssistant is installed as a pip package
-  - All the python dependencies are automatically installed using pip and requirements.txt
+  - All the python dependencies are automatically installed using pip and requirements_test.txt
   - `PYTHONPATH` is set to prevent 'module not found on imports
   - `PROJECT_ROOT` is set to allow script and code execution independent of the working directory
   - File and remote debugging possibility are configured in launch.json
@@ -111,12 +111,32 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Use a Consistent Coding Style
 
-Use [black](https://github.com/ambv/black) to make sure the code follows the style.
-Sort your imports using [isort](https://pycqa.github.io/isort/).
+Use [ruff](https://docs.astral.sh/ruff/) to make sure the code follows the style:
+
+```shell
+ruff check .
+ruff format .
+```
 
 ## Test your code modification
 
-For new devices, create profile, add a `expected.py`, and get the tests green
+```shell
+python3 -m pip install -r requirements_test.txt
+python3 -m pytest --cov=custom_components/vzug --cov-report=term-missing
+```
+
+The tests run a real Home Assistant (via
+[pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component))
+against simulated appliances. `tests/appliance.py` answers the requests of the
+integration from the recorded responses in `tests/fixtures/<device>/responses`, so
+every device profile there is automatically set up in `tests/test_init.py`.
+
+For new devices, collect the responses with `collect_responses.sh`, add an
+`expected.py`, and get the tests green.
+
+The tests in `tests/integration` talk to the Flask emulators over the network and
+are not part of the default run. Start the emulators with `start_all_emulators.sh`,
+then run `python3 -m pytest tests/integration`.
 
 ## License
 
