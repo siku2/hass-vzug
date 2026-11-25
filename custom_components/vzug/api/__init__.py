@@ -422,7 +422,7 @@ class VZugApi:
 
             if expected_type is list and data is None:
                 # if we want a list and the response is null, we just treat that as an empty list
-                data: Any = []
+                data = []
 
             if expected_type is not None:
                 assert isinstance(data, expected_type), (
@@ -434,7 +434,7 @@ class VZugApi:
 
         if retry_delay is None:
             retry_delay = RETRY_DELAY
-        last_exc = ValueError("no attempts made")
+        last_exc: Exception = ValueError("no attempts made")
         attempt_idx = 0
         while attempt_idx < attempts:
             # starts with 0s, then retry_delay
@@ -566,13 +566,14 @@ class VZugApi:
         async def _cloud() -> dict[str, Any]:
             if not supports_cloud_status:
                 return {}
-            return await self._command(
+            result: dict[str, Any] = await self._command(
                 "ai",
                 command="getCloudStatus",
                 expected_type=dict,
                 attempts=2,
                 value_on_err=dict,
             )
+            return result
 
         update, ai_fw_version, hh_fw_version, cloud_status = await asyncio.gather(
             _update(),
@@ -759,7 +760,7 @@ class VZugApi:
         return commands
 
     async def _optional_command(self, name: str) -> dict[str, Any]:
-        return await self._command(
+        result: dict[str, Any] = await self._command(
             "hh",
             command="getCommand",
             params={"value": name},
@@ -767,6 +768,7 @@ class VZugApi:
             attempts=2,
             value_on_err=dict,
         )
+        return result
 
     async def _user_setting(self, setting_id: str) -> dict[str, Any]:
         data = await self._command(
@@ -782,9 +784,10 @@ class VZugApi:
 
     async def get_installed_features(self) -> list[str]:
         """Paid V-ZUG Upgrades installed on the appliance (hh 1.7)."""
-        return await self._command(
+        result: list[str] = await self._command(
             "hh", command="getInstalledFeatures", expected_type=list, attempts=2
         )
+        return result
 
     async def get_api_version(self, component: str) -> tuple[int, ...] | None:
         """'getAPIVersion' of the 'ai' or 'hh' API, ex. {"value":"1.12.0"}.
@@ -804,35 +807,38 @@ class VZugApi:
     async def get_mac_address(
         self, *, default_on_error: bool = False, attempts: int = 5
     ) -> str:
-        return await self._command(
+        result: str = await self._command(
             "ai",
             command="getMacAddress",
             raw=True,
             attempts=attempts,
             value_on_err=(lambda: "") if default_on_error else None,
         )
+        return result
 
     async def get_model_description(
         self, *, default_on_error: bool = False, attempts: int = 5
     ) -> str:
-        return await self._command(
+        result: str = await self._command(
             "ai",
             command="getModelDescription",
             raw=True,
             attempts=attempts,
             value_on_err=(lambda: "") if default_on_error else None,
         )
+        return result
 
     async def get_device_status(
         self, *, default_on_error: bool = False, attempts: int = 5
     ) -> DeviceStatus:
-        return await self._command(
+        result: DeviceStatus = await self._command(
             "ai",
             command="getDeviceStatus",
             expected_type=dict,
             attempts=attempts,
             value_on_err=(lambda: DeviceStatus()) if default_on_error else None,
         )
+        return result
 
     async def get_errors(self) -> list[str]:
         """Error codes shown on the display, '/hh getDeviceStatus' (hh 1.5).
@@ -853,12 +859,13 @@ class VZugApi:
     async def get_update_status(
         self, *, default_on_error: bool = False
     ) -> UpdateStatus:
-        return await self._command(
+        result: UpdateStatus = await self._command(
             "ai",
             command="getUpdateStatus",
             expected_type=dict,
             value_on_err=(lambda: UpdateStatus()) if default_on_error else None,
         )
+        return result
 
     async def check_for_updates(self) -> None:
         await self._command(
@@ -877,7 +884,7 @@ class VZugApi:
     async def get_last_push_notifications(
         self, *, default_on_error: bool = False
     ) -> list[PushNotification]:
-        return await self._command(
+        result: list[PushNotification] = await self._command(
             "ai",
             command="getLastPUSHNotifications",
             expected_type=list,
@@ -885,30 +892,35 @@ class VZugApi:
             # ex. CombairSteamer V6000 60 answers 404 since a firmware update
             value_on_client_err=list,
         )
+        return result
 
     async def list_categories(self) -> list[str]:
-        return await self._command(
+        result: list[str] = await self._command(
             "hh",
             command="getCategories",
             expected_type=list,
             # the API sometimes wrongly returns an empty list, but there are also appliances (ex. AdoraWash V4000) which don't have any categories
             reject_empty=False,
         )
+        return result
 
     async def get_category(self, value: str) -> Category:
-        return await self._command(
+        result: Category = await self._command(
             "hh", command="getCategory", params={"value": value}, expected_type=dict
         )
+        return result
 
     async def list_commands(self, value: str) -> list[str]:
-        return await self._command(
+        result: list[str] = await self._command(
             "hh", command="getCommands", params={"value": value}, expected_type=list
         )
+        return result
 
     async def get_command(self, value: str) -> Command:
-        return await self._command(
+        result: Command = await self._command(
             "hh", command="getCommand", params={"value": value}, expected_type=dict
         )
+        return result
 
     async def set_command(self, command: str, value: str) -> None:
         await self._command(
@@ -928,23 +940,25 @@ class VZugApi:
         )
 
     async def get_hh_fw_version(self, *, default_on_error: bool = False) -> HhFwVersion:
-        return await self._command(
+        result: HhFwVersion = await self._command(
             "hh",
             command="getFWVersion",
             expected_type=dict,
             value_on_err=(lambda: HhFwVersion()) if default_on_error else None,
         )
+        return result
 
     async def get_ai_fw_version(
         self, *, default_on_error: bool = False, attempts: int = 5
     ) -> AiFwVersion:
-        return await self._command(
+        result: AiFwVersion = await self._command(
             "ai",
             command="getFWVersion",
             expected_type=dict,
             attempts=attempts,
             value_on_err=(lambda: AiFwVersion()) if default_on_error else None,
         )
+        return result
 
     async def get_zh_mode(
         self, *, default_on_error: bool = False, attempts: int = 5
@@ -956,10 +970,11 @@ class VZugApi:
             attempts=attempts,
             value_on_err=(lambda: {"value": -1}) if default_on_error else None,
         )
-        return data.get("value", -1)
+        value = data.get("value", -1)
+        return value if isinstance(value, int) else -1
 
     async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
-        result = await self._command(
+        result: EcoInfo = await self._command(
             "hh",
             command="getEcoInfo",
             expected_type=dict,
@@ -980,12 +995,13 @@ class VZugApi:
     async def get_device_info(self, *, default_on_error: bool = False) -> DeviceInfo:
         # 'getAPIVersion' can be used to get only the API version
         # 'getZHMode' gives just the zh mode
-        return await self._command(
+        result: DeviceInfo = await self._command(
             "hh",
             command="getDeviceInfo",
             expected_type=dict,
             value_on_err=(lambda: DeviceInfo()) if default_on_error else None,
         )
+        return result
 
     async def get_program(self) -> list[Program]:
         # TODO: this is interesting but what can we do with it??
@@ -1000,7 +1016,7 @@ class VZugApi:
 
     async def set_program(
         self, program_id: int, options: dict[str, Any] | None = None
-    ) -> list[Any]:
+    ) -> str | None:
         # example options: {"id":50,"dryPlus":false,"energySaving":false,"partialload":false,"rinsePlus":false,"steamfinish":true}
         # also seen with just the "id" key
         if not options:
@@ -1008,7 +1024,7 @@ class VZugApi:
         options["id"] = program_id
         return await self.set_program_dto(options)
 
-    async def set_program_dto(self, dto: dict[str, Any]) -> Any:
+    async def set_program_dto(self, dto: dict[str, Any]) -> str | None:
         """'setProgram' with typed values, ex. {"zone":"cookingChamber1","light":true}.
 
         hh 1.5 and newer take the whole object at once. Older appliances take one
@@ -1046,11 +1062,12 @@ class VZugApi:
 
     async def get_all_program_ids(self) -> list[int]:
         # TODO: this gives us a nice list of ids that could be used with set_program, but we need a program id to name mapping
-        return await self._command(
+        result: list[int] = await self._command(
             "hh",
             command="getAllProgramIds",
             expected_type=list,
         )
+        return result
 
     async def get_raw_programs(self, *, attempts: int = 5) -> list[dict[str, Any]]:
         """'getProgram' as the appliance sends it.
@@ -1061,12 +1078,13 @@ class VZugApi:
          "doorClosed":true,"zone":"fridge1"}
         A running timed function gains 'set' (requested seconds) and 'act' (seconds left).
         """
-        return await self._command(
+        result: list[dict[str, Any]] = await self._command(
             "hh",
             command="getProgram",
             expected_type=list,
             attempts=attempts,
         )
+        return result
 
     async def get_program_details(self, program_id: int) -> dict[str, Any]:
         """'getProgram' for one program id, without selecting it.

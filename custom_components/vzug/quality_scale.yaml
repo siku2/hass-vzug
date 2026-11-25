@@ -76,5 +76,11 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
-  strict-typing: todo
+  inject-websession:
+    status: exempt
+    comment: >-
+      The appliances only cope with one connection at a time and need digest
+      authentication, so every appliance gets its own httpx client with a
+      single-connection transport (see VZugApi._create_client). Home
+      Assistant's shared client can't be limited like that.
+  strict-typing: done

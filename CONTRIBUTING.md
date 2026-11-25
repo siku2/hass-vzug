@@ -116,7 +116,10 @@ Use [ruff](https://docs.astral.sh/ruff/) to make sure the code follows the style
 ```shell
 ruff check .
 ruff format .
+mypy
 ```
+
+The integration is fully typed, `mypy` checks it strictly (see `mypy.ini`).
 
 ## Test your code modification
 

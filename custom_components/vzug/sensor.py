@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import api, zones
@@ -30,7 +30,7 @@ from .coordinator import (
 
 _ECO_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        "water.total",
+        key="water.total",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="L",
@@ -38,7 +38,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         translation_key="water_total",
     ),
     SensorEntityDescription(
-        "water.program",
+        key="water.program",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="L",
@@ -46,7 +46,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         translation_key="water_program",
     ),
     SensorEntityDescription(
-        "energy.total",
+        key="energy.total",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="kWh",
@@ -54,7 +54,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         translation_key="energy_total",
     ),
     SensorEntityDescription(
-        "energy.program",
+        key="energy.program",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="kWh",
@@ -62,7 +62,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         translation_key="energy_program",
     ),
     SensorEntityDescription(
-        "energy.lastMonth",
+        key="energy.lastMonth",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="kWh",
@@ -70,7 +70,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         translation_key="energy_last_month",
     ),
     SensorEntityDescription(
-        "energy.lastYear",
+        key="energy.lastYear",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="kWh",
@@ -81,7 +81,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # This is tricky, because it is not really a measurement, but calculated by the device.
         # But HomeAssistant does not like that combination. It prevents SensorDeviceClass.WATER with SensorStateClass.MEASUREMENT
         # Therefore we do not set the device class here.
-        "water.average",
+        key="water.average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="L",
         state_class=SensorStateClass.MEASUREMENT,
@@ -91,7 +91,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # This is tricky, because it is not really a measurement, but calculated by the device.
         # But HomeAssistant does not like that combination. It prevents SensorDeviceClass.ENERGY with SensorStateClass.MEASUREMENT
         # Therefore we do not set the device class here.
-        "energy.average",
+        key="energy.average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.MEASUREMENT,
@@ -107,7 +107,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VZugConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     shared = config_entry.runtime_data
 
@@ -142,7 +142,9 @@ async def async_setup_entry(
         category, _, field = desc.key.partition(".")
         if category not in eco_info:
             continue
-        if field in ("lastMonth", "lastYear") and field not in eco_info[category]:
+        if field in ("lastMonth", "lastYear") and field not in cast(
+            dict[str, Any], eco_info
+        ).get(category, {}):
             continue
         entities.append(Eco(shared, desc, category=category, field=field))
     for index, _ in enumerate(eco_info.get("doorOpenings") or []):
@@ -208,7 +210,7 @@ class HobLevel(ZoneEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        return zones.value(self.zone_data, self.vzug_key)
+        return _state(zones.value(self.zone_data, self.vzug_key))
 
 
 class OvenValue(ZoneEntity, SensorEntity):
@@ -236,7 +238,7 @@ class OvenValue(ZoneEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        return zones.value_field(self.zone_data, self.vzug_key, self.vzug_field)
+        return _state(zones.value_field(self.zone_data, self.vzug_key, self.vzug_field))
 
 
 class ProgramInfo(VZugEntity[Any], SensorEntity):
@@ -272,17 +274,16 @@ class ProgramInfo(VZugEntity[Any], SensorEntity):
 
     @property
     def _program(self) -> Mapping[str, Any] | None:
-        data = self.coordinator.data
+        data: zones.ZoneState | zones.ProgramState | None = self.coordinator.data
         if data is None:
             return None
         if self.vzug_zone:
-            return data.zones.get(self.vzug_zone)
-        return data.current
+            return cast(zones.ZoneState, data).zones.get(self.vzug_zone)
+        return cast(zones.ProgramState, data).current
 
     @property
     def native_value(self) -> str | datetime | None:
         program = self._program
-        fetched_at = self.coordinator.data.fetched_at if program is not None else None
         if self.vzug_kind == "program_state":
             # the program coordinator only keeps a program while one is selected
             status = (program or {}).get(
@@ -291,6 +292,7 @@ class ProgramInfo(VZugEntity[Any], SensorEntity):
             return status if status in zones.PROGRAM_STATES else None
         if program is None:
             return None
+        fetched_at: datetime = self.coordinator.data.fetched_at
         if self.vzug_kind == "program_end_time":
             return zones.end_time(program, fetched_at)
         return zones.start_time(program, fetched_at)
@@ -355,7 +357,7 @@ class Program(StateBase):
 
 class ProgramEndRaw(StateBase):
     _attr_translation_key = "program_end_raw"
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
     # 'Program end' shows the same as a timestamp
     _attr_entity_registry_enabled_default = False
 
@@ -386,7 +388,7 @@ class ProgramEnd(ProgramEndRaw):
 
     def __init__(self, shared: Shared) -> None:
         super().__init__(shared)
-        self.__end_at = None
+        self.__end_at: datetime | None = None
 
     @property
     def vzug_program_duration_left(self) -> timedelta | None:
@@ -458,9 +460,8 @@ class Eco(StateBase):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         try:
-            return self.coordinator.data.eco_info[cast(Any, self.vzug_category)][
-                self.vzug_field
-            ]
+            eco_info = cast(dict[str, Any], self.coordinator.data.eco_info)
+            return _state(eco_info[self.vzug_category][self.vzug_field])
         except LookupError:
             return None
 
@@ -561,7 +562,7 @@ class DoorOpenings(StateBase):
     def native_value(self) -> StateType:
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
-            return entry[self.vzug_period]["amount"]
+            return _state(entry[self.vzug_period]["amount"])
         except (LookupError, TypeError):
             return None
 
@@ -592,3 +593,8 @@ class ProgramValue(VZugEntity[ProgramCoordinator], SensorEntity):
         current = self.coordinator.data.current if self.coordinator.data else None
         value = zones.value(current, self.vzug_key)
         return value if isinstance(value, (str, int, float)) else None
+
+
+def _state(value: Any) -> StateType:
+    """'value' if Home Assistant can show it as a state, else None."""
+    return value if isinstance(value, (str, int, float)) else None

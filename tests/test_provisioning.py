@@ -72,6 +72,8 @@ def test_bluetooth_stays_optional():
     manifest = json.loads(
         (pathlib.Path(provisioning.__file__).parents[1] / "manifest.json").read_text()
     )
-    assert not {"bluetooth", "bluetooth_adapters"} & set(manifest["dependencies"])
+    assert not {"bluetooth", "bluetooth_adapters"} & set(
+        manifest.get("dependencies", [])
+    )
     assert "bluetooth_adapters" in manifest["after_dependencies"]
     assert {"manufacturer_id": 0x05CE, "connectable": True} in manifest["bluetooth"]

@@ -36,6 +36,10 @@
                 "data": {
                     "username": "Nom d'utilisateur",
                     "password": "Mot de passe"
+                },
+                "data_description": {
+                    "username": "Le nom d'utilisateur de l'interface web de l'appareil.",
+                    "password": "Le mot de passe de l'interface web de l'appareil."
                 }
             },
             "confirm": {
@@ -47,6 +51,10 @@
                 "data": {
                     "ssid": "Nom du Wi-Fi (SSID)",
                     "password": "Mot de passe Wi-Fi"
+                },
+                "data_description": {
+                    "ssid": "Le réseau 2,4 GHz que l'appareil rejoint.",
+                    "password": "Envoyé à l'appareil par Bluetooth, Home Assistant ne l'enregistre pas."
                 }
             },
             "reauth_confirm": {

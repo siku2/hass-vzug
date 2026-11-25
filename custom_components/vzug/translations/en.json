@@ -36,6 +36,10 @@
                 "data": {
                     "username": "Username",
                     "password": "Password"
+                },
+                "data_description": {
+                    "username": "The user name of the appliance's web interface.",
+                    "password": "The password of the appliance's web interface."
                 }
             },
             "confirm": {
@@ -47,6 +51,10 @@
                 "data": {
                     "ssid": "Wi-Fi name (SSID)",
                     "password": "Wi-Fi password"
+                },
+                "data_description": {
+                    "ssid": "The 2.4 GHz network the appliance joins.",
+                    "password": "Sent to the appliance over Bluetooth, Home Assistant doesn't store it."
                 }
             },
             "reauth_confirm": {

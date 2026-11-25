@@ -27,6 +27,7 @@ def shared():
     """A Shared instance without the HomeAssistant machinery around it."""
     instance = Shared.__new__(Shared)
     instance.hass = MagicMock()
+    instance.config_entry = MagicMock()
     instance.client = MagicMock()
     # every poll gets an answer from the appliance
     type(instance.client).responses = PropertyMock(side_effect=itertools.count())
@@ -47,7 +48,7 @@ def shared():
 
 
 def _config_refreshes(shared: Shared) -> int:
-    return shared.hass.async_create_task.call_count
+    return shared.config_entry.async_create_background_task.call_count
 
 
 def _state(eco_info):

@@ -1,8 +1,8 @@
 """Base entities of the V-ZUG integration."""
 
 import functools
-from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate
+from collections.abc import Callable, Coroutine
+from typing import Any, cast
 
 import httpx
 from homeassistant.const import EntityCategory
@@ -22,9 +22,7 @@ from .coordinator import ConfigCoordinator, Shared, ZoneCoordinator
 from .helpers import name_from_command_key
 
 
-def vzug_action[EntityT: "VZugBaseEntity", **P, R](
-    func: Callable[Concatenate[EntityT, P], Awaitable[R]],
-) -> Callable[Concatenate[EntityT, P], Coroutine[Any, Any, R]]:
+def vzug_action[FuncT: Callable[..., Coroutine[Any, Any, Any]]](func: FuncT) -> FuncT:
     """Turn a failed request to the appliance into an error the user sees.
 
     Without this an action (pressing a button, switching a switch) that fails
@@ -33,7 +31,7 @@ def vzug_action[EntityT: "VZugBaseEntity", **P, R](
     """
 
     @functools.wraps(func)
-    async def wrapper(self: EntityT, *args: P.args, **kwargs: P.kwargs) -> R:
+    async def wrapper(self: VZugBaseEntity, *args: Any, **kwargs: Any) -> Any:
         try:
             return await func(self, *args, **kwargs)
         except HomeAssistantError:
@@ -59,7 +57,7 @@ def vzug_action[EntityT: "VZugBaseEntity", **P, R](
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-    return wrapper
+    return cast(FuncT, wrapper)
 
 
 class VZugBaseEntity(Entity):
@@ -184,9 +182,11 @@ class ZoneEntity(VZugEntity[ZoneCoordinator]):
 
     @property
     def zone_data(self) -> zones.Zone | None:
-        if self.coordinator.data is None:
+        # None while the zones were never fetched (unit tests build entities so)
+        data: zones.ZoneState | None = self.coordinator.data
+        if data is None:
             return None
-        return self.coordinator.data.zones.get(self.vzug_zone)
+        return data.zones.get(self.vzug_zone)
 
     @property
     def available(self) -> bool:
