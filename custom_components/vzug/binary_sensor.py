@@ -12,6 +12,10 @@ from .helpers import snake, zone_translation
 from .coordinator import ProgramCoordinator, Shared, StateCoordinator, VZugConfigEntry
 
 
+# read only, the coordinators do the polling
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VZugConfigEntry,

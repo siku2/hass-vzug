@@ -1,8 +1,12 @@
 """Base entities of the V-ZUG integration."""
 
-from typing import Any
+import functools
+from collections.abc import Awaitable, Callable, Coroutine
+from typing import Any, Concatenate
 
+import httpx
 from homeassistant.const import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import (
@@ -13,6 +17,40 @@ from homeassistant.helpers.update_coordinator import (
 from . import api, zones
 from .coordinator import ConfigCoordinator, Shared, ZoneCoordinator
 from .helpers import name_from_command_key
+
+
+def vzug_action[EntityT: "VZugBaseEntity", **P, R](
+    func: Callable[Concatenate[EntityT, P], Awaitable[R]],
+) -> Callable[Concatenate[EntityT, P], Coroutine[Any, Any, R]]:
+    """Turn a failed request to the appliance into an error the user sees.
+
+    Without this an action (pressing a button, switching a switch) that fails
+    shows up as an unexpected exception with a traceback in the log instead of
+    as a message in the frontend.
+    """
+
+    @functools.wraps(func)
+    async def wrapper(self: EntityT, *args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return await func(self, *args, **kwargs)
+        except HomeAssistantError:
+            raise
+        except api.AuthenticationFailed as err:
+            self.shared.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                "The appliance refused the credentials, please re-authenticate"
+            ) from err
+        except httpx.HTTPStatusError as err:
+            raise HomeAssistantError(
+                f"The appliance refused the request: {err.response.status_code} "
+                f"{err.response.text.strip()}"
+            ) from err
+        except (httpx.HTTPError, ValueError, AssertionError) as err:
+            raise HomeAssistantError(
+                f"Error communicating with the appliance: {err!r}"
+            ) from err
+
+    return wrapper
 
 
 class VZugBaseEntity(Entity):

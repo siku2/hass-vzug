@@ -40,6 +40,20 @@ Appliances that are already on your network are found by discovery or DHCP, or a
 
 Optionally, a new appliance that isn't on your Wi-Fi yet can be set up over Bluetooth: switch on V-ZUG-Home in its user settings and Home Assistant discovers it and asks for your Wi-Fi (2.4 GHz only). This needs Home Assistant's Bluetooth integration with an adapter on the Home Assistant machine; pairing through Bluetooth proxies may not work. Without Bluetooth, everything else works as usual.
 
+## Configuration
+
+Setting up an appliance asks for:
+
+| Parameter | When | Description |
+| --- | --- | --- |
+| Host | Manual setup | The IP address or host name of the appliance, ex. `192.168.1.42`. A full URL like `https://192.168.1.42` works too, without a scheme `http://` is used. Give the appliance a fixed address in your router; if it changes anyway, DHCP discovery usually picks up the new one. |
+| Username, Password | Only if the appliance asks for them | The credentials of the appliance's web interface, if you protected it with a password. If they change later, Home Assistant asks for the new ones (re-authentication). |
+| Wi-Fi name (SSID), Wi-Fi password | Bluetooth setup only | The 2.4 GHz network the appliance joins. They are sent to the appliance over Bluetooth and not stored in Home Assistant. |
+
+Discovery (**Add integration → V-ZUG → Discovery**) broadcasts on every network adapter Home Assistant uses and offers each appliance that answers; appliances on another subnet or VLAN have to be added manually.
+
+The integration has no options. Everything you can change on the appliance is an entity of its device.
+
 ## Features
 
 For every appliance:

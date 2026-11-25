@@ -4,7 +4,8 @@
       "already_configured": "Gerät ist bereits konfiguriert",
       "false_discovery": "Falsch positive Entdeckung",
       "discovery_finished": "{count} Gerät(e) entdeckt",
-      "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+      "wrong_device": "Diese Anmeldedaten gehören zu einem anderen Gerät. Verwende die des eingerichteten Geräts."
     },
     "error": {
       "auth_failed": "Authentifizierung fehlgeschlagen",
@@ -45,6 +46,18 @@
         "data": {
           "ssid": "WLAN-Name (SSID)",
           "password": "WLAN-Passwort"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut anmelden",
+        "description": "Das Gerät {name} akzeptiert die gespeicherten Anmeldedaten nicht mehr. Gib den Nutzernamen und das Passwort ein, die auf dem Gerät gesetzt sind.",
+        "data": {
+          "username": "Nutzername",
+          "password": "Passwort"
+        },
+        "data_description": {
+          "username": "Der Nutzername der Weboberfläche des Geräts.",
+          "password": "Das Passwort der Weboberfläche des Geräts."
         }
       }
     },

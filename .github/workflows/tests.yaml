@@ -38,4 +38,5 @@ jobs:
           --cov=custom_components/vzug
           --cov-report=term-missing
           --cov-report=xml
+          --cov-fail-under=95
           -p no:sugar

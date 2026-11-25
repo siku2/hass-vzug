@@ -1,0 +1,28 @@
+{
+  "status": "idle",
+  "isAIUpdateAvailable": false,
+  "isHHGUpdateAvailable": false,
+  "isSynced": true,
+  "components": [
+    {
+      "name": "AI",
+      "running": false,
+      "available": false,
+      "required": false,
+      "progress": {
+        "download": 0,
+        "installation": 0
+      }
+    },
+    {
+      "name": "HHG",
+      "running": false,
+      "available": false,
+      "required": false,
+      "progress": {
+        "download": 0,
+        "installation": 0
+      }
+    }
+  ]
+}

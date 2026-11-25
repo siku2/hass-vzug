@@ -4,7 +4,8 @@
             "already_configured": "Device is already configured",
             "false_discovery": "False-positive Discovery",
             "discovery_finished": "Discovered {count} device(s)",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_device": "These credentials belong to another appliance. Use the ones of the appliance you set up."
         },
         "error": {
             "auth_failed": "Authentication failed",
@@ -45,6 +46,18 @@
                 "data": {
                     "ssid": "Wi-Fi name (SSID)",
                     "password": "Wi-Fi password"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Re-authenticate",
+                "description": "The appliance {name} no longer accepts the stored credentials. Enter the user name and password set on the appliance.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "username": "The user name of the appliance's web interface.",
+                    "password": "The password of the appliance's web interface."
                 }
             }
         },

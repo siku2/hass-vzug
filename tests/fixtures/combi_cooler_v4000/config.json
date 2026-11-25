@@ -1,0 +1,7 @@
+{
+  "base_url": "http://10.0.3.40",
+  "fake_mac_address": "02:43:a0:d1:80:c0",
+  "fake_device_serial_1": "51071 000123",
+  "fake_device_serial_2": "5100000123",
+  "synthetic": "Not recorded from an appliance: built from the refrigerator responses quoted in the code and in tests/test_zones.py, to test the zone entities in a running Home Assistant."
+}

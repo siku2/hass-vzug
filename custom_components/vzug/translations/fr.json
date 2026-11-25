@@ -4,7 +4,8 @@
             "already_configured": "Le périphérique est déjà configuré",
             "false_discovery": "Découverte fausse positive",
             "discovery_finished": "{count} appareil(s) découvert(s)",
-            "reauth_successful": "La ré-authentification a réussi"
+            "reauth_successful": "La ré-authentification a réussi",
+            "wrong_device": "Ces identifiants appartiennent à un autre appareil. Utilise ceux de l'appareil configuré."
         },
         "error": {
             "auth_failed": "Échec de l'authentification",
@@ -45,6 +46,18 @@
                 "data": {
                     "ssid": "Nom du Wi-Fi (SSID)",
                     "password": "Mot de passe Wi-Fi"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Nouvelle authentification",
+                "description": "L'appareil {name} n'accepte plus les identifiants enregistrés. Saisis le nom d'utilisateur et le mot de passe définis sur l'appareil.",
+                "data": {
+                    "username": "Nom d'utilisateur",
+                    "password": "Mot de passe"
+                },
+                "data_description": {
+                    "username": "Le nom d'utilisateur de l'interface web de l'appareil.",
+                    "password": "Le mot de passe de l'interface web de l'appareil."
                 }
             }
         },

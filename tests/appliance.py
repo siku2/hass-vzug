@@ -30,6 +30,9 @@ _AI_FILES = {
     "getMacAddress": "ai_get_macaddress.txt",
     "getModelDescription": "ai_get_modeldescription.txt",
     "getUpdateStatus": "ai_get_updatestatus.json",
+    # not recorded for every device, the others answer them like unknown commands
+    "getAPIVersion": "ai_get_apiversion.json",
+    "getCloudStatus": "ai_get_cloudstatus.json",
 }
 _HH_FILES = {
     "getAllProgramIds": "hh_get_allprogramids.json",
@@ -38,7 +41,11 @@ _HH_FILES = {
     "getEcoInfo": "hh_get_ecoinfo.json",
     "getFWVersion": "hh_get_fwversion.json",
     "getZHMode": "hh_get_zhmode.json",
+    "getAPIVersion": "hh_get_apiversion.json",
+    "getDeviceStatus": "hh_get_devicestatus.json",
 }
+# 'getcmd<name>' / 'setcmd<name>' settings outside the category tree, ex. HolidayMode
+_CMD_FILE = "hh_get_cmd.json"
 # commands that change something, the appliance answers them with an empty 200
 _WRITE_PREFIXES = ("set", "do", "check")
 
@@ -66,6 +73,11 @@ class FakeAppliance:
     calls: list[Call] = field(default_factory=list)
     overrides: dict[tuple[str, str], Override] = field(default_factory=dict)
     reachable: bool = True
+    cmd_values: dict[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if (self.responses / _CMD_FILE).exists():
+            self.cmd_values = self.response_json(_CMD_FILE)
 
     @property
     def base_url(self) -> str:
@@ -156,6 +168,11 @@ class FakeAppliance:
             return httpx.Response(400, json={"error": ["code", "400.03"]})
         if filename := _HH_FILES.get(command):
             return self._file(filename)
+        if command.startswith("getcmd") and command[6:] in self.cmd_values:
+            return httpx.Response(200, text=self.cmd_values[command[6:]])
+        if command.startswith("setcmd") and command[6:] in self.cmd_values:
+            self.cmd_values[command[6:]] = value or ""
+            return httpx.Response(200, text="")
         if command.startswith(_WRITE_PREFIXES):
             return httpx.Response(200, text="")
         return self._file("hh_get_invalid_command.txt", status=404)
@@ -163,7 +180,8 @@ class FakeAppliance:
     def _file(self, filename: str, *, status: int = 200) -> httpx.Response:
         path = self.responses / filename
         if not path.exists():
-            return httpx.Response(400, json={"error": '{ "code":400.03}'})
+            prefix = filename.split("_", 1)[0]
+            return self._file(f"{prefix}_get_invalid_command.txt", status=404)
         content = path.read_text().strip()
         if '"code": 404' in content or '"code":404' in content:
             status = 404

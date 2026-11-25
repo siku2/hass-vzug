@@ -9,12 +9,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .entity import UserConfigEntity, vzug_action, VZugEntity, ZoneEntity
 from .helpers import snake, zone_translation
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
 # what the V-ZUG app offers first when a timed function is switched on
 DEFAULT_BOOST_HOURS = 12.0
+
+
+# the appliance handles one request at a time, so do the actions
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -101,6 +105,7 @@ class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
             return self._field("set")
         return wanted / 60 if self.vzug_key == "duration" else wanted
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.program_settings[self.vzug_key] = (
             value * 60 if self.vzug_key == "duration" else value
@@ -140,6 +145,7 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
     def native_value(self) -> float:
         return self.shared.start_delay_hours
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.start_delay_hours = value
         self.async_write_ha_state()
@@ -197,6 +203,7 @@ class Illumination(ZoneEntity, NumberEntity):
         except ValueError:
             return None
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         await self.shared.client.set_cmd_value(self.vzug_key, str(int(value)))
         await self.coordinator.async_request_refresh()
@@ -244,6 +251,7 @@ class WarmingDrawerDuration(ZoneEntity, NumberEntity):
     def native_value(self) -> float:
         return self.shared.warming_drawer_minutes[self.vzug_zone]
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.warming_drawer_minutes[self.vzug_zone] = value
         self.async_write_ha_state()
@@ -279,6 +287,7 @@ class ZoneTemperature(ZoneEntity, NumberEntity):
         value = zones.value_field(self.zone_data, self.vzug_key, "set")
         return float(value) if isinstance(value, (int, float)) else None
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         await self._write_zone(zones.format_value(value))
 
@@ -324,6 +333,7 @@ class BoostDuration(ZoneEntity, RestoreNumber):
         if (last := await self.async_get_last_number_data()) and last.native_value:
             self.shared.boost_hours[self.vzug_key] = last.native_value
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.boost_hours[self.vzug_key] = value
         self.async_write_ha_state()
@@ -357,6 +367,7 @@ class Timer(ZoneEntity, NumberEntity):
         # round up, so a timer about to ring still shows 1 and not 0
         return float(-(-left // 60)) if left else 0.0
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         if any(zones.is_cooling_zone(z) for z in self.coordinator.data.zones):
             # refrigerators: {"zone":"countdown1","duration":"600"}, "0" stops it
@@ -408,6 +419,7 @@ class UserConfig(NumberEntity, UserConfigEntity):
         except ValueError:
             return None
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         await self.shared.client.set_command(self.vzug_command_key, str(int(value)))
         await self.coordinator.async_request_refresh()

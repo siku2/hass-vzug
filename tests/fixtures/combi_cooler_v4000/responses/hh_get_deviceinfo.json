@@ -1,0 +1,10 @@
+{
+  "model": "KS6TI",
+  "description": "CombiCooler V4000",
+  "type": "KS",
+  "name": "Kühlschrank",
+  "serialNumber": "51071 000123",
+  "articleNumber": "5100000123",
+  "apiVersion": "1.12.0",
+  "zhMode": 2
+}

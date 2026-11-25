@@ -300,6 +300,18 @@ class VZugApi:
         self.hh_api_version: tuple[int, ...] | None = None
         # 'getDeviceInfo' type, learned in 'aggregate_meta'
         self.machine_type = ""
+        # how many requests got an answer (whatever the status), see 'responses'
+        self._responses = 0
+
+    @property
+    def responses(self) -> int:
+        """How many requests the appliance answered so far, errors included.
+
+        Most reads fall back to a default when they fail, so a poll of an
+        appliance that is gone looks like a poll of an idle one. Comparing this
+        before and after a poll tells the two apart.
+        """
+        return self._responses
 
     def hh_supports(self, version: tuple[int, ...]) -> bool:
         """Whether the hh API is at least 'version' (or unknown)."""
@@ -330,7 +342,7 @@ class VZugApi:
         # happen. It costs nothing since we only allow one connection anyway.
         async with self._request_lock:
             try:
-                return await self._client.get(url)
+                response = await self._client.get(url)
             except httpx.PoolTimeout:
                 # nobody else is in the pool, so it is broken. Start over with a
                 # fresh client instead of failing until Home Assistant restarts.
@@ -338,6 +350,8 @@ class VZugApi:
                 old_client, self._client = self._client, self._create_client()
                 await old_client.aclose()
                 raise
+            self._responses += 1
+            return response
 
     async def _command(
         self,

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "CATEGORY_0",
+    "category": {
+      "description": "Einstellungen"
+    },
+    "commands": [
+      "DOOR_ALARM",
+      "BRIGHTNESS",
+      "LANGUAGE",
+      "RESET_FILTER",
+      "FILTER_STATE"
+    ]
+  }
+]

@@ -1,6 +1,5 @@
 from typing import Any
 
-import httpx
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -8,8 +7,18 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, VZugBaseEntity, VZugEntity, ZoneEntity
+from .entity import (
+    UserConfigEntity,
+    vzug_action,
+    VZugBaseEntity,
+    VZugEntity,
+    ZoneEntity,
+)
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
+
+
+# the appliance handles one request at a time, so do the actions
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -59,6 +68,7 @@ class StopProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         assert shared.program_coord is not None
         super().__init__(shared, shared.program_coord, unique_id_suffix="stop-program")
 
+    @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.stop_program()
         await self.coordinator.async_request_refresh()
@@ -76,6 +86,7 @@ class StopZone(ZoneEntity, ButtonEntity):
         else:
             self._attr_translation_key = "stop_program"
 
+    @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.stop_program(self.vzug_zone)
         await self.coordinator.async_request_refresh()
@@ -90,6 +101,7 @@ class StartWarmingDrawer(ZoneEntity, ButtonEntity):
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="start")
 
+    @vzug_action
     async def async_press(self) -> None:
         minutes = self.shared.warming_drawer_minutes.get(self.vzug_zone, 120)
         await self.shared.client.set_program_dto(
@@ -117,6 +129,7 @@ class SendProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         assert shared.program_coord is not None
         super().__init__(shared, shared.program_coord, unique_id_suffix="send-program")
 
+    @vzug_action
     async def async_press(self) -> None:
         # the selection might have been changed on the panel since the last poll
         await self.coordinator.async_refresh()
@@ -157,17 +170,14 @@ class StartProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         assert shared.program_coord is not None
         super().__init__(shared, shared.program_coord, unique_id_suffix="start-program")
 
+    @vzug_action
     async def async_press(self) -> None:
         dto: dict[str, Any] = {"status": "active"}
         if zone := getattr(self.shared, "program_zone", None):
             dto["zone"] = zone
-        try:
-            await self.shared.client.set_program_dto(dto)
-        except httpx.HTTPStatusError as err:
-            raise HomeAssistantError(
-                f"The appliance refused to start: {err.response.status_code} "
-                f"{err.response.text.strip()}"
-            ) from err
+        # an appliance that won't start remotely answers with an error, which
+        # 'vzug_action' passes on to the user
+        await self.shared.client.set_program_dto(dto)
         await self.coordinator.async_request_refresh()
 
 
@@ -188,6 +198,7 @@ class RefreshNow(VZugBaseEntity, ButtonEntity):
     def __init__(self, shared: Shared) -> None:
         super().__init__(shared, unique_id_suffix="refresh-now")
 
+    @vzug_action
     async def async_press(self) -> None:
         await self.shared.async_probe_device()
 
@@ -200,11 +211,13 @@ class CheckUpdate(VZugBaseEntity, ButtonEntity):
     def __init__(self, shared: Shared) -> None:
         super().__init__(shared, unique_id_suffix="check-update")
 
+    @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.check_for_updates()
         await self.shared.update_coord.async_request_refresh()
 
 
 class UserConfig(ButtonEntity, UserConfigEntity):
+    @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.do_command_action(self.vzug_command_key)
