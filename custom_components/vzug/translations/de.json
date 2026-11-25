@@ -2,9 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "Gerät ist bereits konfiguriert",
-      "update_success": "Update Erfolgreich",
       "false_discovery": "Falsch positive Entdeckung",
-      "discovery_finished": "{count} Gerät(e) entdeckt"
+      "discovery_finished": "{count} Gerät(e) entdeckt",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
     },
     "error": {
       "auth_failed": "Authentifizierung fehlgeschlagen",

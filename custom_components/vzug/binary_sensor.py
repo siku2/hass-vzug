@@ -2,24 +2,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
-from .const import DOMAIN
-from .helpers import ZoneEntity, snake, zone_translation
-from .shared import ProgramCoordinator, Shared, StateCoordinator
+from .entity import VZugEntity, ZoneEntity
+from .helpers import snake, zone_translation
+from .coordinator import ProgramCoordinator, Shared, StateCoordinator, VZugConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
     entities: list[BinarySensorEntity] = []
     if shared.client.hh_supports((1, 5, 0)):
         entities.append(Errors(shared))
@@ -90,18 +88,17 @@ class TimerRinging(ZoneEntity, BinarySensorEntity):
         return zone.get("status") == "idle" and left == 0
 
 
-class Errors(CoordinatorEntity[StateCoordinator], BinarySensorEntity):
+class Errors(VZugEntity[StateCoordinator], BinarySensorEntity):
     """On while the appliance shows an error, the codes are attributes."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "errors"
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, shared: Shared) -> None:
-        super().__init__(shared.state_coord)
-        self._attr_unique_id = f"{shared.unique_id_prefix}-binary_sensor-errors"
-        self._attr_device_info = shared.device_info
+        super().__init__(
+            shared, shared.state_coord, unique_id_suffix="binary_sensor-errors"
+        )
 
     @property
     def is_on(self) -> bool:
@@ -150,17 +147,17 @@ class PanDetected(ZoneEntity, BinarySensorEntity):
         }
 
 
-class ProgramFlag(CoordinatorEntity[ProgramCoordinator], BinarySensorEntity):
+class ProgramFlag(VZugEntity[ProgramCoordinator], BinarySensorEntity):
     """An option of the selected program, ex. a dishwasher's EnergySaving."""
 
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, shared: Shared, *, key: str) -> None:
-        super().__init__(shared.program_coord)
+        assert shared.program_coord is not None
+        super().__init__(
+            shared, shared.program_coord, unique_id_suffix=f"program-flag-{key}"
+        )
         self.vzug_key = key
-        self._attr_unique_id = f"{shared.unique_id_prefix}-program-flag-{key}"
-        self._attr_device_info = shared.device_info
         self._attr_translation_key = snake(key)
 
     @property

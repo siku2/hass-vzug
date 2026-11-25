@@ -8,9 +8,11 @@ rules:
     status: exempt
     comment: The integration registers no actions.
   appropriate-polling: done
-  brands: todo
-  common-modules: todo
-  config-flow-test-coverage: todo
+  brands:
+    status: done
+    comment: https://github.com/home-assistant/brands/tree/master/custom_integrations/vzug
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -18,16 +20,16 @@ rules:
     comment: The integration registers no actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Entities only listen to their coordinators, through CoordinatorEntity.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: todo
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo

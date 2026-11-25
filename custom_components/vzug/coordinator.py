@@ -16,6 +16,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type VZugConfigEntry = ConfigEntry[Shared]
+"""A config entry of this integration, its runtime_data is the appliance."""
+
 StateCoordinator = DataUpdateCoordinator[api.AggState]
 # 'getDeviceStatus' wakes the appliance and it stays awake for ~20s afterwards, so
 # polling it every 30s keeps the appliance awake around the clock. While a program
@@ -67,6 +70,8 @@ STATE_MAX_STALE_UPDATES = 3
 
 
 class Shared:
+    """Everything about one appliance: its API client and its coordinators."""
+
     hass: HomeAssistant
     client: api.VZugApi
 
@@ -83,7 +88,7 @@ class Shared:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: VZugConfigEntry,
         base_url: yarl.URL,
         credentials: api.Credentials | None,
     ) -> None:
