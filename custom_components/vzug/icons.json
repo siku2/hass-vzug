@@ -1,5 +1,44 @@
 {
     "entity": {
+        "binary_sensor": {
+            "pan_detected": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "probe_inserted": {
+                "default": "mdi:thermometer-probe"
+            },
+            "timer_ringing": {
+                "default": "mdi:bell-ring"
+            }
+        },
+        "button": {
+            "send_program": {
+                "default": "mdi:send"
+            },
+            "start_program": {
+                "default": "mdi:play"
+            },
+            "start_warming_drawer": {
+                "default": "mdi:play"
+            },
+            "stop_program": {
+                "default": "mdi:stop"
+            },
+            "stop_warming_drawer": {
+                "default": "mdi:stop"
+            }
+        },
+        "number": {
+            "illumination": {
+                "default": "mdi:lightbulb-on-outline"
+            },
+            "start_delay": {
+                "default": "mdi:clock-start"
+            },
+            "timer": {
+                "default": "mdi:timer-outline"
+            }
+        },
         "select": {
             "program_select": {
                 "default": "mdi:dishwasher",
@@ -13,6 +52,102 @@
                     "hygiene": "mdi:shield-check-outline",
                     "pre_rinsing": "mdi:water-sync"
                 }
+            },
+            "temperature_unit": {
+                "default": "mdi:thermometer"
+            }
+        },
+        "sensor": {
+            "cloud_status": {
+                "default": "mdi:cloud-outline",
+                "state": {
+                    "connected": "mdi:cloud-check-outline",
+                    "disabled": "mdi:cloud-off-outline"
+                }
+            },
+            "door_openings_sevendayaverage": {
+                "default": "mdi:door-open"
+            },
+            "door_openings_thirtydayaverage": {
+                "default": "mdi:door-open"
+            },
+            "door_openings_today": {
+                "default": "mdi:door-open"
+            },
+            "energy_average": {
+                "default": "mdi:lightning-bolt"
+            },
+            "energy_last_month": {
+                "default": "mdi:lightning-bolt"
+            },
+            "energy_last_year": {
+                "default": "mdi:lightning-bolt"
+            },
+            "energy_program": {
+                "default": "mdi:lightning-bolt"
+            },
+            "energy_total": {
+                "default": "mdi:lightning-bolt"
+            },
+            "hob_level": {
+                "default": "mdi:stove"
+            },
+            "last_notification": {
+                "default": "mdi:bell"
+            },
+            "program_state": {
+                "default": "mdi:state-machine"
+            },
+            "time_left_party_cooling": {
+                "default": "mdi:timer-sand"
+            },
+            "time_left_super_cool": {
+                "default": "mdi:timer-sand"
+            },
+            "time_left_super_freeze": {
+                "default": "mdi:timer-sand"
+            },
+            "water_average": {
+                "default": "mdi:water"
+            },
+            "water_program": {
+                "default": "mdi:water"
+            },
+            "water_total": {
+                "default": "mdi:water"
+            },
+            "zh_mode": {
+                "default": "mdi:remote",
+                "state": {
+                    "off": "mdi:remote-off",
+                    "display": "mdi:eye-outline"
+                }
+            }
+        },
+        "switch": {
+            "holiday_mode": {
+                "default": "mdi:beach"
+            },
+            "mono_fridge_mode": {
+                "default": "mdi:fridge-outline"
+            },
+            "oven_light": {
+                "default": "mdi:lightbulb",
+                "state": {
+                    "off": "mdi:lightbulb-off"
+                }
+            },
+            "party_cooling": {
+                "default": "mdi:party-popper"
+            },
+            "silent_plus_mode": {
+                "default": "mdi:volume-off"
+            },
+            "super_cool": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "super_freeze": {
+                "default": "mdi:snowflake-alert"
             }
         }
     }

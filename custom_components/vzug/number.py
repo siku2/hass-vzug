@@ -9,7 +9,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, vzug_action, VZugEntity, ZoneEntity
+from .entity import (
+    user_config_entities,
+    UserConfigEntity,
+    vzug_action,
+    VZugEntity,
+    ZoneEntity,
+)
 from .helpers import snake, zone_translation
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
@@ -30,16 +36,14 @@ async def async_setup_entry(
 
     entities: list[NumberEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "range" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        user_config_entities(
+            shared,
+            async_add_entities,
+            lambda c: c.get("type") == "range" and c.get("alterable", True),
+            UserConfig,
+        )
+    )
 
     entities.extend(_zone_entities(shared))
     if shared.program_coord is not None and shared.program_zone is None:
@@ -121,7 +125,6 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
     """
 
     _attr_translation_key = "start_delay"
-    _attr_icon = "mdi:clock-start"
     _attr_device_class = NumberDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.HOURS
     _attr_native_min_value = 0.0
@@ -187,7 +190,6 @@ class Illumination(ZoneEntity, NumberEntity):
     """Interior light of a wine cabinet, 0 (off) to 5."""
 
     _attr_translation_key = "illumination"
-    _attr_icon = "mdi:lightbulb-on-outline"
     _attr_native_min_value = 0.0
     _attr_native_max_value = 5.0
     _attr_native_step = 1.0
@@ -351,7 +353,6 @@ class Timer(ZoneEntity, NumberEntity):
     _attr_native_min_value = 0.0
     _attr_native_step = 1.0
     _attr_mode = NumberMode.BOX
-    _attr_icon = "mdi:timer-outline"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key=zones.TIMER_KEY)

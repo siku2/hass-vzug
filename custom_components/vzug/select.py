@@ -5,7 +5,14 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, vzug_action, VZugEntity, ZoneEntity
+from .const import DOMAIN
+from .entity import (
+    user_config_entities,
+    UserConfigEntity,
+    vzug_action,
+    VZugEntity,
+    ZoneEntity,
+)
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
 
@@ -22,16 +29,14 @@ async def async_setup_entry(
 
     entities: list[SelectEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "selection" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        user_config_entities(
+            shared,
+            async_add_entities,
+            lambda c: c.get("type") == "selection" and c.get("alterable", True),
+            UserConfig,
+        )
+    )
 
     if shared.program_coord is not None:
         entities.append(ProgramSelect(shared))
@@ -88,7 +93,11 @@ class ProgramSelect(VZugEntity[ProgramCoordinator], SelectEntity):
     async def async_select_option(self, option: str) -> None:
         program_id = zones.program_id_by_key(self.coordinator.data.names, option)
         if program_id is None:
-            raise ServiceValidationError(f"Unknown program {option!r}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_program",
+                translation_placeholders={"option": option},
+            )
         # ovens pick the program for their cooking chamber
         if zone := getattr(self.shared, "program_zone", None):
             await self.shared.client.set_program(program_id, {"zone": zone})
@@ -103,7 +112,6 @@ class TemperatureUnit(ZoneEntity, SelectEntity):
     _attr_translation_key = "temperature_unit"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = ["°C", "°F"]
-    _attr_icon = "mdi:thermometer"
 
     def __init__(self, shared: Shared) -> None:
         super().__init__(shared, zone="", key=zones.UNIT_MODE)

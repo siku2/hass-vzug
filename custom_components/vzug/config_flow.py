@@ -96,11 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                base_url = URL(user_input["host"])
-                if not base_url.is_absolute():
-                    base_url = URL(f"http://{base_url}")
-            except Exception:
+            if (base_url := _parse_host(user_input[CONF_HOST])) is None:
                 errors[CONF_HOST] = ERR_INVALID_HOST
             else:
                 self._base_url = base_url
@@ -116,6 +112,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Change the address of an appliance that is set up already."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if (base_url := _parse_host(user_input[CONF_HOST])) is None:
+                errors[CONF_HOST] = ERR_INVALID_HOST
+            else:
+                self._base_url = base_url
+                # the credentials stay, re-authentication changes those
+                self._username = entry.data.get(CONF_USERNAME)
+                self._password = entry.data.get(CONF_PASSWORD)
+                self._set_client()
+                assert self._client
+                try:
+                    meta = await self._client.aggregate_meta()
+                except api.AuthenticationFailed:
+                    errors[CONF_BASE] = ERR_AUTH_FAILED
+                except Exception:
+                    errors[CONF_BASE] = ERR_CANNOT_CONNECT
+                else:
+                    await self.async_set_unique_id(dr.format_mac(meta.mac_address))
+                    self._abort_if_unique_id_mismatch(reason=ABORT_WRONG_DEVICE)
+                    return self.async_update_reload_and_abort(
+                        entry, data_updates={CONF_BASE_URL: str(base_url)}
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_HOST): str}),
+                {CONF_HOST: user_input[CONF_HOST] if user_input else _host_of(entry)},
+            ),
+            description_placeholders={"name": entry.title},
             errors=errors,
         )
 
@@ -392,6 +427,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+def _parse_host(host: str) -> URL | None:
+    """'192.168.1.42', 'appliance.local' or a full URL; None if it isn't one."""
+    host = host.strip()
+    if "://" not in host:
+        host = f"http://{host}"
+    try:
+        base_url = URL(host)
+    except ValueError:
+        return None
+    if not base_url.host:
+        return None
+    return base_url
+
+
+def _host_of(entry: config_entries.ConfigEntry) -> str:
+    """The address to show for 'entry': the bare host, unless it needs more."""
+    base_url = URL(entry.data[CONF_BASE_URL])
+    if base_url.scheme == "http" and base_url.path in ("", "/") and base_url.host:
+        return str(base_url).removeprefix("http://").rstrip("/")
+    return str(base_url)
 
 
 def _iter_adapter_interfaces(adapters: list[Adapter]) -> Iterator[IPv4Interface]:

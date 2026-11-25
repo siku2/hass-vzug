@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import api, zones
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .entity import user_config_entities, UserConfigEntity, VZugEntity, ZoneEntity
 from .helpers import snake, zone_translation
 from .coordinator import (
     ProgramCoordinator,
@@ -33,7 +33,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "water.total",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.TOTAL,
         translation_key="water_total",
@@ -42,7 +41,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "water.program",
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="water_program",
@@ -51,7 +49,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "energy.total",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL,
         translation_key="energy_total",
@@ -60,7 +57,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "energy.program",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="energy_program",
@@ -69,7 +65,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "energy.lastMonth",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL,
         translation_key="energy_last_month",
@@ -78,7 +73,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         "energy.lastYear",
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.TOTAL,
         translation_key="energy_last_year",
@@ -89,7 +83,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # Therefore we do not set the device class here.
         "water.average",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:water",
         native_unit_of_measurement="L",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="water_average",
@@ -100,7 +93,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         # Therefore we do not set the device class here.
         "energy.average",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lightning-bolt",
         native_unit_of_measurement="kWh",
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="energy_average",
@@ -136,16 +128,14 @@ async def async_setup_entry(
             for kind in ProgramInfo.KINDS
         )
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "status":
-                entities.append(
-                    UserConfigSensor(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        user_config_entities(
+            shared,
+            async_add_entities,
+            lambda c: c.get("type") == "status",
+            UserConfigSensor,
+        )
+    )
 
     eco_info = shared.state_coord.data.eco_info
     for desc in _ECO_SENSORS:
@@ -210,7 +200,6 @@ class HobLevel(ZoneEntity, SensorEntity):
     """Power level of a hob zone, in steps of 0.5. Read only."""
 
     _attr_translation_key = "hob_level"
-    _attr_icon = "mdi:stove"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
@@ -275,7 +264,9 @@ class ProgramInfo(VZugEntity[Any], SensorEntity):
         if kind == "program_state":
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(zones.PROGRAM_STATES)
-            self._attr_icon = "mdi:state-machine"
+            if self._attr_translation_key is None:
+                # no translation to take the icon from, see icons.json
+                self._attr_icon = "mdi:state-machine"
         else:
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
@@ -310,7 +301,6 @@ class TimeLeft(ZoneEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_icon = "mdi:timer-sand"
 
     def __init__(self, shared: Shared, *, zone: str, key: str) -> None:
         super().__init__(shared, zone=zone, key=key)
@@ -366,6 +356,8 @@ class Program(StateBase):
 class ProgramEndRaw(StateBase):
     _attr_translation_key = "program_end_raw"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    # 'Program end' shows the same as a timestamp
+    _attr_entity_registry_enabled_default = False
 
     @property
     def vzug_program_end(self) -> api.DeviceStatusProgramEnd:
@@ -389,6 +381,7 @@ _RE_END_DURATON = re.compile(r"(?P<hours>\d+)[h](?P<minutes>\d+)", re.IGNORECASE
 class ProgramEnd(ProgramEndRaw):
     _attr_translation_key = "program_end"
     _attr_entity_category = None
+    _attr_entity_registry_enabled_default = True
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, shared: Shared) -> None:
@@ -474,7 +467,6 @@ class Eco(StateBase):
 
 class LastNotification(StateBase):
     _attr_translation_key = "last_notification"
-    _attr_icon = "mdi:bell"
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -494,6 +486,14 @@ class LastNotification(StateBase):
 
 
 class UserConfigSensor(SensorEntity, UserConfigEntity):
+    """A read-only value from the settings, ex. 'Consumption last programme'.
+
+    Disabled by default: most repeat a dedicated sensor (the eco values), as
+    text the appliance formats for its display.
+    """
+
+    _attr_entity_registry_enabled_default = False
+
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self.vzug_command.get("value")
@@ -506,7 +506,6 @@ class ZhMode(StateBase):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = ["off", "display", "operate"]
-    _attr_icon = "mdi:remote"
 
     @property
     def native_value(self) -> str | None:
@@ -519,7 +518,7 @@ class CloudStatus(SensorEntity, VZugEntity[UpdateCoordinator]):
 
     _attr_translation_key = "cloud_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:cloud-outline"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, shared: Shared) -> None:
         super().__init__(
@@ -544,7 +543,6 @@ class DoorOpenings(StateBase):
 
     PERIODS = ("today", "sevenDayAverage", "thirtyDayAverage")
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:door-open"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, shared: Shared, *, index: int, period: str) -> None:
@@ -556,6 +554,8 @@ class DoorOpenings(StateBase):
             f"{shared.unique_id_prefix}-sensor-door-openings-{index}-{period}"
         )
         self._attr_translation_placeholders = {"door": str(index + 1)}
+        # today's count is the interesting one, the averages are for statistics
+        self._attr_entity_registry_enabled_default = period == "today"
 
     @property
     def native_value(self) -> StateType:

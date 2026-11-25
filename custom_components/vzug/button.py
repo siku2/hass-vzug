@@ -3,12 +3,14 @@ from typing import Any
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
+from .const import DOMAIN
 from .entity import (
     UserConfigEntity,
+    user_config_entities,
     vzug_action,
     VZugBaseEntity,
     VZugEntity,
@@ -32,16 +34,14 @@ async def async_setup_entry(
     if shared.meta.supports_update_status():
         entities.append(CheckUpdate(shared))
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "action":
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        user_config_entities(
+            shared,
+            async_add_entities,
+            lambda c: c.get("type") == "action",
+            UserConfig,
+        )
+    )
 
     if shared.program_coord is not None:
         entities.append(SendProgram(shared))
@@ -62,7 +62,6 @@ class StopProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
     """'Stop' in the V-ZUG app: end the running or waiting program."""
 
     _attr_translation_key = "stop_program"
-    _attr_icon = "mdi:stop"
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
@@ -76,8 +75,6 @@ class StopProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
 
 class StopZone(ZoneEntity, ButtonEntity):
     """Stop the program of one zone (oven, warming drawer)."""
-
-    _attr_icon = "mdi:stop"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="stop")
@@ -96,7 +93,6 @@ class StartWarmingDrawer(ZoneEntity, ButtonEntity):
     """Select the warming drawer for the set duration, as the V-ZUG app does."""
 
     _attr_translation_key = "start_warming_drawer"
-    _attr_icon = "mdi:play"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="start")
@@ -123,7 +119,6 @@ class SendProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
     """
 
     _attr_translation_key = "send_program"
-    _attr_icon = "mdi:send"
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
@@ -135,7 +130,9 @@ class SendProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         await self.coordinator.async_refresh()
         current = self.coordinator.data.current
         if current is None or not isinstance(current.get("id"), int):
-            raise HomeAssistantError("Select a program first")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="select_program_first"
+            )
         options: dict[str, Any] = dict(zones.program_options(current))
         delay = zones.start_delay_seconds(current, self.shared.start_delay_hours)
         if delay:
@@ -143,7 +140,9 @@ class SendProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         if zone := getattr(self.shared, "program_zone", None):
             # like the V-ZUG app, an oven doesn't take a new program while one runs
             if current.get("status") in ("active", "timed"):
-                raise HomeAssistantError("Stop the running program first")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="stop_program_first"
+                )
             options["zone"] = zone
             options.update(
                 zones.program_settings(current, self.shared.program_settings)
@@ -163,7 +162,6 @@ class StartProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
     """
 
     _attr_translation_key = "start_program"
-    _attr_icon = "mdi:play"
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, shared: Shared) -> None:
@@ -218,6 +216,14 @@ class CheckUpdate(VZugBaseEntity, ButtonEntity):
 
 
 class UserConfig(ButtonEntity, UserConfigEntity):
+    """An action from the settings, ex. resetting the consumption statistics.
+
+    Disabled by default: these change the appliance for good with a single
+    press, nobody should find one on a dashboard by accident.
+    """
+
+    _attr_entity_registry_enabled_default = False
+
     @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.do_command_action(self.vzug_command_key)

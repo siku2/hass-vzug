@@ -6,8 +6,10 @@ from typing import Any, Concatenate
 
 import httpx
 from homeassistant.const import EntityCategory
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -15,6 +17,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import api, zones
+from .const import DOMAIN
 from .coordinator import ConfigCoordinator, Shared, ZoneCoordinator
 from .helpers import name_from_command_key
 
@@ -38,16 +41,22 @@ def vzug_action[EntityT: "VZugBaseEntity", **P, R](
         except api.AuthenticationFailed as err:
             self.shared.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "The appliance refused the credentials, please re-authenticate"
+                translation_domain=DOMAIN, translation_key="auth_failed"
             ) from err
         except httpx.HTTPStatusError as err:
             raise HomeAssistantError(
-                f"The appliance refused the request: {err.response.status_code} "
-                f"{err.response.text.strip()}"
+                translation_domain=DOMAIN,
+                translation_key="request_refused",
+                translation_placeholders={
+                    "status": str(err.response.status_code),
+                    "response": err.response.text.strip(),
+                },
             ) from err
         except (httpx.HTTPError, ValueError, AssertionError) as err:
             raise HomeAssistantError(
-                f"Error communicating with the appliance: {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": repr(err)},
             ) from err
 
     return wrapper
@@ -121,6 +130,39 @@ class UserConfigEntity(VZugEntity[ConfigCoordinator]):
             if self.vzug_command.get("alterable", False)
             else EntityCategory.DIAGNOSTIC
         )
+
+
+def user_config_entities[EntityT: UserConfigEntity](
+    shared: Shared,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    wanted: Callable[[api.Command], bool],
+    factory: Callable[..., EntityT],
+) -> list[EntityT]:
+    """Entities for the settings in the category tree that 'wanted' picks.
+
+    Returns those the appliance has now, and adds the ones that show up later
+    (ex. after a firmware update, or once a busy appliance lists them all).
+    """
+    known: set[tuple[str, str]] = set()
+
+    def collect() -> list[EntityT]:
+        new: list[EntityT] = []
+        for category in (shared.config_coord.data or {}).values():
+            for command in category.commands.values():
+                key = (category.key, command.get("command", ""))
+                if key in known or not wanted(command):
+                    continue
+                known.add(key)
+                new.append(factory(shared, category_key=key[0], command_key=key[1]))
+        return new
+
+    @callback
+    def add_new() -> None:
+        if new := collect():
+            async_add_entities(new)
+
+    shared.config_entry.async_on_unload(shared.config_coord.async_add_listener(add_new))
+    return collect()
 
 
 class ZoneEntity(VZugEntity[ZoneCoordinator]):

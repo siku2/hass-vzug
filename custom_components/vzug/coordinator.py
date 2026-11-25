@@ -169,7 +169,12 @@ class Shared:
         except Exception as exc:
             # HA only logs the message, not the chained exception
             raise ConfigEntryNotReady(
-                f"unable to reach the appliance at {self.client.base_url}: {exc!r}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_reach",
+                translation_placeholders={
+                    "url": str(self.client.base_url),
+                    "error": repr(exc),
+                },
             ) from exc
 
         await self.state_coord.async_config_entry_first_refresh()
@@ -181,7 +186,11 @@ class Shared:
             await self._post_first_refresh()
         except Exception as exc:
             _LOGGER.exception("init failed")
-            raise ConfigEntryNotReady() from exc
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_failed",
+                translation_placeholders={"error": repr(exc)},
+            ) from exc
 
     async def _setup_zones(self) -> None:
         """Find out whether this appliance has zones, and which modes it knows.
@@ -271,7 +280,11 @@ class Shared:
             raise
         except Exception as exc:
             if previous is None:
-                raise UpdateFailed(f"program update failed: {exc!r}") from exc
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"data": "program", "error": repr(exc)},
+                ) from exc
             _LOGGER.debug("program update failed, keeping previous data: %r", exc)
             return previous
         return zones.ProgramState(
@@ -290,12 +303,18 @@ class Shared:
                 }
             state = zones.ZoneState(zones=zones.index_zones(raw_programs), modes=modes)
             if not state.zones:
-                raise UpdateFailed("'getProgram' returned no zones")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="no_zones"
+                )
         except ConfigEntryAuthFailed:
             raise
         except Exception as exc:
             if previous is None or self._zone_stale_count >= ZONE_MAX_STALE_UPDATES:
-                raise UpdateFailed(f"zone update failed: {exc!r}") from exc
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"data": "zone", "error": repr(exc)},
+                ) from exc
             self._zone_stale_count += 1
             _LOGGER.debug(
                 "zone update failed (%s/%s), keeping previous data: %r",
@@ -356,7 +375,9 @@ class Shared:
             # every request failed without an answer, so the values are only the
             # defaults: the appliance is switched off or off the network
             raise UpdateFailed(
-                f"no answer from the appliance at {self.client.base_url}"
+                translation_domain=DOMAIN,
+                translation_key="no_answer",
+                translation_placeholders={"url": str(self.client.base_url)},
             )
 
         if not probe:
@@ -556,7 +577,9 @@ class Shared:
             if not config_tree and previous:
                 # the appliance answers '200 []' to 'getCategories' when it's busy.
                 # An empty result is only believable if the previous one was empty too.
-                raise UpdateFailed("getCategories returned empty")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN, translation_key="no_settings"
+                )
         except ConfigEntryAuthFailed:
             raise
         except Exception as exc:
@@ -581,5 +604,7 @@ class Shared:
 async def detect_auth_failed():
     try:
         yield
-    except api.AuthenticationFailed:
-        raise ConfigEntryAuthFailed
+    except api.AuthenticationFailed as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="auth_failed"
+        ) from err

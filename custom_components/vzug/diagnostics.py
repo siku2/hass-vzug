@@ -1,4 +1,7 @@
+"""Diagnostics of an appliance, with a sample of everything its API answers."""
+
 import asyncio
+import dataclasses
 from collections.abc import Awaitable
 from typing import Any
 
@@ -6,9 +9,28 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_BASE_URL
 from .coordinator import Shared, VZugConfigEntry
 
-TO_REDACT: set[str] = {CONF_PASSWORD, CONF_USERNAME}
+# everything that identifies the appliance or where it is
+TO_REDACT: set[str] = {
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_BASE_URL,
+    "unique_id",
+    "title",
+    # the appliance's answers
+    "mac_address",
+    "deviceUuid",
+    "Serial",
+    "serialNumber",
+    "serial_number",
+    "articleNumber",
+    "DeviceName",
+    "device_name",
+    "fn",
+    "an",
+}
 
 
 def _serialize_exception(exc: Exception) -> dict[str, Any]:
@@ -24,7 +46,7 @@ async def gather_full_api_sample(shared: Shared) -> dict[str, Any]:
 
     async def do_one(key: str, pending: Awaitable[Any]) -> None:
         try:
-            data[key] = await pending
+            data[key] = _jsonable(await pending)
         except Exception as exc:
             data[key] = _serialize_exception(exc)
 
@@ -54,6 +76,52 @@ async def gather_full_api_sample(shared: Shared) -> dict[str, Any]:
     return data
 
 
+def _jsonable(value: Any) -> Any:
+    """Dataclasses (the aggregated config tree) as plain data."""
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return dataclasses.asdict(value)
+    if isinstance(value, dict):
+        return {key: _jsonable(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_jsonable(item) for item in value]
+    return value
+
+
+def _coordinators(shared: Shared) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for coordinator in (
+        shared.state_coord,
+        shared.update_coord,
+        shared.config_coord,
+        shared.zone_coord,
+        shared.program_coord,
+    ):
+        if coordinator is None:
+            continue
+        interval = coordinator.update_interval
+        result[coordinator.name] = {
+            "last_update_success": coordinator.last_update_success,
+            "update_interval": interval.total_seconds() if interval else None,
+            "last_exception": repr(coordinator.last_exception)
+            if coordinator.last_exception
+            else None,
+        }
+    return result
+
+
+def _scrub(data: Any, secrets: list[str]) -> Any:
+    """Replace the appliance's address (in error messages, URLs) everywhere."""
+    if isinstance(data, str):
+        for secret in secrets:
+            data = data.replace(secret, "**REDACTED**")
+        return data
+    if isinstance(data, dict):
+        return {key: _scrub(value, secrets) for key, value in data.items()}
+    if isinstance(data, (list, tuple)):
+        return [_scrub(value, secrets) for value in data]
+    return data
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: VZugConfigEntry
 ) -> dict[str, Any]:
@@ -61,7 +129,19 @@ async def async_get_config_entry_diagnostics(
 
     api_sample = await gather_full_api_sample(shared)
 
-    return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
+    data = {
+        "entry": entry.as_dict(),
+        "meta": dataclasses.asdict(shared.meta),
+        "coordinators": _coordinators(shared),
         "api_sample": api_sample,
     }
+    secrets = [
+        secret
+        for secret in (
+            shared.client.base_url.host,
+            shared.meta.mac_address,
+            shared.meta.serial_number,
+        )
+        if secret
+    ]
+    return async_redact_data(_scrub(data, secrets), TO_REDACT)

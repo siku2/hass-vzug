@@ -5,19 +5,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, vzug_action, ZoneEntity
+from .entity import user_config_entities, UserConfigEntity, vzug_action, ZoneEntity
 from .helpers import snake
 from .coordinator import Shared, VZugConfigEntry
-
-_ICONS = {
-    "superCool": "mdi:snowflake-thermometer",
-    "superFreeze": "mdi:snowflake-alert",
-    "partyCooling": "mdi:party-popper",
-    "HolidayMode": "mdi:beach",
-    "SilentPlusMode": "mdi:volume-off",
-    "MonoFridgeMode": "mdi:fridge-outline",
-}
-
 
 # the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
@@ -32,16 +22,14 @@ async def async_setup_entry(
 
     entities: list[SwitchEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "boolean" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        user_config_entities(
+            shared,
+            async_add_entities,
+            lambda c: c.get("type") == "boolean" and c.get("alterable", True),
+            UserConfig,
+        )
+    )
 
     entities.extend(_zone_entities(shared))
     async_add_entities(entities)
@@ -74,7 +62,6 @@ class Light(ZoneEntity, SwitchEntity):
     """The oven light, 'light' in 'setProgram' with real booleans."""
 
     _attr_translation_key = "oven_light"
-    _attr_icon = "mdi:lightbulb"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="light")
@@ -106,7 +93,6 @@ class TimedFunction(ZoneEntity, SwitchEntity):
     def __init__(self, shared: Shared, *, zone: str, key: str) -> None:
         super().__init__(shared, zone=zone, key=key)
         self._attr_translation_key = snake(key)
-        self._attr_icon = _ICONS.get(key)
 
     @property
     def is_on(self) -> bool:
@@ -134,7 +120,6 @@ class Mode(ZoneEntity, SwitchEntity):
     def __init__(self, shared: Shared, *, mode: str) -> None:
         super().__init__(shared, zone="", key=mode)
         self._attr_translation_key = snake(mode)
-        self._attr_icon = _ICONS.get(mode)
 
     @property
     def is_on(self) -> bool | None:
