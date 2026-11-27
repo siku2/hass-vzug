@@ -63,7 +63,6 @@ People *love* thorough bug reports. I'm not even kidding.
   
 - Tests
   - Run the tests with `uv run pytest`.
-  - The tests run a real Home Assistant against simulated appliances, using [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component). `tests/appliance.py` answers the requests from the recorded responses in `tests/fixtures/<device>/responses`. `tests/test_init.py` sets up every device there.
   - The tests in `tests/integration` need the emulators running. Run them with `uv run pytest tests/integration`.
   - For a new device, collect its responses, add an `expected.py` next to them and get the tests green.
   
