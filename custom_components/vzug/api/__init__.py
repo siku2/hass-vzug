@@ -473,7 +473,7 @@ class VZugApi:
             attempt_idx += 1
 
         if value_on_err:
-            _LOGGER.exception("command error, using default", exc_info=last_exc)
+            _LOGGER.debug("%s failed, using default: %r", command, last_exc)
             return value_on_err()
 
         raise last_exc
