@@ -563,7 +563,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return entry[self.vzug_period]["amount"]
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
     @property
@@ -571,7 +571,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return {"duration": entry[self.vzug_period]["duration"]}
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
 
