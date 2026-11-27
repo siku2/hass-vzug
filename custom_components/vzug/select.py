@@ -1,22 +1,19 @@
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
-from .const import DOMAIN
-from .helpers import UserConfigEntity, ZoneEntity
-from .shared import ProgramCoordinator, Shared
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
 
     entities: list[SelectEntity] = []
 
@@ -42,21 +39,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ProgramSelect(CoordinatorEntity[ProgramCoordinator], SelectEntity):
+class ProgramSelect(VZugEntity[ProgramCoordinator], SelectEntity):
     """Pick a program, like tapping it in the V-ZUG app.
 
     This only selects the program on the appliance, it doesn't start it.
     """
 
-    _attr_has_entity_name = True
     _attr_translation_key = "program_select"
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
-        super().__init__(shared.program_coord)
-        self.shared = shared
-        self._attr_unique_id = f"{shared.unique_id_prefix}-program-select"
-        self._attr_device_info = shared.device_info
+        super().__init__(
+            shared, shared.program_coord, unique_id_suffix="program-select"
+        )
 
     @property
     def options(self) -> list[str]:

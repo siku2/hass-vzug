@@ -5,44 +5,35 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api
-from .const import DOMAIN
-from .shared import Shared, UpdateCoordinator
+from .coordinator import Shared, UpdateCoordinator, VZugConfigEntry
+from .entity import VZugEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
 
     if shared.meta.supports_update_status():
         async_add_entities([VZugUpdate(shared)])
 
 
-class VZugUpdate(UpdateEntity, CoordinatorEntity[UpdateCoordinator]):
+class VZugUpdate(UpdateEntity, VZugEntity[UpdateCoordinator]):
     _attr_translation_key = "update"
-    _attr_has_entity_name = True
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_auto_update = False
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    shared: Shared
-
     def __init__(self, shared: Shared) -> None:
-        super().__init__(shared.update_coord)
-        self.shared = shared
-
-        self._attr_unique_id = f"{shared.unique_id_prefix}-update"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, shared.update_coord, unique_id_suffix="update")
         self._last_installed: str | None = None
         self._last_latest: str | None = None
         self._attr_latest_version = self._latest_version()

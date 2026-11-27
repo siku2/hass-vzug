@@ -4,16 +4,14 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
-from .const import DOMAIN
-from .helpers import UserConfigEntity, ZoneEntity, snake, zone_translation
-from .shared import ProgramCoordinator, Shared
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .helpers import snake, zone_translation
 
 # what the V-ZUG app offers first when a timed function is switched on
 DEFAULT_BOOST_HOURS = 12.0
@@ -21,10 +19,10 @@ DEFAULT_BOOST_HOURS = 12.0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
 
     entities: list[NumberEntity] = []
 
@@ -49,22 +47,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ProgramSetting(CoordinatorEntity[ProgramCoordinator], NumberEntity):
+class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
     """Temperature or duration sent with the next oven program.
 
     Kept by Home Assistant until 'Send to appliance'. The limits are those of
     the selected program; a value outside them is not sent.
     """
 
-    _attr_has_entity_name = True
     _attr_mode = NumberMode.BOX
 
     def __init__(self, shared: Shared, *, key: str) -> None:
-        super().__init__(shared.program_coord)
-        self.shared = shared
+        assert shared.program_coord is not None
+        super().__init__(
+            shared, shared.program_coord, unique_id_suffix=f"program-setting-{key}"
+        )
         self.vzug_key = key
-        self._attr_unique_id = f"{shared.unique_id_prefix}-program-setting-{key}"
-        self._attr_device_info = shared.device_info
         if key == "temp":
             self._attr_translation_key = "program_temperature"
             self._attr_device_class = NumberDeviceClass.TEMPERATURE
@@ -111,14 +108,13 @@ class ProgramSetting(CoordinatorEntity[ProgramCoordinator], NumberEntity):
         self.async_write_ha_state()
 
 
-class StartDelay(CoordinatorEntity[ProgramCoordinator], NumberEntity):
+class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
     """Delayed start for the next 'Send to appliance', in hours. 0 starts right away.
 
     Kept by Home Assistant until the program is sent, then sent as 'starttime'
     and reset to 0. The countdown begins once the door is closed.
     """
 
-    _attr_has_entity_name = True
     _attr_translation_key = "start_delay"
     _attr_icon = "mdi:clock-start"
     _attr_device_class = NumberDeviceClass.DURATION
@@ -129,10 +125,7 @@ class StartDelay(CoordinatorEntity[ProgramCoordinator], NumberEntity):
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
-        super().__init__(shared.program_coord)
-        self.shared = shared
-        self._attr_unique_id = f"{shared.unique_id_prefix}-start-delay"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, shared.program_coord, unique_id_suffix="start-delay")
 
     @property
     def available(self) -> bool:

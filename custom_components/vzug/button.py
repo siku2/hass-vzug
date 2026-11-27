@@ -2,25 +2,22 @@ from typing import Any
 
 import httpx
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import zones
-from .const import DOMAIN
-from .helpers import UserConfigEntity, ZoneEntity
-from .shared import ProgramCoordinator, Shared
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
+from .entity import UserConfigEntity, VZugBaseEntity, VZugEntity, ZoneEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
 
     entities: list[ButtonEntity] = [RefreshNow(shared)]
     if shared.meta.supports_update_status():
@@ -52,19 +49,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class StopProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
+class StopProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
     """'Stop' in the V-ZUG app: end the running or waiting program."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "stop_program"
     _attr_icon = "mdi:stop"
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
-        super().__init__(shared.program_coord)
-        self.shared = shared
-        self._attr_unique_id = f"{shared.unique_id_prefix}-stop-program"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, shared.program_coord, unique_id_suffix="stop-program")
 
     async def async_press(self) -> None:
         await self.shared.client.stop_program()
@@ -110,23 +103,19 @@ class StartWarmingDrawer(ZoneEntity, ButtonEntity):
         await self.coordinator.async_request_refresh()
 
 
-class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
+class SendProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
     """'Send to appliance' in the V-ZUG app: transfer the selected program.
 
     The appliance starts it once its door is closed. There is no way to start a
     program remotely without that, the appliance insists on it.
     """
 
-    _attr_has_entity_name = True
     _attr_translation_key = "send_program"
     _attr_icon = "mdi:send"
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
-        super().__init__(shared.program_coord)
-        self.shared = shared
-        self._attr_unique_id = f"{shared.unique_id_prefix}-send-program"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, shared.program_coord, unique_id_suffix="send-program")
 
     async def async_press(self) -> None:
         # the selection might have been changed on the panel since the last poll
@@ -152,7 +141,7 @@ class SendProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
         await self.coordinator.async_request_refresh()
 
 
-class StartProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
+class StartProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
     """Experimental: start the selected program remotely.
 
     The V-ZUG app never does this, it leaves starting to someone at the
@@ -160,17 +149,13 @@ class StartProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
     only if you accept an oven or dishwasher starting without anyone there.
     """
 
-    _attr_has_entity_name = True
     _attr_translation_key = "start_program"
     _attr_icon = "mdi:play"
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, shared: Shared) -> None:
         assert shared.program_coord is not None
-        super().__init__(shared.program_coord)
-        self.shared = shared
-        self._attr_unique_id = f"{shared.unique_id_prefix}-start-program"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, shared.program_coord, unique_id_suffix="start-program")
 
     async def async_press(self) -> None:
         dto: dict[str, Any] = {"status": "active"}
@@ -186,7 +171,7 @@ class StartProgram(CoordinatorEntity[ProgramCoordinator], ButtonEntity):
         await self.coordinator.async_request_refresh()
 
 
-class RefreshNow(ButtonEntity):
+class RefreshNow(VZugBaseEntity, ButtonEntity):
     """Bring every value up to date right now, waking the appliance if necessary.
 
     While the appliance is in standby the state updates only talk to the AI module
@@ -198,30 +183,22 @@ class RefreshNow(ButtonEntity):
     """
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_has_entity_name = True
     _attr_translation_key = "refresh_now"
 
     def __init__(self, shared: Shared) -> None:
-        self.shared = shared
-
-        self._attr_unique_id = f"{shared.unique_id_prefix}-refresh-now"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, unique_id_suffix="refresh-now")
 
     async def async_press(self) -> None:
         await self.shared.async_probe_device()
 
 
-class CheckUpdate(ButtonEntity):
+class CheckUpdate(VZugBaseEntity, ButtonEntity):
     _attr_device_class = ButtonDeviceClass.UPDATE
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_has_entity_name = True
     _attr_translation_key = "check_update"
 
     def __init__(self, shared: Shared) -> None:
-        self.shared = shared
-
-        self._attr_unique_id = f"{shared.unique_id_prefix}-check-update"
-        self._attr_device_info = shared.device_info
+        super().__init__(shared, unique_id_suffix="check-update")
 
     async def async_press(self) -> None:
         await self.shared.client.check_for_updates()

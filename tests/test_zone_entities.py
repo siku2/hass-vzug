@@ -8,11 +8,11 @@ import pytest
 
 from custom_components.vzug import zones
 from custom_components.vzug.binary_sensor import Door
+from custom_components.vzug.coordinator import Shared
 from custom_components.vzug.number import BoostDuration, Timer, ZoneTemperature
 from custom_components.vzug.number import _zone_entities as number_entities
 from custom_components.vzug.sensor import ModeSensor, TimeLeft
 from custom_components.vzug.sensor import _zone_entities as sensor_entities
-from custom_components.vzug.shared import Shared
 from custom_components.vzug.switch import Mode, TimedFunction
 from custom_components.vzug.switch import _zone_entities as switch_entities
 
@@ -195,7 +195,7 @@ async def test_setup_zones_probes_the_modes(bare_shared, monkeypatch):
     bare_shared.client.get_cmd_value = get_cmd_value
     coordinator = MagicMock(async_config_entry_first_refresh=AsyncMock())
     monkeypatch.setattr(
-        "custom_components.vzug.shared.DataUpdateCoordinator",
+        "custom_components.vzug.coordinator.DataUpdateCoordinator",
         MagicMock(return_value=coordinator),
     )
     await bare_shared._setup_zones()
@@ -254,7 +254,7 @@ async def test_setup_programs_learns_the_names(bare_shared, monkeypatch):
     )
     coordinator = MagicMock(async_config_entry_first_refresh=AsyncMock(), data=None)
     monkeypatch.setattr(
-        "custom_components.vzug.shared.DataUpdateCoordinator",
+        "custom_components.vzug.coordinator.DataUpdateCoordinator",
         MagicMock(return_value=coordinator),
     )
 

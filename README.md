@@ -65,6 +65,14 @@ Like in the V-ZUG app, a selected program is only sent to the appliance; you sta
 
 [^2]: New and not yet confirmed on real appliances. Please report how it works with yours in an issue or a discussion.
 
+## Removal
+
+1. Go to **Settings > Devices & services** and select **V-ZUG**.
+2. Open the menu (⋮) of the appliance and select **Delete**. Repeat this for every appliance.
+3. To remove the integration itself, open HACS, select **V-ZUG**, choose **Remove**, and restart Home Assistant.
+
+Removing the integration doesn't change the appliance. An appliance you set up over Bluetooth stays on your Wi-Fi. To take it off the network, switch off V-ZUG-Home in its user settings.
+
 ## Contributions are welcome
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)

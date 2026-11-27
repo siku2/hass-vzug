@@ -10,17 +10,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import api, zones
-from .const import DOMAIN
-from .helpers import UserConfigEntity, ZoneEntity, snake, zone_translation
-from .shared import ProgramCoordinator, Shared, StateCoordinator, UpdateCoordinator
+from .coordinator import (
+    ProgramCoordinator,
+    Shared,
+    StateCoordinator,
+    UpdateCoordinator,
+    VZugConfigEntry,
+)
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .helpers import snake, zone_translation
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -106,10 +110,10 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VZugConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    shared: Shared = hass.data[DOMAIN][config_entry.entry_id]
+    shared = config_entry.runtime_data
 
     entities: list[SensorEntity] = [
         Program(shared),
@@ -242,25 +246,22 @@ class OvenValue(ZoneEntity, SensorEntity):
         return zones.value_field(self.zone_data, self.vzug_key, self.vzug_field)
 
 
-class ProgramInfo(CoordinatorEntity, SensorEntity):
+class ProgramInfo(VZugEntity[Any], SensorEntity):
     """State, end or start of the program in one zone, from 'getProgram'.
 
     For dishwashers and washers (no zones) this reads the program coordinator.
     """
 
     KINDS = ("program_state", "program_end_time", "program_start_time")
-    _attr_has_entity_name = True
 
     def __init__(
         self, shared: Shared, coordinator: Any, *, zone: str, kind: str
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(
+            shared, coordinator, unique_id_suffix=f"program-{zone or 'main'}-{kind}"
+        )
         self.vzug_zone = zone
         self.vzug_kind = kind
-        self._attr_unique_id = (
-            f"{shared.unique_id_prefix}-program-{zone or 'main'}-{kind}"
-        )
-        self._attr_device_info = shared.device_info
         if zone:
             self._attr_translation_key, name = zone_translation(kind, zone)
             if name:
@@ -335,19 +336,13 @@ class ModeSensor(ZoneEntity, SensorEntity):
         return None if on is None else ("on" if on else "off")
 
 
-class StateBase(SensorEntity, CoordinatorEntity[StateCoordinator]):
-    _attr_has_entity_name = True
-
-    shared: Shared
-
+class StateBase(SensorEntity, VZugEntity[StateCoordinator]):
     def __init__(self, shared: Shared) -> None:
-        super().__init__(shared.state_coord)
-        self.shared = shared
-
-        self._attr_unique_id = (
-            f"{shared.unique_id_prefix}-sensor-{self.translation_key}"
+        super().__init__(
+            shared,
+            shared.state_coord,
+            unique_id_suffix=f"sensor-{self.translation_key}",
         )
-        self._attr_device_info = shared.device_info
 
 
 class Program(StateBase):
@@ -514,18 +509,17 @@ class ZhMode(StateBase):
         return self._attr_options[mode] if mode in (0, 1, 2) else None
 
 
-class CloudStatus(SensorEntity, CoordinatorEntity[UpdateCoordinator]):
+class CloudStatus(SensorEntity, VZugEntity[UpdateCoordinator]):
     """Connection to the V-ZUG cloud, '/ai getCloudStatus'."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "cloud_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:cloud-outline"
 
     def __init__(self, shared: Shared) -> None:
-        super().__init__(shared.update_coord)
-        self._attr_unique_id = f"{shared.unique_id_prefix}-sensor-cloud_status"
-        self._attr_device_info = shared.device_info
+        super().__init__(
+            shared, shared.update_coord, unique_id_suffix="sensor-cloud_status"
+        )
 
     @property
     def native_value(self) -> str | None:
@@ -575,17 +569,17 @@ class DoorOpenings(StateBase):
             return None
 
 
-class ProgramValue(CoordinatorEntity[ProgramCoordinator], SensorEntity):
+class ProgramValue(VZugEntity[ProgramCoordinator], SensorEntity):
     """A reading of the selected program, ex. an OptiDos tray's fill level."""
 
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, shared: Shared, *, key: str) -> None:
-        super().__init__(shared.program_coord)
+        assert shared.program_coord is not None
+        super().__init__(
+            shared, shared.program_coord, unique_id_suffix=f"program-value-{key}"
+        )
         self.vzug_key = key
-        self._attr_unique_id = f"{shared.unique_id_prefix}-program-value-{key}"
-        self._attr_device_info = shared.device_info
         self._attr_translation_key = snake(key)
 
     @property

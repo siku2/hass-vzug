@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Le périphérique est déjà configuré",
-            "update_success": "Mise à jour réussie",
             "false_discovery": "Découverte fausse positive",
-            "discovery_finished": "{count} appareil(s) découvert(s)"
+            "discovery_finished": "{count} appareil(s) découvert(s)",
+            "reauth_successful": "La ré-authentification a réussi"
         },
         "error": {
             "auth_failed": "Échec de l'authentification",

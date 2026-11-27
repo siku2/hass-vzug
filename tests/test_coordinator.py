@@ -6,7 +6,7 @@ import pytest
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from custom_components.vzug.api import AggState, AggUpdateStatus, AuthenticationFailed
-from custom_components.vzug.shared import (
+from custom_components.vzug.coordinator import (
     STATE_COORD_ACTIVE_INTERVAL,
     STATE_COORD_IDLE_INTERVAL,
     STATE_COORD_IDLE_PROBE_INTERVAL,
