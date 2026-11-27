@@ -19,7 +19,6 @@ _ICONS = {
 }
 
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 

@@ -17,7 +17,6 @@ async def _tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta) -> N
     """Let 'delta' pass: for the clock the coordinators read, and for their timers."""
     freezer.tick(delta)
     async_fire_time_changed(hass)
-    # the coordinators refresh in background tasks
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
@@ -55,7 +54,6 @@ async def test_running_program(
     await _tick(hass, freezer, coordinator.STATE_COORD_ACTIVE_INTERVAL)
     assert hass.states.get("sensor.adora_sl_program_end").state == end
 
-    # it is done
     appliance.set_json("ai", "getDeviceStatus", status)
     await _tick(hass, freezer, coordinator.STATE_COORD_ACTIVE_INTERVAL)
     assert hass.states.get("sensor.adora_sl_program").state == "standby"

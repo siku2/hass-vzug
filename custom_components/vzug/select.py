@@ -8,7 +8,6 @@ from . import zones
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import UserConfigEntity, VZugEntity, ZoneEntity, vzug_action
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 

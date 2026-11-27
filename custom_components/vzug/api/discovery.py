@@ -72,7 +72,6 @@ async def create_discovery_stream(interface: IPv4Interface, timeout: float | Non
 
         yield _make_iter(protocol)
     finally:
-        # the stream can end before the timeout, ex. when the socket fails
         if timer is not None:
             timer.cancel()
         transport.abort()

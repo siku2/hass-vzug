@@ -16,7 +16,6 @@ from .entity import (
     vzug_action,
 )
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
@@ -174,8 +173,6 @@ class StartProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         dto: dict[str, Any] = {"status": "active"}
         if zone := getattr(self.shared, "program_zone", None):
             dto["zone"] = zone
-        # an appliance that won't start remotely answers with an error, which
-        # 'vzug_action' passes on to the user
         await self.shared.client.set_program_dto(dto)
         await self.coordinator.async_request_refresh()
 

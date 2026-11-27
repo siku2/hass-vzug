@@ -108,7 +108,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
 ]
 
 
-# read only, the coordinators do the polling
 PARALLEL_UPDATES = 0
 
 

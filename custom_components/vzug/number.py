@@ -17,7 +17,6 @@ from .helpers import snake, zone_translation
 DEFAULT_BOOST_HOURS = 12.0
 
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 

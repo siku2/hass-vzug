@@ -11,7 +11,6 @@ from .coordinator import ProgramCoordinator, Shared, StateCoordinator, VZugConfi
 from .entity import VZugEntity, ZoneEntity
 from .helpers import snake, zone_translation
 
-# read only, the coordinators do the polling
 PARALLEL_UPDATES = 0
 
 

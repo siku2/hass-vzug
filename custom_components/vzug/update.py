@@ -13,7 +13,6 @@ from . import api
 from .coordinator import Shared, UpdateCoordinator, VZugConfigEntry
 from .entity import VZugEntity, vzug_action
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
