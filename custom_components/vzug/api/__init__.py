@@ -7,9 +7,9 @@ import urllib.parse
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
-import json_repair
 
 import httpx
+import json_repair
 from yarl import URL
 
 from . import discovery  # noqa: F401 # type: ignore

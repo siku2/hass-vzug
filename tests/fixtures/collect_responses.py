@@ -3,11 +3,12 @@ import json
 import logging
 import os
 import random
+from pathlib import Path
+from time import sleep
+
 import requests
 
-from pathlib import Path
 from tests.fixtures import shared
-from time import sleep
 
 
 class record_call:
