@@ -65,42 +65,14 @@ People *love* thorough bug reports. I'm not even kidding.
     ```
   
 - Tests
-  - Run the tests with `uv run pytest tests --ignore=tests/integration`.
-  - The tests in `tests/integration` need the emulators running.
+  - Run the tests with `uv run pytest`.
+  - The tests in `tests/integration` need the emulators running. Run them with `uv run pytest tests/integration`.
+  - For a new device, collect its responses, add an `expected.py` next to them and get the tests green.
   
 - Emulator
   - The emulator is currently read-only, i.e. only GET and no POST requests
   - The emulator is currently static, i.e. it does not support the pretty frequent 503 responses from the V-Zug appliances
   - The emulator can be accessed using Postman, and be debugged that way
-
-## API Notes
-
-- `Yes` means confirmed valid result
-- `No` means confirmed 404
-- `?` has not been collected yet
-
-| Scope, Command              | Support added | Adora Dish v6000 | Adora SQL | Adora TSQL WP | Adora Wash v6000 | Combair Steamer v6000 |
-| --------------------------- | ------------- | ---------------- | --------- | ------------- | ---------------- | --------------------- |
-| ai?checkUpdate              |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?doAIUpdate               |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?doHHGUpdate              |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?getDeviceStatus          |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?getFWVersion             |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?getLastPUSHNotifications |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?getMacAddress            |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?getModelDescription      |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| ai?getUpdateStatus          |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getCategories            |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getCategory              |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getCommand               |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getCommands              |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getEcoInfo               |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getFWVersion             |               | Yes              | Yes       | Yes           | Yes              | Yes                   |
-| hh?getZHMode                |               | Yes              | No        | No            | Yes              | Yes                   |
-| hh?getAllProgramIds         | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
-| hh?getDeviceInfo            | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
-| hh?getProgram               | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
-| hh?setProgram               | 0.4           | Yes              | No        | No            | Yes              | Yes                   |
 
 ## Use a Consistent Coding Style
 
@@ -111,22 +83,8 @@ uv run ruff format .
 uv run ruff check --fix .
 ```
 
-## Test your code modification
-
-For new devices, create profile, add a `expected.py`, and get the tests green
-
 ## License
 
 This custom component is based on [integration_blueprint template](https://github.com/ludeeus/integration_blueprint).
 
 By contributing, you agree that your contributions will be licensed under its MIT License.
-
-## Pull updates from the template repository
-
-```shell
-# add the template repo as a remote
-git remote add template https://github.com/siku2/hass-integration-template.git
-git remote update
-# merge changes
-git merge --squash -e -Xtheirs --allow-unrelated-histories template/main
-```shell
