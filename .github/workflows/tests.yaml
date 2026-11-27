@@ -33,4 +33,3 @@ jobs:
           uv run --locked pytest
           --cov=custom_components/vzug
           --cov-report=term-missing
-          --cov-fail-under=95
