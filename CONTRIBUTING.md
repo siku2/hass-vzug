@@ -15,7 +15,7 @@ Pull requests are the best way to propose changes to the codebase.
 
 1. Fork the repo and create your branch from `main`.
 2. If you've changed something, update the documentation.
-3. Make sure your code lints (using `scripts/lint.sh`).
+3. Make sure your code lints (using `uv run ruff check`).
 4. Test you contribution.
 5. Issue that pull request!
 
@@ -45,14 +45,11 @@ People *love* thorough bug reports. I'm not even kidding.
 ## Development
 
 - Install [uv](https://docs.astral.sh/uv/) and run `uv sync`. This installs Home Assistant and all other dependencies into `.venv`.
-- The project comes with a device profiler and an emulator. To get an idea, run
+- The project comes with a device profiler and an emulator. Start the emulators and Home Assistant in two terminals. Stop them with Ctrl+C.
 
     ```shell
     scripts/start_all_emulators.sh
     scripts/start_ha.sh
-    ...
-    scripts/stop_all_emulators.sh
-    scripts/stop_ha.sh
     ```
 
   - Once HA is up and running, login and add V-Zug device on 127.0.0.1:5000, 127.0.0.1:5001, ...
@@ -61,7 +58,7 @@ People *love* thorough bug reports. I'm not even kidding.
 - To get API responses from a new device, simple run following command and follow the instructions
 
     ```shell
-    scripts/collect_responses.sh
+    uv run python -m tests.fixtures.collect_responses
     ```
   
 - Tests
