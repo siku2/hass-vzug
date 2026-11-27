@@ -18,23 +18,19 @@ coloredlogs.install(fmt="%(asctime)s %(levelname)s %(message)s")
 
 
 def fixtures_directory() -> str:
-    return os.path.join(os.getenv("PROJECT_ROOT"), "tests/fixtures")
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 def device_directory(device_id) -> str:
-    return os.path.join(os.getenv("PROJECT_ROOT"), "tests/fixtures", device_id)
+    return os.path.join(fixtures_directory(), device_id)
 
 
 def device_config_file(device_id) -> str:
-    return os.path.join(
-        os.getenv("PROJECT_ROOT"), "tests/fixtures", device_id, DEVICE_CONF_FILE
-    )
+    return os.path.join(device_directory(device_id), DEVICE_CONF_FILE)
 
 
 def responses_directory(device_id) -> str:
-    return os.path.join(
-        os.getenv("PROJECT_ROOT"), "tests/fixtures", device_id, RESPONSES_SUBDIR
-    )
+    return os.path.join(device_directory(device_id), RESPONSES_SUBDIR)
 
 
 def is_valid_device(device_id) -> bool:

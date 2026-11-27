@@ -2,9 +2,6 @@
 
 set -e
 
-# When started as task in VSCode, add necessary path
-export PATH="$HOME/.local/bin:$PATH"
-
 cd "$(dirname "$0")/.."
 
 # Skip if Home Assistant (hass) is present
@@ -18,7 +15,7 @@ fi
 # Create config dir if not present
 if [[ ! -d "${PWD}/config" ]]; then
     mkdir -p "${PWD}/config"
-    hass --config "${PWD}/config" --script ensure_config
+    uv run hass --config "${PWD}/config" --script ensure_config
 fi
 
 # Set the path to custom_components
@@ -33,4 +30,4 @@ echo "----------------------------------------------------------------------"
 echo "Start Home Assistant ..."
 echo "----------------------------------------------------------------------"
 
-hass --config "${PWD}/config" --debug
+uv run hass --config "${PWD}/config" --debug

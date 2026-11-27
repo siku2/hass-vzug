@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 START_PORT=5000
 END_PORT=5004

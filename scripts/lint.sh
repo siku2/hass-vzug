@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-# When started as task in VSCode, add necessary path
-export PATH="$HOME/.local/bin:$PATH"
-
 set -e
 
-cd "$PROJECT_ROOT"
+cd "$(dirname "$0")/.."
 
-ruff check . --fix
+uv run ruff check . --fix

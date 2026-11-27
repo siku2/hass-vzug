@@ -1,3 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-python "$PROJECT_ROOT/tests/fixtures/start_single_emulator.py"
+cd "$(dirname "$0")/.."
+
+uv run python -m tests.fixtures.start_single_emulator "$@"

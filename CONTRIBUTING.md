@@ -15,7 +15,7 @@ Pull requests are the best way to propose changes to the codebase.
 
 1. Fork the repo and create your branch from `main`.
 2. If you've changed something, update the documentation.
-3. Make sure your code lints (using `lint.sh`).
+3. Make sure your code lints (using `scripts/lint.sh`).
 4. Test you contribution.
 5. Issue that pull request!
 
@@ -42,24 +42,17 @@ Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
 
 People *love* thorough bug reports. I'm not even kidding.
 
-## Debugging using VSCode
+## Development
 
-- After cloning the repo, VScode will detect the devcontainer setup and start to build one with docker desktop. Wait for completion. It may take a few minutes.
-- The devcontainer is setup like this
-  - A python base image
-  - `uv sync` installs Home Assistant and all other dependencies from `pyproject.toml` into `.venv`
-  - `PYTHONPATH` is set to prevent 'module not found on imports
-  - `PROJECT_ROOT` is set to allow script and code execution independent of the working directory
-  - File and remote debugging possibility are configured in launch.json
-  
+- Install [uv](https://docs.astral.sh/uv/) and run `uv sync`. This installs Home Assistant and all other dependencies into `.venv`.
 - The project comes with a device profiler and an emulator. To get an idea, run
 
     ```shell
-    start_all_emulators.sh
-    start_ha.sh
+    scripts/start_all_emulators.sh
+    scripts/start_ha.sh
     ...
-    stop_all_emulators.sh
-    stop_ha.sh
+    scripts/stop_all_emulators.sh
+    scripts/stop_ha.sh
     ```
 
   - Once HA is up and running, login and add V-Zug device on 127.0.0.1:5000, 127.0.0.1:5001, ...
@@ -68,11 +61,12 @@ People *love* thorough bug reports. I'm not even kidding.
 - To get API responses from a new device, simple run following command and follow the instructions
 
     ```shell
-    collect_responses.sh
+    scripts/collect_responses.sh
     ```
   
 - Tests
-  - The automated tests are automatically discovered by vscode. This is an ideal starting point for debugging
+  - Run the tests with `uv run pytest tests --ignore=tests/integration`.
+  - The tests in `tests/integration` need the emulators running.
   
 - Emulator
   - The emulator is currently read-only, i.e. only GET and no POST requests

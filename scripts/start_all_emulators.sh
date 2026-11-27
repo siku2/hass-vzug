@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # Since Flask does not support multiple parallel apps, it needs to be done
 # at OS/script level
 ###############################################################################
+
+cd "$(dirname "$0")/.."
 
 START_PORT=5000
 END_PORT=5004
@@ -20,11 +22,11 @@ echo "----------------------------------------------------------------------"
 echo "Starting emulators ..."
 echo "----------------------------------------------------------------------"
 
-python "$PROJECT_ROOT/tests/fixtures/start_single_emulator.py" --port 5000 --device_id "adora_dish_v6000" &
-python "$PROJECT_ROOT/tests/fixtures/start_single_emulator.py" --port 5001 --device_id "adora_slq" & 
-python "$PROJECT_ROOT/tests/fixtures/start_single_emulator.py" --port 5002 --device_id "adora_tslq_wp" & 
-python "$PROJECT_ROOT/tests/fixtures/start_single_emulator.py" --port 5003 --device_id "adora_wash_v6000" & 
-python "$PROJECT_ROOT/tests/fixtures/start_single_emulator.py" --port 5004 --device_id "combair_steamer_v6000_76c" & 
+uv run python -m tests.fixtures.start_single_emulator --port 5000 --device_id "adora_dish_v6000" &
+uv run python -m tests.fixtures.start_single_emulator --port 5001 --device_id "adora_slq" & 
+uv run python -m tests.fixtures.start_single_emulator --port 5002 --device_id "adora_tslq_wp" & 
+uv run python -m tests.fixtures.start_single_emulator --port 5003 --device_id "adora_wash_v6000" & 
+uv run python -m tests.fixtures.start_single_emulator --port 5004 --device_id "combair_steamer_v6000_76c" & 
 
 sleep 5
 
