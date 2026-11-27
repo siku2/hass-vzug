@@ -104,7 +104,6 @@ class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
             return self._field("set")
         return wanted / 60 if self.vzug_key == "duration" else wanted
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.program_settings[self.vzug_key] = (
             value * 60 if self.vzug_key == "duration" else value
@@ -144,7 +143,6 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
     def native_value(self) -> float:
         return self.shared.start_delay_hours
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.start_delay_hours = value
         self.async_write_ha_state()
@@ -250,7 +248,6 @@ class WarmingDrawerDuration(ZoneEntity, NumberEntity):
     def native_value(self) -> float:
         return self.shared.warming_drawer_minutes[self.vzug_zone]
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.warming_drawer_minutes[self.vzug_zone] = value
         self.async_write_ha_state()
@@ -332,7 +329,6 @@ class BoostDuration(ZoneEntity, RestoreNumber):
         if (last := await self.async_get_last_number_data()) and last.native_value:
             self.shared.boost_hours[self.vzug_key] = last.native_value
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.boost_hours[self.vzug_key] = value
         self.async_write_ha_state()

@@ -783,5 +783,22 @@
             "title": "{name} ne peut pas être commandé",
             "description": "V-ZUG-Home est désactivé sur {name} ou réglé sur affichage seul, l'appareil refuse donc toute modification envoyée par Home Assistant. Pour le commander, réglez V-ZUG-Home sur « commander » (ou « commande et affichage ») dans les réglages utilisateur de l'appareil."
         }
+    },
+    "exceptions": {
+        "auth_failed": {
+            "message": "L'appareil a refusé les identifiants. Authentifie à nouveau l'intégration."
+        },
+        "request_refused": {
+            "message": "L'appareil a refusé la requête : {status} {response}"
+        },
+        "communication_error": {
+            "message": "Erreur de communication avec l'appareil : {error}"
+        },
+        "unknown_program": {
+            "message": "Programme inconnu {program}"
+        },
+        "unknown_update_component": {
+            "message": "Composant de mise à jour inconnu {component}"
+        }
     }
 }

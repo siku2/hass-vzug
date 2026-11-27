@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import api, zones
+from .const import DOMAIN
 from .coordinator import ConfigCoordinator, Shared, ZoneCoordinator
 from .helpers import name_from_command_key
 
@@ -23,32 +24,31 @@ from .helpers import name_from_command_key
 def vzug_action[EntityT: "VZugBaseEntity", **P, R](
     func: Callable[Concatenate[EntityT, P], Awaitable[R]],
 ) -> Callable[Concatenate[EntityT, P], Coroutine[Any, Any, R]]:
-    """Turn a failed request to the appliance into an error the user sees.
-
-    Without this an action (pressing a button, switching a switch) that fails
-    shows up as an unexpected exception with a traceback in the log instead of
-    as a message in the frontend.
-    """
+    """Raise a failed request to the appliance as an error the user sees."""
 
     @functools.wraps(func)
     async def wrapper(self: EntityT, *args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return await func(self, *args, **kwargs)
-        except HomeAssistantError:
-            raise
         except api.AuthenticationFailed as err:
             self.shared.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
-                "The appliance refused the credentials, please re-authenticate"
+                translation_domain=DOMAIN, translation_key="auth_failed"
             ) from err
         except httpx.HTTPStatusError as err:
             raise HomeAssistantError(
-                f"The appliance refused the request: {err.response.status_code} "
-                f"{err.response.text.strip()}"
+                translation_domain=DOMAIN,
+                translation_key="request_refused",
+                translation_placeholders={
+                    "status": str(err.response.status_code),
+                    "response": err.response.text.strip(),
+                },
             ) from err
-        except (httpx.HTTPError, ValueError, AssertionError) as err:
+        except (httpx.HTTPError, ValueError) as err:
             raise HomeAssistantError(
-                f"Error communicating with the appliance: {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": repr(err)},
             ) from err
 
     return wrapper

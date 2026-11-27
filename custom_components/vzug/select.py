@@ -5,6 +5,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
+from .const import DOMAIN
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import UserConfigEntity, VZugEntity, ZoneEntity, vzug_action
 
@@ -86,7 +87,11 @@ class ProgramSelect(VZugEntity[ProgramCoordinator], SelectEntity):
     async def async_select_option(self, option: str) -> None:
         program_id = zones.program_id_by_key(self.coordinator.data.names, option)
         if program_id is None:
-            raise ServiceValidationError(f"Unknown program {option!r}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_program",
+                translation_placeholders={"program": option},
+            )
         # ovens pick the program for their cooking chamber
         if zone := getattr(self.shared, "program_zone", None):
             await self.shared.client.set_program(program_id, {"zone": zone})

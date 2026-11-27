@@ -783,5 +783,22 @@
       "title": "{name} lässt sich nicht steuern",
       "description": "V-ZUG-Home ist auf {name} ausgeschaltet oder auf «nur anzeigen» gestellt. Das Gerät lehnt deshalb alle Änderungen aus Home Assistant ab. Um es zu steuern, in den Benutzereinstellungen des Geräts V-ZUG-Home auf «bedienen» (bzw. «bedienen und anzeigen») stellen."
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Das Gerät hat die Anmeldedaten abgelehnt. Melde die Integration erneut an."
+    },
+    "request_refused": {
+      "message": "Das Gerät hat die Anfrage abgelehnt: {status} {response}"
+    },
+    "communication_error": {
+      "message": "Fehler bei der Kommunikation mit dem Gerät: {error}"
+    },
+    "unknown_program": {
+      "message": "Unbekanntes Programm {program}"
+    },
+    "unknown_update_component": {
+      "message": "Unbekannte Update-Komponente {component}"
+    }
   }
 }
