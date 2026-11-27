@@ -10,9 +10,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import api
-from .entity import vzug_action, VZugEntity
 from .coordinator import Shared, UpdateCoordinator, VZugConfigEntry
-
+from .entity import VZugEntity, vzug_action
 
 # the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1

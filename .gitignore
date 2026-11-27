@@ -8,3 +8,6 @@ __pycache__
 # misc
 .coverage
 coverage.xml
+
+# uv
+.venv

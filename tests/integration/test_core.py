@@ -1,5 +1,5 @@
-from datetime import datetime
 import re
+from datetime import datetime
 
 
 async def assert_ai_get_device_status_core(vzug_client, expected_result):

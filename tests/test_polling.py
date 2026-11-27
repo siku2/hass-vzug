@@ -3,7 +3,7 @@
 import httpx
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import async_fire_time_changed
+from pytest_homeassistant.common import async_fire_time_changed
 
 from custom_components.vzug import coordinator
 
