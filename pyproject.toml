@@ -22,6 +22,12 @@ package = false
 # Home Assistant pins aiodns, but not pycares, and pycares 5 breaks aiodns 3.4
 constraint-dependencies = ["pycares<5"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# the tests in 'tests/integration' need the emulators running
+norecursedirs = ["integration", "fixtures"]
+asyncio_default_fixture_loop_scope = "function"
+
 # Based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 [tool.ruff]
 target-version = "py313"
