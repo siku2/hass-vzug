@@ -31,14 +31,13 @@ def _shared(raw=COMBI_COOLER, modes=MODES):
     coord.data = zones.ZoneState(zones=zones.index_zones(raw), modes=dict(modes))
     coord.async_request_refresh = AsyncMock()
     coord.last_update_success = True
-    shared = SimpleNamespace(
+    return SimpleNamespace(
         zone_coord=coord,
         client=MagicMock(set_zone_value=AsyncMock(), set_cmd_value=AsyncMock()),
         unique_id_prefix="fc:1b:ff:06:6e:8e",
         device_info={},
         boost_hours={},
     )
-    return shared
 
 
 def test_entities_created_for_a_combi_cooler():

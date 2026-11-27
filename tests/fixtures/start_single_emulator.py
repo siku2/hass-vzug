@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import os
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -12,16 +11,12 @@ import tests.fixtures.shared as shared
 
 
 def file_content_or_error(response_directory, filename):
-    file = os.path.join(response_directory, filename)
-    if os.path.exists(file):
-        with open(file) as f:
-            content = f.read().strip()
-            if '"code": 404' in content:
-                return jsonify({"error": "", "code": 404}), 404
-            else:
-                return send_from_directory(response_directory, filename)
-    else:
-        return jsonify({"error": '{ "code":400.03}'}), 400
+    file = response_directory / filename
+    if file.exists():
+        if '"code": 404' in file.read_text().strip():
+            return jsonify({"error": "", "code": 404}), 404
+        return send_from_directory(response_directory, filename)
+    return jsonify({"error": '{ "code":400.03}'}), 400
 
 
 def register_route_ai(app, response_directory):
@@ -31,27 +26,26 @@ def register_route_ai(app, response_directory):
         command = request.args.get("command")
         if command == "getDeviceStatus":
             return file_content_or_error(response_directory, "ai_get_devicestatus.json")
-        elif command == "getFWVersion":
+        if command == "getFWVersion":
             return file_content_or_error(response_directory, "ai_get_fwversion.json")
-        elif command == "getLastPUSHNotifications":
+        if command == "getLastPUSHNotifications":
             return file_content_or_error(
                 response_directory, "ai_get_lastpushnotifications.json"
             )
-        elif command == "getMacAddress":
+        if command == "getMacAddress":
             return file_content_or_error(response_directory, "ai_get_macaddress.txt")
-        elif command == "getModelDescription":
+        if command == "getModelDescription":
             return file_content_or_error(
                 response_directory, "ai_get_modeldescription.txt"
             )
-        elif command == "getUpdateStatus":
+        if command == "getUpdateStatus":
             return file_content_or_error(response_directory, "ai_get_updatestatus.json")
 
-        elif command:  # command exists and is not empty
+        if command:  # command exists and is not empty
             return file_content_or_error(
                 response_directory, "hh_get_invalid_command.txt"
             ), 404
-        else:
-            return file_content_or_error(response_directory, "hh_bad_request.txt"), 400
+        return file_content_or_error(response_directory, "hh_bad_request.txt"), 400
 
 
 def register_route_hh(app, response_directory):
@@ -63,15 +57,12 @@ def register_route_hh(app, response_directory):
         # cache_avoidance_number = request.args.get('_')
 
         if command == "getCategories":
-            result = []
-            with open(os.path.join(response_directory, "hh_get_categories.json")) as f:
+            with (response_directory / "hh_get_categories.json").open() as f:
                 categories_content = json.load(f)
-                for category in categories_content:
-                    result.append(category["id"])
-                return jsonify(result)
+                return jsonify([category["id"] for category in categories_content])
 
         elif command == "getCategory":
-            with open(os.path.join(response_directory, "hh_get_categories.json")) as f:
+            with (response_directory / "hh_get_categories.json").open() as f:
                 categories_content = json.load(f)
 
                 # Find category that matches the value
@@ -80,11 +71,10 @@ def register_route_hh(app, response_directory):
                 )
                 if matching_category:
                     return matching_category["category"]
-                else:
-                    return jsonify({"error": ["code", "400.03"]}), 400
+                return jsonify({"error": ["code", "400.03"]}), 400
 
         elif command == "getCommands":
-            with open(os.path.join(response_directory, "hh_get_categories.json")) as f:
+            with (response_directory / "hh_get_categories.json").open() as f:
                 categories_content = json.load(f)
 
                 # Find category that matches the value, to return its commands
@@ -93,13 +83,10 @@ def register_route_hh(app, response_directory):
                 )
                 if matching_category:
                     return matching_category["commands"]
-                else:
-                    return jsonify({"error": ["code", "400.03"]}), 400
+                return jsonify({"error": ["code", "400.03"]}), 400
 
         elif command == "getCommand":
-            with open(
-                os.path.join(response_directory, "hh_get_command_details.json")
-            ) as f:
+            with (response_directory / "hh_get_command_details.json").open() as f:
                 categories_content = json.load(f)
 
                 # Find command that matches the value
@@ -108,8 +95,7 @@ def register_route_hh(app, response_directory):
                 )
                 if matching_category:
                     return matching_category["details"]
-                else:
-                    return jsonify({"error": ["code", "400.03"]}), 400
+                return jsonify({"error": ["code", "400.03"]}), 400
 
         elif command == "getAllProgramIds":
             return file_content_or_error(
@@ -162,7 +148,7 @@ def select_device() -> str:
     devices = shared.get_devices()
 
     # Select the device to be used
-    print("")
+    print()
     print(
         "--------------------------------------------------------------------------------------"
     )
@@ -174,7 +160,7 @@ def select_device() -> str:
     for idx, device in enumerate(devices, start=1):
         print(f"{idx}: {device}")
 
-    print("")
+    print()
 
     response_id = input("Please enter device number: ")
 

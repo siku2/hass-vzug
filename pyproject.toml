@@ -34,15 +34,22 @@ target-version = "py313"
 
 [tool.ruff.lint]
 select = [
+    "ASYNC",   # flake8-async
     "B007",    # Loop control variable {name} not used within loop body
     "B014",    # Exception handler with duplicate exception
     "C",       # complexity
     "E",       # pycodestyle
     "F",       # pyflakes/autoflake
+    "FURB",    # refurb
     "I",       # isort
     "ICN001",  # import conventions; {name} should be imported as {asname}
+    "PERF",    # Perflint
     "PGH004",  # Use specific rule codes when using noqa
+    "PIE",     # flake8-pie
     "PLC0414", # Useless import alias. Import alias does not rename original package.
+    "PTH",     # flake8-pathlib
+    "RET",     # flake8-return
+    "RUF",     # Ruff-specific rules (see `ignore` for exclusions)
     "SIM105",  # Use contextlib.suppress({exception}) instead of try-except-pass
     "SIM117",  # Merge with-statements that use the same scope
     "SIM118",  # Use {key} in {dict} instead of {key} in {dict}.keys()
@@ -52,15 +59,19 @@ select = [
     "SIM401",  # Use get from dict with default instead of an if block
     "T20",     # flake8-print
     "TRY004",  # Prefer TypeError exception for invalid type
-    "RUF006",  # Store a reference to the return value of asyncio.create_task
     "UP",      # pyupgrade
     "W",       # pycodestyle
 ]
 
 ignore = [
-    "T201", # No print statements
-    "E501", # line too long
-    "E731", # do not assign a lambda expression, use a def
+    "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
+    "RUF001",   # String contains ambiguous unicode character.
+    "RUF012",   # Mutable class attributes should be annotated with typing.ClassVar
+    "RUF015",   # Prefer next(...) over single element slice
+    "RUF043",   # Pattern passed to match= contains metacharacters but is neither escaped nor raw
+    "T201",     # No print statements
+    "E501",     # line too long
+    "E731",     # do not assign a lambda expression, use a def
 ]
 
 [tool.ruff.lint.isort]

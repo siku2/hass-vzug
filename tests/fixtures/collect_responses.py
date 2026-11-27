@@ -1,8 +1,8 @@
 import argparse
 import json
 import logging
-import os
 import random
+import shutil
 from pathlib import Path
 from time import sleep
 
@@ -106,7 +106,7 @@ def collect_responses(device_id):
     for current_call in record_calls:
         url = config["base_url"] + current_call.relative_url
 
-        output_file = os.path.join(response_root, current_call.resulting_filename)
+        output_file = response_root / current_call.resulting_filename
 
         i = 0
         while i < 10:
@@ -122,8 +122,8 @@ def collect_responses(device_id):
 
         if current_call.category_special:
             collect_categories_details(
-                os.path.join(response_root, "hh_get_categories.json"),
-                os.path.join(response_root, "hh_get_command_details.json"),
+                response_root / "hh_get_categories.json",
+                response_root / "hh_get_command_details.json",
                 config["base_url"],
                 response.json(),
             )
@@ -131,14 +131,11 @@ def collect_responses(device_id):
         elif current_call.resulting_filename.endswith(".txt"):
             if current_call.resulting_filename == "ai_get_macaddress.txt":
                 # More general purpose search was not worth it yet
-                with open(output_file, "w") as f:
-                    f.write(config["fake_mac_address"])
+                output_file.write_text(config["fake_mac_address"])
             elif current_call.resulting_filename == "ai_get_modeldescription.txt":
-                with open(output_file, "w") as f:
-                    f.write(f"{response.text} Emulator")
+                output_file.write_text(f"{response.text} Emulator")
             else:
-                with open(output_file, "w") as f:
-                    f.write(response.text)
+                output_file.write_text(response.text)
 
             logging.info(f"Response saved to {output_file}")
 
@@ -160,7 +157,7 @@ def collect_responses(device_id):
             if "400.03" in response.text:
                 logging.error(f"The response from {url} contains 400.03 error.")
             else:
-                with open(output_file, "w") as f:
+                with output_file.open("w") as f:
                     json.dump(response_json, f, indent=2, ensure_ascii=False)
                 logging.info(f"Response saved to {output_file}")
         else:
@@ -170,8 +167,8 @@ def collect_responses(device_id):
 
 
 def collect_categories_details(
-    filename_categories: str,
-    filename_commands: str,
+    filename_categories: Path,
+    filename_commands: Path,
     base_url: str,
     categories_json: dict,
 ):
@@ -202,36 +199,24 @@ def collect_categories_details(
     ]
     details_data = [{"id": d.id, "details": d.details} for d in all_command_details]
 
-    with open(filename_categories, "w") as f:
+    with filename_categories.open("w") as f:
         json.dump(categories_data, f, indent=2, ensure_ascii=False)
 
-    with open(filename_commands, "w") as f:
+    with filename_commands.open("w") as f:
         json.dump(details_data, f, indent=2, ensure_ascii=False)
 
     logging.info(f"Response saved to {filename_categories}")
     logging.info(f"Response saved to {filename_commands}")
 
 
-def rmdir(directory):
-    directory = Path(directory)
-    for item in directory.iterdir():
-        if item.is_dir():
-            rmdir(item)
-        else:
-            item.unlink()
-    directory.rmdir()
-
-
 def get_config_from_existing_file(device_id) -> dict:
-    with open(shared.device_config_file(device_id)) as f:
-        config = json.load(f)
-
-    return config
+    with shared.device_config_file(device_id).open() as f:
+        return json.load(f)
 
 
 def get_config_from_user_and_save(device_id):
-    if not os.path.exists(shared.device_directory(device_id)):
-        os.makedirs(shared.device_directory(device_id))
+    if not shared.device_directory(device_id).exists():
+        shared.device_directory(device_id).mkdir(parents=True)
 
         ip_address = input("Please enter IP address: ")
 
@@ -253,7 +238,7 @@ def get_config_from_user_and_save(device_id):
             "fake_device_serial_1": serial_number_1,
             "fake_device_serial_2": serial_number_2,
         }
-        with open(shared.device_config_file(device_id), "w") as f:
+        with shared.device_config_file(device_id).open("w") as f:
             json.dump(config, f, indent=2)
 
 
@@ -263,7 +248,7 @@ def select_device() -> str:
     devices = shared.get_devices()
 
     # Select the device to be used
-    print("")
+    print()
     print(
         "--------------------------------------------------------------------------------------"
     )
@@ -280,14 +265,14 @@ def select_device() -> str:
     for idx, device in enumerate(devices, start=1):
         print(f"{idx}: {device}")
 
-    print("")
+    print()
 
     response_id = input("Please enter device number: ")
 
     if int(response_id) == 0:
         device_id = input("Specify new device ID: ")
-        if os.path.exists(shared.device_directory(device_id)):
-            rmdir(shared.device_directory(device_id))
+        if shared.device_directory(device_id).exists():
+            shutil.rmtree(shared.device_directory(device_id))
     else:
         device_id = devices[int(response_id) - 1]
 
@@ -296,12 +281,12 @@ def select_device() -> str:
 
     # Eventually, we want to have multiple responses for the same device
     responses_dir = shared.responses_directory(device_id)
-    if os.path.exists(shared.responses_directory(device_id)):
+    if responses_dir.exists():
         print(f"Responses for device {device_id} already exists. Delete exiting ones")
-        rmdir(responses_dir)
-        print("")
+        shutil.rmtree(responses_dir)
+        print()
 
-    os.makedirs(responses_dir)
+    responses_dir.mkdir(parents=True)
 
     return device_id
 

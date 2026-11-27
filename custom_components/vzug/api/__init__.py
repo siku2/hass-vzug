@@ -776,7 +776,7 @@ class VZugApi:
             command="getAPIVersion",
             expected_type=dict,
             attempts=1,
-            value_on_err=lambda: {},
+            value_on_err=dict,
         )
         return parse_version(data.get("value"))
 
@@ -860,7 +860,7 @@ class VZugApi:
             "ai",
             command="getLastPUSHNotifications",
             expected_type=list,
-            value_on_err=(lambda: []) if default_on_error else None,
+            value_on_err=list if default_on_error else None,
             # ex. CombairSteamer V6000 60 answers 404 since a firmware update
             value_on_client_err=list,
         )
