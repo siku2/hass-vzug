@@ -290,6 +290,23 @@ async def test_start_discovery(
     _assert_entry(result, appliance)
 
 
+async def test_discovery_of_configured_appliance_updates_address(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    appliance = appliances.add(DEVICE)
+    entry = mock_entry(appliance, **{CONF_BASE_URL: "http://192.0.2.1"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DISCOVERY},
+        data=api.discovery.DiscoveryInfo(host=appliance.host),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_BASE_URL] == appliance.base_url
+
+
 async def test_discovery_not_an_appliance(
     hass: HomeAssistant, appliances: ApplianceNetwork
 ) -> None:

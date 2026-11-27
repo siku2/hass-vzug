@@ -275,6 +275,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_BASE] = ERR_CANNOT_CONNECT
             return None
 
+        await self.async_set_unique_id(
+            dr.format_mac(self._meta.mac_address), raise_on_progress=needs_confirmation
+        )
+        self._abort_if_unique_id_configured(
+            updates={CONF_BASE_URL: str(self._base_url)}
+        )
+
         if needs_confirmation:
             return await self.async_step_confirm()
         return await self._create_entry()
