@@ -81,3 +81,17 @@ async def test_digest_credentials_work(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_entry_without_unique_id_gets_one(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    """Entries from before the config flow set a unique id, reauth needs one."""
+    appliance = appliances.add("adora_dish_v6000")
+    entry = mock_entry(appliance)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, unique_id=None)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.unique_id == dr.format_mac(appliance.mac_address)

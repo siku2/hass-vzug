@@ -36,6 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VZugConfigEntry) -> bool
     shared = Shared(hass, entry, base_url, credentials)
     await shared.async_config_entry_first_refresh()
     entry.runtime_data = shared
+    # entries created before the config flow set a unique id, reauth needs one
+    if entry.unique_id is None and shared.unique_id_prefix:
+        hass.config_entries.async_update_entry(entry, unique_id=shared.unique_id_prefix)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
