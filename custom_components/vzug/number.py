@@ -28,16 +28,16 @@ async def async_setup_entry(
 
     entities: list[NumberEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "range" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfig(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "range" and command.get("alterable", True)
+    )
 
     entities.extend(_zone_entities(shared))
     if shared.program_coord is not None and shared.program_zone is None:

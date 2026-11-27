@@ -1,6 +1,6 @@
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import EntityCategory
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,16 +20,16 @@ async def async_setup_entry(
 
     entities: list[SelectEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "selection" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfig(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "selection" and command.get("alterable", True)
+    )
 
     if shared.program_coord is not None:
         entities.append(ProgramSelect(shared))
