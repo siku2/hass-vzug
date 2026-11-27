@@ -47,8 +47,7 @@ People *love* thorough bug reports. I'm not even kidding.
 - After cloning the repo, VScode will detect the devcontainer setup and start to build one with docker desktop. Wait for completion. It may take a few minutes.
 - The devcontainer is setup like this
   - A python base image
-  - HomeAssistant is installed as a pip package
-  - All the python dependencies are automatically installed using pip and requirements.txt
+  - `uv sync` installs Home Assistant and all other dependencies from `pyproject.toml` into `.venv`
   - `PYTHONPATH` is set to prevent 'module not found on imports
   - `PROJECT_ROOT` is set to allow script and code execution independent of the working directory
   - File and remote debugging possibility are configured in launch.json
@@ -111,8 +110,12 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Use a Consistent Coding Style
 
-Use [black](https://github.com/ambv/black) to make sure the code follows the style.
-Sort your imports using [isort](https://pycqa.github.io/isort/).
+Format the code and sort the imports with [ruff](https://docs.astral.sh/ruff/):
+
+```shell
+uv run ruff format .
+uv run ruff check --fix .
+```
 
 ## Test your code modification
 
