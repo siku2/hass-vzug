@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import api
-from .entity import VZugEntity
 from .coordinator import Shared, UpdateCoordinator, VZugConfigEntry
+from .entity import VZugEntity
 
 
 async def async_setup_entry(

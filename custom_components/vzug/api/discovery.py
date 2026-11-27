@@ -77,8 +77,5 @@ async def create_discovery_stream(interface: IPv4Interface, timeout: float | Non
 async def discover_list(
     interface: IPv4Interface, timeout: float
 ) -> list[DiscoveryInfo]:
-    collected: list[DiscoveryInfo] = []
     async with create_discovery_stream(interface, timeout) as stream:
-        async for discovery in stream:
-            collected.append(discovery)
-    return collected
+        return [discovery async for discovery in stream]

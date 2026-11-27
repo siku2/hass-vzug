@@ -8,8 +8,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, VZugBaseEntity, VZugEntity, ZoneEntity
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
+from .entity import UserConfigEntity, VZugBaseEntity, VZugEntity, ZoneEntity
 
 
 async def async_setup_entry(
@@ -23,16 +23,16 @@ async def async_setup_entry(
     if shared.meta.supports_update_status():
         entities.append(CheckUpdate(shared))
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "action":
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfig(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "action"
+    )
 
     if shared.program_coord is not None:
         entities.append(SendProgram(shared))

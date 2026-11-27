@@ -1,5 +1,6 @@
 import logging
-import os
+from pathlib import Path
+
 import coloredlogs
 
 DEVICE_CONF_FILE = "config.json"
@@ -16,38 +17,33 @@ coloredlogs.install(level="DEBUG", logger=logger)
 coloredlogs.install(fmt="%(asctime)s %(levelname)s %(message)s")
 
 
-def fixtures_directory() -> str:
-    return os.path.join(os.getenv("PROJECT_ROOT"), "tests/fixtures")
+def fixtures_directory() -> Path:
+    return Path(__file__).resolve().parent
 
 
-def device_directory(device_id) -> str:
-    return os.path.join(os.getenv("PROJECT_ROOT"), "tests/fixtures", device_id)
+def device_directory(device_id) -> Path:
+    return fixtures_directory() / device_id
 
 
-def device_config_file(device_id) -> str:
-    return os.path.join(
-        os.getenv("PROJECT_ROOT"), "tests/fixtures", device_id, DEVICE_CONF_FILE
-    )
+def device_config_file(device_id) -> Path:
+    return device_directory(device_id) / DEVICE_CONF_FILE
 
 
-def responses_directory(device_id) -> str:
-    return os.path.join(
-        os.getenv("PROJECT_ROOT"), "tests/fixtures", device_id, RESPONSES_SUBDIR
-    )
+def responses_directory(device_id) -> Path:
+    return device_directory(device_id) / RESPONSES_SUBDIR
 
 
 def is_valid_device(device_id) -> bool:
-    return os.path.exists(device_config_file(device_id))
+    return device_config_file(device_id).exists()
 
 
-def get_devices() -> str:
+def get_devices() -> list[str]:
     """Return list of subdirectories in fixtures"""
-    fixtures_root = fixtures_directory()
-    return [
-        d
-        for d in os.listdir(fixtures_root)
-        if os.path.isdir(os.path.join(fixtures_root, d)) and d != "__pycache__"
-    ]
+    return sorted(
+        d.name
+        for d in fixtures_directory().iterdir()
+        if d.is_dir() and d.name != "__pycache__"
+    )
 
 
 class category_expectation:

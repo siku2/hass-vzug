@@ -7,9 +7,9 @@ import urllib.parse
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
-import json_repair
 
 import httpx
+import json_repair
 from yarl import URL
 
 from . import discovery  # noqa: F401 # type: ignore
@@ -186,7 +186,7 @@ class Program:
     options: dict[str, ProgramOption]
 
     @classmethod
-    def build(cls, raw: dict[str, Any]) -> "Program":
+    def build(cls, raw: dict[str, Any]) -> Program:
         info = {}
         options = raw.copy()
         for key in ProgramInfo.__required_keys__ | ProgramInfo.__optional_keys__:
@@ -783,7 +783,7 @@ class VZugApi:
             command="getAPIVersion",
             expected_type=dict,
             attempts=1,
-            value_on_err=lambda: {},
+            value_on_err=dict,
         )
         return parse_version(data.get("value"))
 
@@ -867,7 +867,7 @@ class VZugApi:
             "ai",
             command="getLastPUSHNotifications",
             expected_type=list,
-            value_on_err=(lambda: []) if default_on_error else None,
+            value_on_err=list if default_on_error else None,
             # ex. CombairSteamer V6000 60 answers 404 since a firmware update
             value_on_client_err=list,
         )

@@ -16,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import api, zones
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity
-from .helpers import snake, zone_translation
 from .coordinator import (
     ProgramCoordinator,
     Shared,
@@ -25,6 +23,8 @@ from .coordinator import (
     UpdateCoordinator,
     VZugConfigEntry,
 )
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .helpers import snake, zone_translation
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -132,16 +132,16 @@ async def async_setup_entry(
             for kind in ProgramInfo.KINDS
         )
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "status":
-                entities.append(
-                    UserConfigSensor(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfigSensor(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "status"
+    )
 
     eco_info = shared.state_coord.data.eco_info
     for desc in _ECO_SENSORS:
@@ -353,10 +353,9 @@ class Program(StateBase):
         device = self.coordinator.data.device
         if program := device.get("Program"):
             return program
-        elif device.get("Inactive") == "true":
+        if device.get("Inactive") == "true":
             return "standby"
-        else:
-            return "active"
+        return "active"
 
 
 class ProgramEndRaw(StateBase):
@@ -558,7 +557,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return entry[self.vzug_period]["amount"]
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
     @property
@@ -566,7 +565,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return {"duration": entry[self.vzug_period]["duration"]}
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
 

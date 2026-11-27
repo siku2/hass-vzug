@@ -5,9 +5,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
+from .coordinator import Shared, VZugConfigEntry
 from .entity import UserConfigEntity, ZoneEntity
 from .helpers import snake
-from .coordinator import Shared, VZugConfigEntry
 
 _ICONS = {
     "superCool": "mdi:snowflake-thermometer",
@@ -28,16 +28,16 @@ async def async_setup_entry(
 
     entities: list[SwitchEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "boolean" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfig(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "boolean" and command.get("alterable", True)
+    )
 
     entities.extend(_zone_entities(shared))
     async_add_entities(entities)

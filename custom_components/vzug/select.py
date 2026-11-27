@@ -4,8 +4,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity
 
 
 async def async_setup_entry(
@@ -17,16 +17,16 @@ async def async_setup_entry(
 
     entities: list[SelectEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "selection" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfig(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "selection" and command.get("alterable", True)
+    )
 
     if shared.program_coord is not None:
         entities.append(ProgramSelect(shared))

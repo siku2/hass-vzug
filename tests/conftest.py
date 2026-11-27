@@ -1,10 +1,9 @@
-# Home Assistant 2026.11 aliases httpx and httpcore to httpx2 and httpcore2 on
-# import. Import it before any test module imports httpx, like HA does at runtime.
-import homeassistant  # noqa: F401
-
 from collections.abc import Iterator
 from unittest.mock import patch
 
+# Home Assistant 2026.11 aliases httpx and httpcore to httpx2 and httpcore2 on
+# import. Import it before any test module imports httpx, like HA does at runtime.
+import homeassistant  # noqa: F401
 import httpx
 import pytest
 
@@ -12,13 +11,6 @@ from custom_components.vzug import api
 from custom_components.vzug.api import provisioning
 
 from .appliance import ApplianceNetwork
-
-
-@pytest.fixture(autouse=True)
-def _custom_integrations(request: pytest.FixtureRequest) -> None:
-    """Let Home Assistant load 'custom_components/vzug' in tests that run it."""
-    if "hass" in request.fixturenames:
-        request.getfixturevalue("enable_custom_integrations")
 
 
 @pytest.fixture(autouse=True)

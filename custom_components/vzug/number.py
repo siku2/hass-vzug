@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import UserConfigEntity, VZugEntity, ZoneEntity
 from .helpers import snake, zone_translation
-from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
 # what the V-ZUG app offers first when a timed function is switched on
 DEFAULT_BOOST_HOURS = 12.0
@@ -26,16 +26,16 @@ async def async_setup_entry(
 
     entities: list[NumberEntity] = []
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "range" and command.get("alterable", True):
-                entities.append(
-                    UserConfig(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfig(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "range" and command.get("alterable", True)
+    )
 
     entities.extend(_zone_entities(shared))
     if shared.program_coord is not None and shared.program_zone is None:
@@ -384,14 +384,14 @@ class UserConfig(NumberEntity, UserConfigEntity):
     def native_min_value(self) -> float:
         try:
             return float(self.vzug_command["minMax"][0])
-        except (ValueError, LookupError, TypeError):
+        except ValueError, LookupError, TypeError:
             return 0.0
 
     @property
     def native_max_value(self) -> float:
         try:
             return float(self.vzug_command["minMax"][1])
-        except (ValueError, LookupError, TypeError):
+        except ValueError, LookupError, TypeError:
             return 0.0
 
     @property

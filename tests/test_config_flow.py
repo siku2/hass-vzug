@@ -391,7 +391,7 @@ async def test_bluetooth_configured_appliance_gets_its_address(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, SERIAL)})
+    [device] = dr.async_get(hass).async_get_devices(identifiers={(DOMAIN, SERIAL)})
     assert (dr.CONNECTION_BLUETOOTH, "fc:1b:ff:08:90:27") in device.connections
 
 
