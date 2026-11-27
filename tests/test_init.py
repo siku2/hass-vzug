@@ -2,6 +2,7 @@
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -47,6 +48,12 @@ async def test_setup_and_unload(
     assert entities
     assert all(e.device_id == device_entry.id for e in entities)
     assert len({e.unique_id for e in entities}) == len(entities)
+    unavailable = [
+        e.entity_id
+        for e in entities
+        if (state := hass.states.get(e.entity_id)) and state.state == STATE_UNAVAILABLE
+    ]
+    assert not unavailable
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
