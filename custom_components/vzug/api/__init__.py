@@ -186,7 +186,7 @@ class Program:
     options: dict[str, ProgramOption]
 
     @classmethod
-    def build(cls, raw: dict[str, Any]) -> "Program":
+    def build(cls, raw: dict[str, Any]) -> Program:
         info = {}
         options = raw.copy()
         for key in ProgramInfo.__required_keys__ | ProgramInfo.__optional_keys__:

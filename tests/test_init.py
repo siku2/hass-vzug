@@ -6,7 +6,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.vzug.const import CONF_BASE_URL, DOMAIN
 
@@ -40,8 +40,9 @@ async def test_setup_and_unload(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    device_entry = dr.async_get(hass).async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(appliance.mac_address))}
+    device_entry = dr.async_get(hass).async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(appliance.mac_address)),
+        entry.entry_id,
     )
     assert device_entry is not None
     entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)

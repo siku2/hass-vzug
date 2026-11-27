@@ -1,9 +1,9 @@
 [project]
 name = "hass-vzug"
 version = "0.0.0"
-requires-python = ">=3.13.2"
+requires-python = ">=3.14.2"
 dependencies = [
-    "homeassistant==2025.6.0",
+    "homeassistant==2026.11.3",
     "json-repair~=0.46.2",
 ]
 
@@ -12,14 +12,13 @@ dev = [
     "coloredlogs",
     "flask",
     # pins pytest and its plugins to the versions of the Home Assistant release
-    "pytest-homeassistant-custom-component==0.13.251",
+    "pytest-homeassistant==2026.11.3",
+    "pytest-cov",
     "ruff",
 ]
 
 [tool.uv]
 package = false
-# Home Assistant pins aiodns, but not pycares, and pycares 5 breaks aiodns 3.4
-constraint-dependencies = ["pycares<5"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -27,10 +26,13 @@ testpaths = ["tests"]
 norecursedirs = ["integration", "fixtures"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# let Home Assistant install its httpx alias before respx is imported
+addopts = "-p no:respx"
+pythonpath = ["."]
 
 # Based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [

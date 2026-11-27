@@ -391,14 +391,14 @@ class UserConfig(NumberEntity, UserConfigEntity):
     def native_min_value(self) -> float:
         try:
             return float(self.vzug_command["minMax"][0])
-        except (ValueError, LookupError, TypeError):
+        except ValueError, LookupError, TypeError:
             return 0.0
 
     @property
     def native_max_value(self) -> float:
         try:
             return float(self.vzug_command["minMax"][1])
-        except (ValueError, LookupError, TypeError):
+        except ValueError, LookupError, TypeError:
             return 0.0
 
     @property

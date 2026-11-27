@@ -178,7 +178,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"ble-{serial}")
         self._abort_if_unique_id_configured()
         device_reg = dr.async_get(self.hass)
-        if device := device_reg.async_get_device(identifiers={(DOMAIN, serial)}):
+        devices = device_reg.async_get_devices(identifiers={(DOMAIN, serial)})
+        for device in devices:
             # the Bluetooth address differs from the Wi-Fi one. Without it, HA shows
             # the appliance as a second device.
             connection = (
@@ -195,6 +196,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "Bluetooth address %s already belongs to another device",
                         discovery_info.address,
                     )
+        if devices:
             return self.async_abort(reason="already_configured")
 
         self._ble_address = discovery_info.address

@@ -14,13 +14,6 @@ from .appliance import ApplianceNetwork
 
 
 @pytest.fixture(autouse=True)
-def _custom_integrations(request: pytest.FixtureRequest) -> None:
-    """Let Home Assistant load 'custom_components/vzug' in tests that run it."""
-    if "hass" in request.fixturenames:
-        request.getfixturevalue("enable_custom_integrations")
-
-
-@pytest.fixture(autouse=True)
 def _no_retry_delays(monkeypatch: pytest.MonkeyPatch) -> None:
     """The API waits between retries, tests don't have to."""
     monkeypatch.setattr(api, "RETRY_DELAY", 0.0)
