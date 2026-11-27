@@ -82,13 +82,15 @@ async def test_unreachable_appliance_becomes_unavailable(
     await setup_appliance(hass, appliance)
     assert hass.states.get("sensor.adora_sl_last_notification").state != "unavailable"
 
+    entity_ids = hass.states.async_entity_ids()
+
     appliance.reachable = False
     await _tick(hass, freezer, coordinator.STATE_COORD_IDLE_INTERVAL)
-    assert hass.states.get("sensor.adora_sl_last_notification").state == "unavailable"
+    assert {hass.states.get(e).state for e in entity_ids} == {"unavailable"}
 
     appliance.reachable = True
     await _tick(hass, freezer, coordinator.STATE_COORD_IDLE_INTERVAL)
-    assert hass.states.get("sensor.adora_sl_last_notification").state != "unavailable"
+    assert "unavailable" not in {hass.states.get(e).state for e in entity_ids}
 
 
 async def test_busy_config_tree_keeps_the_settings(

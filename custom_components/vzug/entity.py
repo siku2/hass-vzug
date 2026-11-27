@@ -6,6 +6,7 @@ from typing import Any, Concatenate
 
 import httpx
 from homeassistant.const import EntityCategory
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import UndefinedType
@@ -66,6 +67,25 @@ class VZugBaseEntity(Entity):
         self.shared = shared
         self._attr_unique_id = f"{shared.unique_id_prefix}-{unique_id_suffix}"
         self._attr_device_info = shared.device_info
+        self._reachable = True
+
+    @property
+    def available(self) -> bool:
+        return self.shared.state_coord.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if getattr(self, "coordinator", None) is not self.shared.state_coord:
+            self.async_on_remove(
+                self.shared.state_coord.async_add_listener(self._handle_reachability)
+            )
+
+    @callback
+    def _handle_reachability(self) -> None:
+        reachable = self.shared.state_coord.last_update_success
+        if reachable != self._reachable:
+            self._reachable = reachable
+            self.async_write_ha_state()
 
 
 class VZugEntity[CoordinatorT: DataUpdateCoordinator[Any]](
@@ -78,6 +98,10 @@ class VZugEntity[CoordinatorT: DataUpdateCoordinator[Any]](
     ) -> None:
         CoordinatorEntity.__init__(self, coordinator)
         VZugBaseEntity.__init__(self, shared, unique_id_suffix=unique_id_suffix)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.shared.state_coord.last_update_success
 
 
 class UserConfigEntity(VZugEntity[ConfigCoordinator]):

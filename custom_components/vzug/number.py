@@ -77,7 +77,7 @@ class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     def _field(self, field: str) -> float | None:
         data = self.coordinator.data
@@ -134,7 +134,7 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_max_value(self) -> float:
@@ -233,7 +233,7 @@ class WarmingDrawerDuration(ZoneEntity, NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_min_value(self) -> float:
@@ -317,7 +317,7 @@ class BoostDuration(ZoneEntity, RestoreNumber):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_max_value(self) -> float:

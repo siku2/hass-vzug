@@ -33,6 +33,7 @@ def _shared(raw=COMBI_COOLER, modes=MODES):
     coord.last_update_success = True
     return SimpleNamespace(
         zone_coord=coord,
+        state_coord=MagicMock(last_update_success=True),
         client=MagicMock(set_zone_value=AsyncMock(), set_cmd_value=AsyncMock()),
         unique_id_prefix="fc:1b:ff:06:6e:8e",
         device_info={},
