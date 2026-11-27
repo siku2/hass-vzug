@@ -7,7 +7,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import api, zones
 from .shared import ConfigCoordinator, Shared, ZoneCoordinator
 
-
 _KEY_SEPARATOR = re.compile(r"(?<=[a-z0-9])X(?=[A-Za-z0-9])|_+")
 
 

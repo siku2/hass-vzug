@@ -1,11 +1,12 @@
 import asyncio
 import contextlib
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpcore
 import httpx
 import pytest
 from httpcore._backends.mock import AsyncMockBackend
-from unittest.mock import patch, AsyncMock, MagicMock
+
 from custom_components.vzug.api import (
     ZH_MODE_WARMUP_MAX_FAILURES,
     AggCategory,

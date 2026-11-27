@@ -1,4 +1,5 @@
 import pytest
+
 import custom_components.vzug.api as api
 import tests.fixtures.combair_steamer_v6000_76c.expected as expected_result
 import tests.integration.test_core as test_core

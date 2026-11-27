@@ -2,9 +2,10 @@ import argparse
 import json
 import logging
 import os
-import tests.fixtures.shared as shared
 
 from flask import Flask, jsonify, request, send_from_directory
+
+import tests.fixtures.shared as shared
 
 ### If no parameters are specified, show the models to choose from
 ### Flask only allows one app.run at the same time
