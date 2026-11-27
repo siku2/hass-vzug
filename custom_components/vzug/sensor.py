@@ -128,16 +128,16 @@ async def async_setup_entry(
             for kind in ProgramInfo.KINDS
         )
 
-    for category in shared.config_coord.data.values():
-        for command in category.commands.values():
-            if command.get("type") == "status":
-                entities.append(
-                    UserConfigSensor(
-                        shared,
-                        category_key=category.key,
-                        command_key=command.get("command", ""),
-                    )
-                )
+    entities.extend(
+        UserConfigSensor(
+            shared,
+            category_key=category.key,
+            command_key=command.get("command", ""),
+        )
+        for category in shared.config_coord.data.values()
+        for command in category.commands.values()
+        if command.get("type") == "status"
+    )
 
     eco_info = shared.state_coord.data.eco_info
     for desc in _ECO_SENSORS:
@@ -358,10 +358,9 @@ class Program(StateBase):
         device = self.coordinator.data.device
         if program := device.get("Program"):
             return program
-        elif device.get("Inactive") == "true":
+        if device.get("Inactive") == "true":
             return "standby"
-        else:
-            return "active"
+        return "active"
 
 
 class ProgramEndRaw(StateBase):
