@@ -333,14 +333,20 @@ class Shared:
     async def _fetch_state(self) -> api.AggState:
         previous = self.state_coord.data
         probe = self._device_probe_due()
-        responses = self.client.responses
 
         async with detect_auth_failed():
-            state = await self.client.aggregate_state(
-                default_on_error=self._first_refresh_done,
-                include_device=probe,
-                include_eco=probe,
-            )
+            try:
+                state = await self.client.aggregate_state(
+                    default_on_error=self._first_refresh_done,
+                    include_device=probe,
+                    include_eco=probe,
+                )
+            except api.AuthenticationFailed:
+                raise
+            except Exception as exc:
+                raise UpdateFailed(
+                    f"state update from {self.client.base_url} failed: {exc!r}"
+                ) from exc
 
             if self._note_notifications(state.notifications) and not probe:
                 # something happened at the appliance: a program finished, or a
@@ -351,13 +357,6 @@ class Shared:
                     default_on_error=self._first_refresh_done
                 )
                 self.hass.async_create_task(self.config_coord.async_request_refresh())
-
-        if self.client.responses == responses:
-            # every request failed without an answer, so the values are only the
-            # defaults: the appliance is switched off or off the network
-            raise UpdateFailed(
-                f"no answer from the appliance at {self.client.base_url}"
-            )
 
         if not probe:
             return self._carry_over(state, previous)
