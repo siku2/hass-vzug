@@ -11,9 +11,9 @@ dependencies = [
 dev = [
     "coloredlogs",
     "flask",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-socket",
+    # pins pytest and its plugins to the versions of the Home Assistant release
+    "pytest-homeassistant==2026.11.3",
+    "pytest-cov",
     "ruff",
 ]
 
@@ -24,7 +24,11 @@ package = false
 testpaths = ["tests"]
 # the tests in 'tests/integration' need the emulators running
 norecursedirs = ["integration", "fixtures"]
+asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# let Home Assistant install its httpx alias before respx is imported
+addopts = "-p no:respx"
+pythonpath = ["."]
 
 # Based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 [tool.ruff]

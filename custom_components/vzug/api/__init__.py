@@ -21,6 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 # error is not enough to write the command off.
 ZH_MODE_WARMUP_MAX_FAILURES = 3
 
+# seconds between two attempts of a command: 0s, then this, twice this, ...
+RETRY_DELAY = 2.0
+# 'getCategories' answered with an empty list is asked again after these delays
+EMPTY_CATEGORIES_RETRY_DELAYS = (1.0, 2.0)
+
 DeviceStatusInactiveT = Literal["true"] | Literal["false"]
 
 
@@ -344,7 +349,7 @@ class VZugApi:
         expected_type: Any = None,
         reject_empty: bool = False,
         attempts: int = 5,
-        retry_delay: float = 2.0,
+        retry_delay: float | None = None,
         value_on_err: Callable[[], Any] | None = None,
         value_on_client_err: Callable[[], Any] | None = None,
     ) -> Any:
@@ -413,6 +418,8 @@ class VZugApi:
                 assert len(data) > 0, "empty response rejected"
             return data
 
+        if retry_delay is None:
+            retry_delay = RETRY_DELAY
         last_exc = ValueError("no attempts made")
         attempt_idx = 0
         while attempt_idx < attempts:
@@ -648,7 +655,7 @@ class VZugApi:
             # some appliances wrongly return an empty list when the hh module is
             # busy, others (ex. AdoraWash V4000) really don't have any categories.
             # Retry a couple of times, then believe the appliance and stop retrying.
-            for delay in (1.0, 2.0):
+            for delay in EMPTY_CATEGORIES_RETRY_DELAYS:
                 _LOGGER.debug("getCategories returned empty, retrying in %ss", delay)
                 await asyncio.sleep(delay)
                 category_keys = await self.list_categories()
