@@ -42,7 +42,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="L",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         translation_key="water_program",
     ),
     SensorEntityDescription(
@@ -58,7 +58,7 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="kWh",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         translation_key="energy_program",
     ),
     SensorEntityDescription(

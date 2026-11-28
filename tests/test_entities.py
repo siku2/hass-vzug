@@ -45,3 +45,15 @@ async def test_entities(
             "state": state.state if state else None,
         }
     assert summary == snapshot
+
+
+async def test_program_consumption_can_go_down(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    """The last program's consumption isn't a meter, it drops for a smaller program."""
+    await setup_appliance(hass, appliances.add("adora_dish_v6000"))
+    for entity_id in (
+        "sensor.adora_sl_energy_program",
+        "sensor.adora_sl_water_program",
+    ):
+        assert hass.states.get(entity_id).attributes["state_class"] == "total"
