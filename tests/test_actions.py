@@ -49,14 +49,7 @@ def _clear(appliance: FakeAppliance) -> None:
 @pytest.fixture
 async def cooler(hass: HomeAssistant, appliances: ApplianceNetwork) -> FakeAppliance:
     appliance = appliances.add(COOLER)
-    entry = await setup_appliance(hass, appliance)
-    # the settings' actions are disabled by default
-    registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if entity.disabled_by is not None:
-            registry.async_update_entity(entity.entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_appliance(hass, appliance)
     _clear(appliance)
     return appliance
 

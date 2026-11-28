@@ -212,14 +212,6 @@ class CheckUpdate(VZugBaseEntity, ButtonEntity):
 
 
 class UserConfig(ButtonEntity, UserConfigEntity):
-    """An action from the settings, ex. resetting the consumption statistics.
-
-    Disabled by default: these change the appliance for good with a single
-    press, nobody should find one on a dashboard by accident.
-    """
-
-    _attr_entity_registry_enabled_default = False
-
     @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.do_command_action(self.vzug_command_key)

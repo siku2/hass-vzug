@@ -484,14 +484,6 @@ class LastNotification(StateBase):
 
 
 class UserConfigSensor(SensorEntity, UserConfigEntity):
-    """A read-only value from the settings, ex. 'Consumption last programme'.
-
-    Disabled by default: most repeat a dedicated sensor (the eco values), as
-    text the appliance formats for its display.
-    """
-
-    _attr_entity_registry_enabled_default = False
-
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self.vzug_command.get("value")
