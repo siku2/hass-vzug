@@ -1,0 +1,55 @@
+[
+  {
+    "id": 2000,
+    "status": "active",
+    "temp": {
+      "set": 6.0,
+      "act": 6.0,
+      "min": 3.0,
+      "max": 8.0
+    },
+    "superCool": {
+      "min": 0,
+      "max": 86400
+    },
+    "partyCooling": {
+      "min": 0,
+      "max": 172800
+    },
+    "doorClosed": true,
+    "zone": "fridge1"
+  },
+  {
+    "id": 2001,
+    "status": "active",
+    "temp": {
+      "set": -18.0,
+      "act": -18.0,
+      "min": -22.0,
+      "max": -14.0
+    },
+    "superFreeze": {
+      "set": 3600,
+      "act": 3596,
+      "min": 0,
+      "max": 194400
+    },
+    "partyCooling": {
+      "min": 0,
+      "max": 172800
+    },
+    "doorClosed": false,
+    "zone": "freezer1"
+  },
+  {
+    "id": 9000,
+    "status": "active",
+    "duration": {
+      "set": 600,
+      "act": 597,
+      "min": 0,
+      "max": 35700
+    },
+    "zone": "countdown1"
+  }
+]

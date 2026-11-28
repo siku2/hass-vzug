@@ -411,11 +411,13 @@ class VZugApi:
                 data: Any = []
 
             if expected_type is not None:
-                assert isinstance(data, expected_type), (
-                    f"data type mismatch ({type(data)} != {expected_type})"
-                )
+                if not isinstance(data, expected_type):
+                    raise ValueError(
+                        f"data type mismatch ({type(data)} != {expected_type})"
+                    )
             if reject_empty:
-                assert len(data) > 0, "empty response rejected"
+                if not data:
+                    raise ValueError("empty response rejected")
             return data
 
         if retry_delay is None:
@@ -449,9 +451,6 @@ class VZugApi:
             except httpx.TransportError as err:
                 last_exc = err
                 _LOGGER.debug("transport error: %r", err)
-            except AssertionError as exc:
-                last_exc = exc
-                _LOGGER.debug("response data assertion failed: %s", exc)
             except Exception as exc:
                 last_exc = exc
                 _LOGGER.debug("unknown error: %r", exc)
@@ -459,7 +458,7 @@ class VZugApi:
             attempt_idx += 1
 
         if value_on_err:
-            _LOGGER.exception("command error, using default", exc_info=last_exc)
+            _LOGGER.debug("%s failed, using default: %r", command, last_exc)
             return value_on_err()
 
         raise last_exc
@@ -523,7 +522,8 @@ class VZugApi:
             errors,
         ) = await asyncio.gather(
             _device(),
-            self.get_last_push_notifications(default_on_error=default_on_error),
+            # never defaulted, so an appliance that is gone fails the poll
+            self.get_last_push_notifications(),
             _eco(),
             _errors(),
         )

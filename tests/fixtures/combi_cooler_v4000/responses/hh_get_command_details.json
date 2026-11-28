@@ -1,0 +1,60 @@
+[
+  {
+    "id": "DOOR_ALARM",
+    "details": {
+      "type": "boolean",
+      "description": "Türalarm",
+      "command": "DOOR_ALARM",
+      "value": "true",
+      "alterable": true
+    }
+  },
+  {
+    "id": "BRIGHTNESS",
+    "details": {
+      "type": "range",
+      "description": "Helligkeit",
+      "command": "BRIGHTNESS",
+      "value": "3",
+      "alterable": true,
+      "minMax": [
+        "1",
+        "5"
+      ]
+    }
+  },
+  {
+    "id": "LANGUAGE",
+    "details": {
+      "type": "selection",
+      "description": "Sprache",
+      "command": "LANGUAGE",
+      "value": "Deutsch",
+      "alterable": true,
+      "options": [
+        "Deutsch",
+        "English",
+        "Français"
+      ]
+    }
+  },
+  {
+    "id": "RESET_FILTER",
+    "details": {
+      "type": "action",
+      "description": "Filter zurücksetzen",
+      "command": "RESET_FILTER",
+      "alterable": true
+    }
+  },
+  {
+    "id": "FILTER_STATE",
+    "details": {
+      "type": "status",
+      "description": "Filterzustand",
+      "command": "FILTER_STATE",
+      "value": "OK",
+      "alterable": false
+    }
+  }
+]

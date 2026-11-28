@@ -1,0 +1,18 @@
+{
+  "doorOpenings": [
+    {
+      "today": {
+        "duration": 12,
+        "amount": 3
+      },
+      "sevenDayAverage": {
+        "duration": 40,
+        "amount": 9
+      },
+      "thirtyDayAverage": {
+        "duration": 38,
+        "amount": 8
+      }
+    }
+  ]
+}

@@ -6,7 +6,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
 from .coordinator import Shared, VZugConfigEntry
-from .entity import UserConfigEntity, ZoneEntity
+from .entity import UserConfigEntity, ZoneEntity, vzug_action
 from .helpers import snake
 
 _ICONS = {
@@ -17,6 +17,9 @@ _ICONS = {
     "SilentPlusMode": "mdi:volume-off",
     "MonoFridgeMode": "mdi:fridge-outline",
 }
+
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -79,9 +82,11 @@ class Light(ZoneEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         return zones.flag(self.zone_data, self.vzug_key)
 
+    @vzug_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._set(True)
 
+    @vzug_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._set(False)
 
@@ -112,10 +117,12 @@ class TimedFunction(ZoneEntity, SwitchEntity):
             "remaining_seconds": zones.remaining_seconds(self.zone_data, self.vzug_key)
         }
 
+    @vzug_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         hours = self.shared.boost_hours.get(self.vzug_key, 12.0)
         await self._write_zone(zones.format_value(int(hours * 3600)))
 
+    @vzug_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._write_zone("0")
 
@@ -132,9 +139,11 @@ class Mode(ZoneEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         return zones.mode_is_on(self.coordinator.data.modes.get(self.vzug_key))
 
+    @vzug_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._set(True)
 
+    @vzug_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._set(False)
 
@@ -155,9 +164,11 @@ class UserConfig(SwitchEntity, UserConfigEntity):
             case _:
                 return None
 
+    @vzug_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self._vzug_set_state(True)
 
+    @vzug_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self._vzug_set_state(False)
 

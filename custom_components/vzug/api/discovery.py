@@ -42,7 +42,7 @@ class _DiscoveryProtocol(asyncio.DatagramProtocol):
         )
 
     def error_received(self, exc: Exception) -> None:
-        _LOGGER.warn("received error", exc_info=exc)
+        _LOGGER.warning("received error", exc_info=exc)
 
 
 async def _make_iter(protocol: _DiscoveryProtocol) -> AsyncIterator[DiscoveryInfo]:
@@ -61,16 +61,19 @@ async def create_discovery_stream(interface: IPv4Interface, timeout: float | Non
         local_addr=(str(interface.ip), _PORT),
         allow_broadcast=True,
     )
+    timer: asyncio.TimerHandle | None = None
     try:
         transport.sendto(
             _PING,
             (str(interface.network.broadcast_address), _PORT),
         )
         if timeout:
-            loop.call_later(timeout, lambda: transport.close())
+            timer = loop.call_later(timeout, transport.close)
 
         yield _make_iter(protocol)
     finally:
+        if timer is not None:
+            timer.cancel()
         transport.abort()
 
 

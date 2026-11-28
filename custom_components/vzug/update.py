@@ -6,11 +6,15 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import api
+from .const import DOMAIN
 from .coordinator import Shared, UpdateCoordinator, VZugConfigEntry
-from .entity import VZugEntity
+from .entity import VZugEntity, vzug_action
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -62,6 +66,7 @@ class VZugUpdate(UpdateEntity, VZugEntity[UpdateCoordinator]):
 
         return (progress.get("download", 0) + progress.get("installation", 0)) // 2
 
+    @vzug_action
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -75,7 +80,11 @@ class VZugUpdate(UpdateEntity, VZugEntity[UpdateCoordinator]):
         elif name == "HHG":
             await self.shared.client.do_hhg_update()
         else:
-            raise ValueError("unknown update component", name)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_update_component",
+                translation_placeholders={"component": str(name)},
+            )
         # the status may still read 'idle' right after the request, which would
         # put the coordinator back on its idle interval before the run even starts
         self.shared.note_update_activity()

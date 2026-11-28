@@ -175,15 +175,52 @@ async def test_reauth(hass: HomeAssistant, appliances: ApplianceNetwork) -> None
 
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {"name": entry.title}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "wrong"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "auth_failed"}
+
+    appliance.reachable = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "secret"}
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    appliance.reachable = True
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "secret"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_USERNAME] == "admin"
     assert entry.data[CONF_PASSWORD] == "secret"
     assert entry.data[CONF_BASE_URL] == appliance.base_url
+
+
+async def test_reauth_with_another_appliance(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    """The address now leads to another appliance, its credentials don't belong."""
+    appliance = appliances.add(DEVICE, username="admin", password="secret")
+    entry = mock_entry(appliance, **{CONF_PASSWORD: "old"})
+    entry.add_to_hass(hass)
+    # the other appliance took over the address
+    other = appliances.add(
+        "adora_wash_v6000", host=appliance.host, username="admin", password="secret"
+    )
+    assert appliances.appliances[appliance.host] is other
+
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "secret"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert entry.data[CONF_PASSWORD] == "old"
 
 
 # DHCP

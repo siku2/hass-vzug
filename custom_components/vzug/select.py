@@ -1,11 +1,15 @@
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
+from .const import DOMAIN
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity, vzug_action
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -79,10 +83,15 @@ class ProgramSelect(VZugEntity[ProgramCoordinator], SelectEntity):
             "description": descriptions.get(language) or descriptions.get("en"),
         }
 
+    @vzug_action
     async def async_select_option(self, option: str) -> None:
         program_id = zones.program_id_by_key(self.coordinator.data.names, option)
         if program_id is None:
-            raise ValueError(f"unknown program {option!r}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_program",
+                translation_placeholders={"program": option},
+            )
         # ovens pick the program for their cooking chamber
         if zone := getattr(self.shared, "program_zone", None):
             await self.shared.client.set_program(program_id, {"zone": zone})
@@ -106,6 +115,7 @@ class TemperatureUnit(ZoneEntity, SelectEntity):
     def current_option(self) -> str | None:
         return zones.temperature_unit(self.coordinator.data.modes)
 
+    @vzug_action
     async def async_select_option(self, option: str) -> None:
         await self.shared.client.set_cmd_value(self.vzug_key, option)
         await self.coordinator.async_request_refresh()
@@ -120,6 +130,7 @@ class UserConfig(SelectEntity, UserConfigEntity):
     def options(self) -> list[str]:
         return self.vzug_command.get("options", [])
 
+    @vzug_action
     async def async_select_option(self, option: str) -> None:
         await self.shared.client.set_command(self.vzug_command_key, option)
         await self.coordinator.async_request_refresh()

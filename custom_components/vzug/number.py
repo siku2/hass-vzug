@@ -10,11 +10,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity, vzug_action
 from .helpers import snake, zone_translation
 
 # what the V-ZUG app offers first when a timed function is switched on
 DEFAULT_BOOST_HOURS = 12.0
+
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -73,7 +76,7 @@ class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     def _field(self, field: str) -> float | None:
         data = self.coordinator.data
@@ -129,7 +132,7 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_max_value(self) -> float:
@@ -197,6 +200,7 @@ class Illumination(ZoneEntity, NumberEntity):
         except ValueError:
             return None
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         await self.shared.client.set_cmd_value(self.vzug_key, str(int(value)))
         await self.coordinator.async_request_refresh()
@@ -226,7 +230,7 @@ class WarmingDrawerDuration(ZoneEntity, NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_min_value(self) -> float:
@@ -279,6 +283,7 @@ class ZoneTemperature(ZoneEntity, NumberEntity):
         value = zones.value_field(self.zone_data, self.vzug_key, "set")
         return float(value) if isinstance(value, (int, float)) else None
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         await self._write_zone(zones.format_value(value))
 
@@ -308,7 +313,7 @@ class BoostDuration(ZoneEntity, RestoreNumber):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_max_value(self) -> float:
@@ -357,6 +362,7 @@ class Timer(ZoneEntity, NumberEntity):
         # round up, so a timer about to ring still shows 1 and not 0
         return float(-(-left // 60)) if left else 0.0
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         if any(zones.is_cooling_zone(z) for z in self.coordinator.data.zones):
             # refrigerators: {"zone":"countdown1","duration":"600"}, "0" stops it
@@ -408,6 +414,7 @@ class UserConfig(NumberEntity, UserConfigEntity):
         except ValueError:
             return None
 
+    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         await self.shared.client.set_command(self.vzug_command_key, str(int(value)))
         await self.coordinator.async_request_refresh()

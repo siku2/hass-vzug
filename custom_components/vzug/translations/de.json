@@ -4,7 +4,8 @@
       "already_configured": "Gerät ist bereits konfiguriert",
       "false_discovery": "Falsch positive Entdeckung",
       "discovery_finished": "{count} Gerät(e) entdeckt",
-      "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+      "wrong_device": "Diese Anmeldedaten gehören zu einem anderen Gerät. Verwende die des eingerichteten Geräts."
     },
     "error": {
       "auth_failed": "Authentifizierung fehlgeschlagen",
@@ -45,6 +46,18 @@
         "data": {
           "ssid": "WLAN-Name (SSID)",
           "password": "WLAN-Passwort"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut anmelden",
+        "description": "Das Gerät {name} akzeptiert die gespeicherten Anmeldedaten nicht mehr. Gib den Nutzernamen und das Passwort ein, die auf dem Gerät gesetzt sind.",
+        "data": {
+          "username": "Nutzername",
+          "password": "Passwort"
+        },
+        "data_description": {
+          "username": "Der Nutzername der Weboberfläche des Geräts.",
+          "password": "Das Passwort der Weboberfläche des Geräts."
         }
       }
     },
@@ -769,6 +782,23 @@
     "zh_mode": {
       "title": "{name} lässt sich nicht steuern",
       "description": "V-ZUG-Home ist auf {name} ausgeschaltet oder auf «nur anzeigen» gestellt. Das Gerät lehnt deshalb alle Änderungen aus Home Assistant ab. Um es zu steuern, in den Benutzereinstellungen des Geräts V-ZUG-Home auf «bedienen» (bzw. «bedienen und anzeigen») stellen."
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Das Gerät hat die Anmeldedaten abgelehnt. Melde die Integration erneut an."
+    },
+    "request_refused": {
+      "message": "Das Gerät hat die Anfrage abgelehnt: {status} {response}"
+    },
+    "communication_error": {
+      "message": "Fehler bei der Kommunikation mit dem Gerät: {error}"
+    },
+    "unknown_program": {
+      "message": "Unbekanntes Programm {program}"
+    },
+    "unknown_update_component": {
+      "message": "Unbekannte Update-Komponente {component}"
     }
   }
 }

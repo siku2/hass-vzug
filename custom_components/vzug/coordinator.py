@@ -335,11 +335,18 @@ class Shared:
         probe = self._device_probe_due()
 
         async with detect_auth_failed():
-            state = await self.client.aggregate_state(
-                default_on_error=self._first_refresh_done,
-                include_device=probe,
-                include_eco=probe,
-            )
+            try:
+                state = await self.client.aggregate_state(
+                    default_on_error=self._first_refresh_done,
+                    include_device=probe,
+                    include_eco=probe,
+                )
+            except api.AuthenticationFailed:
+                raise
+            except Exception as exc:
+                raise UpdateFailed(
+                    f"state update from {self.client.base_url} failed: {exc!r}"
+                ) from exc
 
             if self._note_notifications(state.notifications) and not probe:
                 # something happened at the appliance: a program finished, or a

@@ -11,6 +11,8 @@ from .coordinator import ProgramCoordinator, Shared, StateCoordinator, VZugConfi
 from .entity import VZugEntity, ZoneEntity
 from .helpers import snake, zone_translation
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

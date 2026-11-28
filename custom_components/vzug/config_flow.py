@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from ipaddress import IPv4Interface
 from typing import Any, cast
 
@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.network import Adapter, async_get_adapters
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -31,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 _DISCOVERY_TIMEOUT = 3.0
 
 ABORT_FALSE_DISCOVERY = "false_discovery"
+ABORT_WRONG_DEVICE = "wrong_device"
 ABORT_DISCOVERY_FINISHED = "discovery_finished"
 
 ERR_AUTH_FAILED = "auth_failed"
@@ -58,8 +60,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._ble_address: str | None = None
         self._ble_serial: str | None = None
 
+    @callback
+    def async_remove(self) -> None:
+        """Close the connection to the appliance when the flow ends."""
+        if self._client is not None:
+            self.hass.async_create_task(self._client.aclose())
+
     def _set_client(self) -> None:
         assert self._base_url
+        if self._client is not None:
+            self.hass.async_create_task(self._client.aclose())
         if self._username is not None and self._password is not None:
             credentials = api.Credentials(
                 username=self._username, password=self._password
@@ -109,11 +119,44 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """The appliance refused the stored credentials."""
         self._base_url = URL(entry_data[CONF_BASE_URL])
         self._username = entry_data.get(CONF_USERNAME)
+        return await self.async_step_reauth_confirm()
 
-        return await self.async_step_auth()
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._username = user_input[CONF_USERNAME]
+            self._password = user_input[CONF_PASSWORD]
+            self._set_client()
+            assert self._client
+            try:
+                meta = await self._client.aggregate_meta()
+            except api.AuthenticationFailed:
+                errors[CONF_BASE] = ERR_AUTH_FAILED
+            except Exception:
+                errors[CONF_BASE] = ERR_CANNOT_CONNECT
+            else:
+                await self.async_set_unique_id(dr.format_mac(meta.mac_address))
+                self._abort_if_unique_id_mismatch(reason=ABORT_WRONG_DEVICE)
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_USERNAME: self._username,
+                        CONF_PASSWORD: self._password,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self._auth_schema(),
+            description_placeholders={"name": self._get_reauth_entry().title},
+            errors=errors,
+        )
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         _LOGGER.debug("dhcp discovery: %s", discovery_info)
@@ -307,21 +350,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self._create_entry()
 
         return self.async_show_form(
-            step_id="auth",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME, default=self._username): TextSelector(
-                        TextSelectorConfig(autocomplete="username")
-                    ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.PASSWORD,
-                            autocomplete="current-password",
-                        )
-                    ),
-                }
-            ),
-            errors=errors,
+            step_id="auth", data_schema=self._auth_schema(), errors=errors
+        )
+
+    def _auth_schema(self) -> vol.Schema:
+        return vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=self._username): TextSelector(
+                    TextSelectorConfig(autocomplete="username")
+                ),
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD,
+                        autocomplete="current-password",
+                    )
+                ),
+            }
         )
 
     # end
@@ -346,10 +390,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             dr.format_mac(self._meta.mac_address), raise_on_progress=False
         )
-        if self.source == config_entries.SOURCE_REAUTH:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data
-            )
         # an appliance that is set up already only gets its new address
         self._abort_if_unique_id_configured(
             updates={CONF_BASE_URL: str(self._base_url)}
