@@ -7,7 +7,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import zones
 from .const import DOMAIN
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
-from .entity import UserConfigEntity, VZugEntity, ZoneEntity, vzug_action
+from .entity import (
+    UserConfigEntity,
+    VZugEntity,
+    ZoneEntity,
+    user_config_entities,
+    vzug_action,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -22,14 +28,12 @@ async def async_setup_entry(
     entities: list[SelectEntity] = []
 
     entities.extend(
-        UserConfig(
+        user_config_entities(
             shared,
-            category_key=category.key,
-            command_key=command.get("command", ""),
+            async_add_entities,
+            lambda c: c.get("type") == "selection" and c.get("alterable", True),
+            UserConfig,
         )
-        for category in shared.config_coord.data.values()
-        for command in category.commands.values()
-        if command.get("type") == "selection" and command.get("alterable", True)
     )
 
     if shared.program_coord is not None:
@@ -106,7 +110,6 @@ class TemperatureUnit(ZoneEntity, SelectEntity):
     _attr_translation_key = "temperature_unit"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = ["°C", "°F"]
-    _attr_icon = "mdi:thermometer"
 
     def __init__(self, shared: Shared) -> None:
         super().__init__(shared, zone="", key=zones.UNIT_MODE)

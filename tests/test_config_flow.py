@@ -85,12 +85,13 @@ async def test_manual_https(hass: HomeAssistant, appliances: ApplianceNetwork) -
     assert result["data"][CONF_BASE_URL] == "https://adora-dish-v6000.local"
 
 
+@pytest.mark.parametrize("host", ["http://[::1", "http://", "  "])
 async def test_manual_invalid_host(
-    hass: HomeAssistant, appliances: ApplianceNetwork
+    hass: HomeAssistant, appliances: ApplianceNetwork, host: str
 ) -> None:
     result = await _start_manual(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "http://[::1"}
+        result["flow_id"], {CONF_HOST: host}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "invalid_host"}
@@ -494,3 +495,75 @@ async def test_bluetooth_out_of_range(
         result["flow_id"], {"ssid": "home", CONF_PASSWORD: "wifi-secret"}
     )
     assert result["errors"] == {"base": "bluetooth_failed"}
+
+
+async def test_reconfigure(hass: HomeAssistant, appliances: ApplianceNetwork) -> None:
+    appliance = appliances.add(DEVICE, username="admin", password="secret")
+    entry = mock_entry(appliance, **{CONF_BASE_URL: "http://192.0.2.1"})
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    schema = result["data_schema"].schema
+    assert next(iter(schema)).description == {"suggested_value": "192.0.2.1"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "http://[::1"}
+    )
+    assert result["errors"] == {CONF_HOST: "invalid_host"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.0.2.99"}
+    )
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: appliance.host}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_BASE_URL] == appliance.base_url
+    assert entry.data[CONF_PASSWORD] == "secret"
+
+
+async def test_reconfigure_to_another_appliance(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    appliance = appliances.add(DEVICE)
+    other = appliances.add("adora_wash_v6000")
+    entry = mock_entry(appliance)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: other.host}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert entry.data[CONF_BASE_URL] == appliance.base_url
+
+
+async def test_reconfigure_with_changed_credentials(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    appliance = appliances.add(DEVICE, username="admin", password="secret")
+    entry = mock_entry(appliance, **{CONF_PASSWORD: "old"})
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: appliance.host}
+    )
+    assert result["errors"] == {"base": "auth_failed"}
+
+
+async def test_reconfigure_shows_a_full_url(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    appliance = appliances.add(DEVICE)
+    entry = mock_entry(appliance, **{CONF_BASE_URL: "https://192.0.2.1"})
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    schema = result["data_schema"].schema
+    assert next(iter(schema)).description == {"suggested_value": "https://192.0.2.1"}

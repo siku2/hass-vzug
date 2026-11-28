@@ -9,6 +9,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -145,6 +146,39 @@ class UserConfigEntity(VZugEntity[ConfigCoordinator]):
             if self.vzug_command.get("alterable", False)
             else EntityCategory.DIAGNOSTIC
         )
+
+
+def user_config_entities[EntityT: UserConfigEntity](
+    shared: Shared,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    wanted: Callable[[api.Command], bool],
+    factory: Callable[..., EntityT],
+) -> list[EntityT]:
+    """Entities for the settings in the category tree that 'wanted' picks.
+
+    Returns those the appliance has now, and adds the ones that show up later
+    (ex. after a firmware update, or once a busy appliance lists them all).
+    """
+    known: set[tuple[str, str]] = set()
+
+    def collect() -> list[EntityT]:
+        new: list[EntityT] = []
+        for category in (shared.config_coord.data or {}).values():
+            for command in category.commands.values():
+                key = (category.key, command.get("command", ""))
+                if key in known or not wanted(command):
+                    continue
+                known.add(key)
+                new.append(factory(shared, category_key=key[0], command_key=key[1]))
+        return new
+
+    @callback
+    def add_new() -> None:
+        if new := collect():
+            async_add_entities(new)
+
+    shared.config_entry.async_on_unload(shared.config_coord.async_add_listener(add_new))
+    return collect()
 
 
 class ZoneEntity(VZugEntity[ZoneCoordinator]):

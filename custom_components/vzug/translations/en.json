@@ -5,7 +5,8 @@
             "false_discovery": "False-positive Discovery",
             "discovery_finished": "Discovered {count} device(s)",
             "reauth_successful": "Re-authentication was successful",
-            "wrong_device": "These credentials belong to another appliance. Use the ones of the appliance you set up."
+            "wrong_device": "Another appliance answers at this address. Check the address of the appliance you set up.",
+            "reconfigure_successful": "The appliance was reconfigured successfully"
         },
         "error": {
             "auth_failed": "Authentication failed",
@@ -58,6 +59,16 @@
                 "data_description": {
                     "username": "The user name of the appliance's web interface.",
                     "password": "The password of the appliance's web interface."
+                }
+            },
+            "reconfigure": {
+                "title": "Change address",
+                "description": "The new address of {name}. It must still be the same appliance.",
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The IP address, host, or base url of the device"
                 }
             }
         },
@@ -794,11 +805,32 @@
         "communication_error": {
             "message": "Error communicating with the appliance: {error}"
         },
+        "select_program_first": {
+            "message": "Select a program first"
+        },
+        "stop_program_first": {
+            "message": "Stop the running program first"
+        },
         "unknown_program": {
             "message": "Unknown program {program}"
         },
         "unknown_update_component": {
             "message": "Unknown update component {component}"
+        },
+        "cannot_reach": {
+            "message": "Unable to reach the appliance at {url}: {error}"
+        },
+        "setup_failed": {
+            "message": "Setting up the appliance failed: {error}"
+        },
+        "update_failed": {
+            "message": "Updating the {data} data failed: {error}"
+        },
+        "no_zones": {
+            "message": "The appliance reported no zones"
+        },
+        "no_settings": {
+            "message": "The appliance returned no settings"
         }
     }
 }

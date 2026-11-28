@@ -210,4 +210,8 @@ async def test_remote_start_is_opt_in_and_reports_a_refusal():
     )
     with pytest.raises(HomeAssistantError) as err:
         await button.async_press()
-    assert err.value.translation_placeholders == {"status": "400", "response": "400.04"}
+    assert err.value.translation_key == "request_refused"
+    assert err.value.translation_placeholders == {
+        "status": "400",
+        "response": "400.04",
+    }

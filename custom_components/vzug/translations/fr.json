@@ -5,7 +5,8 @@
             "false_discovery": "Découverte fausse positive",
             "discovery_finished": "{count} appareil(s) découvert(s)",
             "reauth_successful": "La ré-authentification a réussi",
-            "wrong_device": "Ces identifiants appartiennent à un autre appareil. Utilise ceux de l'appareil configuré."
+            "wrong_device": "Un autre appareil répond à cette adresse. Vérifie l'adresse de l'appareil configuré.",
+            "reconfigure_successful": "L'appareil a été reconfiguré avec succès"
         },
         "error": {
             "auth_failed": "Échec de l'authentification",
@@ -58,6 +59,16 @@
                 "data_description": {
                     "username": "Le nom d'utilisateur de l'interface web de l'appareil.",
                     "password": "Le mot de passe de l'interface web de l'appareil."
+                }
+            },
+            "reconfigure": {
+                "title": "Changer l'adresse",
+                "description": "La nouvelle adresse de {name}. Ce doit toujours être le même appareil.",
+                "data": {
+                    "host": "Nom d'hôte"
+                },
+                "data_description": {
+                    "host": "L'adresse IP, l'hôte ou l'URL de base de l'appareil"
                 }
             }
         },
@@ -794,11 +805,32 @@
         "communication_error": {
             "message": "Erreur de communication avec l'appareil : {error}"
         },
+        "select_program_first": {
+            "message": "Choisis d'abord un programme"
+        },
+        "stop_program_first": {
+            "message": "Arrête d'abord le programme en cours"
+        },
         "unknown_program": {
             "message": "Programme inconnu {program}"
         },
         "unknown_update_component": {
             "message": "Composant de mise à jour inconnu {component}"
+        },
+        "cannot_reach": {
+            "message": "Impossible de joindre l'appareil à {url} : {error}"
+        },
+        "setup_failed": {
+            "message": "La configuration de l'appareil a échoué : {error}"
+        },
+        "update_failed": {
+            "message": "La mise à jour des données ({data}) a échoué : {error}"
+        },
+        "no_zones": {
+            "message": "L'appareil n'a signalé aucune zone"
+        },
+        "no_settings": {
+            "message": "L'appareil n'a renvoyé aucun réglage"
         }
     }
 }

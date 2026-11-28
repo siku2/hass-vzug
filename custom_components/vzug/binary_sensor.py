@@ -64,7 +64,6 @@ class OvenDoor(ZoneEntity, BinarySensorEntity):
 class ProbeInserted(ZoneEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.PLUG
     _attr_translation_key = "probe_inserted"
-    _attr_icon = "mdi:thermometer-probe"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="probeInserted")
@@ -78,7 +77,6 @@ class TimerRinging(ZoneEntity, BinarySensorEntity):
     """The kitchen timer ran out and rings until someone stops it."""
 
     _attr_translation_key = "timer_ringing"
-    _attr_icon = "mdi:bell-ring"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="ringing")
@@ -130,7 +128,6 @@ class PanDetected(ZoneEntity, BinarySensorEntity):
     """A pan stands on this hob zone. Its position and size are attributes."""
 
     _attr_translation_key = "pan_detected"
-    _attr_icon = "mdi:pot-steam-outline"
 
     def __init__(self, shared: Shared, *, zone: str) -> None:
         super().__init__(shared, zone=zone, key="pan")

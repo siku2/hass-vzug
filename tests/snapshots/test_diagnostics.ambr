@@ -1,0 +1,2492 @@
+# serializer version: 1
+# name: test_diagnostics[adora_dish_v6000]
+  dict({
+    'api_sample': dict({
+      'aggregate_config': dict({
+        'CATEGORY_0': dict({
+          'commands': dict({
+            'PIN_DRY_PLUS': dict({
+              'alterable': True,
+              'command': 'PIN_DRY_PLUS',
+              'description': 'TrocknenPlus',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'PIN_ECO': dict({
+              'alterable': True,
+              'command': 'PIN_ECO',
+              'description': 'Energiesparen',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'PIN_OPTISTART': dict({
+              'alterable': False,
+              'command': 'PIN_OPTISTART',
+              'description': 'OptiStart',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'PIN_PARTIALLOAD': dict({
+              'alterable': True,
+              'command': 'PIN_PARTIALLOAD',
+              'description': 'Teilbeladung',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'PIN_RINSE_PLUS': dict({
+              'alterable': True,
+              'command': 'PIN_RINSE_PLUS',
+              'description': 'SpülenPlus',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'PIN_STARTTIME': dict({
+              'alterable': True,
+              'command': 'PIN_STARTTIME',
+              'description': 'Startaufschub [h]',
+              'minMax': list([
+                '0',
+                '24',
+              ]),
+              'refresh': list([
+                'PIN_OPTISTART',
+              ]),
+              'type': 'range',
+              'value': '0',
+            }),
+            'PIN_STEAM_FINISH': dict({
+              'alterable': True,
+              'command': 'PIN_STEAM_FINISH',
+              'description': 'SteamFinish',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+          }),
+          'description': 'Permanente Anwahl',
+          'key': 'CATEGORY_0',
+        }),
+        'CATEGORY_1': dict({
+          'commands': dict({
+            'ECO_MGMT_ENERGY_AVG': dict({
+              'alterable': False,
+              'command': 'ECO_MGMT_ENERGY_AVG',
+              'description': 'Durchschnittsverbrauch',
+              'type': 'status',
+              'value': '1,1 kWh/Ch.',
+            }),
+            'ECO_MGMT_ENERGY_PROGRAM': dict({
+              'alterable': False,
+              'command': 'ECO_MGMT_ENERGY_PROGRAM',
+              'description': 'Verbrauch letztes Programm',
+              'type': 'status',
+              'value': '0,8 kWh',
+            }),
+            'ECO_MGMT_ENERGY_TOTAL': dict({
+              'alterable': False,
+              'command': 'ECO_MGMT_ENERGY_TOTAL',
+              'description': 'Gesamtverbrauch',
+              'type': 'status',
+              'value': '533 kWh',
+            }),
+            'ECO_MGMT_INFO': dict({
+              'alterable': True,
+              'command': 'ECO_MGMT_INFO',
+              'description': 'EcoManagement',
+              'refresh': list([
+                'ECO_MGMT_RESET_AVG',
+                'ECO_MGMT_RESET_TOTAL',
+              ]),
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'ECO_MGMT_RESET_AVG': dict({
+              'alterable': True,
+              'command': 'ECO_MGMT_RESET_AVG',
+              'description': 'Wollen Sie die Verbrauchsstatistiken zurücksetzen?',
+              'refresh': list([
+                'ECO_MGMT_ENERGY_AVG',
+                'ECO_MGMT_WATER_AVG',
+              ]),
+              'type': 'action',
+              'value': 'JA',
+            }),
+            'ECO_MGMT_RESET_TOTAL': dict({
+              'alterable': True,
+              'command': 'ECO_MGMT_RESET_TOTAL',
+              'description': 'Wollen Sie die Verbrauchsstatistiken zurücksetzen?',
+              'refresh': list([
+                'ECO_MGMT_ENERGY_TOTAL',
+                'ECO_MGMT_WATER_TOTAL',
+              ]),
+              'type': 'action',
+              'value': 'JA',
+            }),
+            'ECO_MGMT_WATER_AVG': dict({
+              'alterable': False,
+              'command': 'ECO_MGMT_WATER_AVG',
+              'description': '',
+              'type': 'status',
+              'value': '17 l/Ch.',
+            }),
+            'ECO_MGMT_WATER_PROGRAM': dict({
+              'alterable': False,
+              'command': 'ECO_MGMT_WATER_PROGRAM',
+              'description': '',
+              'type': 'status',
+              'value': '14 l',
+            }),
+            'ECO_MGMT_WATER_TOTAL': dict({
+              'alterable': False,
+              'command': 'ECO_MGMT_WATER_TOTAL',
+              'description': '',
+              'type': 'status',
+              'value': '10783 l',
+            }),
+          }),
+          'description': 'EcoManagement',
+          'key': 'CATEGORY_1',
+        }),
+        'CATEGORY_2': dict({
+          'commands': dict({
+            'ALL_IN_ONE': dict({
+              'alterable': True,
+              'command': 'ALL_IN_ONE',
+              'description': 'All in 1',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'AUTO_DOOR_OPENER': dict({
+              'alterable': True,
+              'command': 'AUTO_DOOR_OPENER',
+              'description': 'Automatische Türöffnung',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'BRIGHTENER': dict({
+              'alterable': True,
+              'command': 'BRIGHTENER',
+              'description': 'Glanzmittel',
+              'options': list([
+                'AUS',
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+                '10',
+                '11',
+                '12',
+                'AUTOMATISCH',
+              ]),
+              'type': 'selection',
+              'value': 'AUTOMATISCH',
+            }),
+            'CHILD_PROOF_LOCK': dict({
+              'alterable': True,
+              'command': 'CHILD_PROOF_LOCK',
+              'description': 'Kindersicherung',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'DSP_BUTTON_SOUND': dict({
+              'alterable': True,
+              'command': 'DSP_BUTTON_SOUND',
+              'description': 'Tastenton',
+              'options': list([
+                'AUS',
+                'LEISE',
+                'LAUT',
+              ]),
+              'type': 'selection',
+              'value': 'AUS',
+            }),
+            'DSP_CTRL_DOOR_ANGLE': dict({
+              'alterable': True,
+              'command': 'DSP_CTRL_DOOR_ANGLE',
+              'description': 'Bedienung Türwinkel 46-90°',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'DSP_ILLUMINATION': dict({
+              'alterable': True,
+              'command': 'DSP_ILLUMINATION',
+              'description': 'Helligkeit ',
+              'minMax': list([
+                '1',
+                '5',
+              ]),
+              'type': 'range',
+              'value': '2',
+            }),
+            'DSP_SIGNAL_SOUND': dict({
+              'alterable': True,
+              'command': 'DSP_SIGNAL_SOUND',
+              'description': 'Signalton',
+              'options': list([
+                'AUS',
+                'LEISE',
+                'LAUT',
+              ]),
+              'type': 'selection',
+              'value': 'AUS',
+            }),
+            'EMPTY_TANK_ON_POWER_FAILURE': dict({
+              'alterable': True,
+              'command': 'EMPTY_TANK_ON_POWER_FAILURE',
+              'description': 'Tank leeren bei Netzunterbruch',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'FUNCTION_LIGHT': dict({
+              'alterable': True,
+              'command': 'FUNCTION_LIGHT',
+              'description': 'FunctionLight',
+              'options': list([
+                'AUS',
+                '1',
+                '2',
+                '3',
+              ]),
+              'type': 'selection',
+              'value': '2',
+            }),
+            'HOT_WATER': dict({
+              'alterable': True,
+              'command': 'HOT_WATER',
+              'description': 'Warmwasseranschluss',
+              'options': list([
+                'AUS',
+                'EIN',
+                'OHNE HEIZEN',
+              ]),
+              'type': 'selection',
+              'value': 'AUS',
+            }),
+            'INTERIOR_LIGHTING': dict({
+              'alterable': True,
+              'command': 'INTERIOR_LIGHTING',
+              'description': 'Innenraumbeleuchtung',
+              'options': list([
+                'AUS',
+                '1 min',
+                '2 min',
+                '5 min',
+                '10 min',
+                '20 min',
+              ]),
+              'type': 'selection',
+              'value': '20 min',
+            }),
+            'STANDBY_AUTOMATIC': dict({
+              'alterable': True,
+              'command': 'STANDBY_AUTOMATIC',
+              'description': 'Standby-Automatik',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'TANK_STORAGE_DURATION': dict({
+              'alterable': True,
+              'command': 'TANK_STORAGE_DURATION',
+              'description': 'Speichertank',
+              'options': list([
+                'AUS',
+                '12 h',
+                '36 h',
+                '50 h',
+              ]),
+              'type': 'selection',
+              'value': 'AUS',
+            }),
+            'TEMPERATURE_UNIT': dict({
+              'alterable': True,
+              'command': 'TEMPERATURE_UNIT',
+              'description': 'Temperatureinheit',
+              'options': list([
+                '°C',
+                '°F',
+              ]),
+              'type': 'selection',
+              'value': '°C',
+            }),
+            'WATER_HARDNESS': dict({
+              'alterable': True,
+              'command': 'WATER_HARDNESS',
+              'description': 'Wasserhärte',
+              'options': list([
+                '0-3 °dH',
+                '4-6 °dH',
+                '7-9 °dH',
+                '10-12 °dH',
+                '13-14 °dH',
+                '15-16 °dH',
+                '17-19 °dH',
+                '20-22 °dH',
+                '23-27 °dH',
+                '28-32 °dH',
+                '33-38 °dH',
+                '39-45 °dH',
+                '46-65 °dH',
+              ]),
+              'type': 'selection',
+              'value': '4-6 °dH',
+            }),
+            'WATER_HARDNESS_UNIT': dict({
+              'alterable': True,
+              'command': 'WATER_HARDNESS_UNIT',
+              'description': 'Wasserhärteeinheit',
+              'options': list([
+                '°fH',
+                '°dH',
+              ]),
+              'refresh': list([
+                'WATER_HARDNESS',
+              ]),
+              'type': 'selection',
+              'value': '°dH',
+            }),
+          }),
+          'description': 'Geräteeinstellungen',
+          'key': 'CATEGORY_2',
+        }),
+      }),
+      'ai_fw_version': dict({
+        'HW': '1049255-R01',
+        'SD': '1052633-R20',
+        'SW': '1052633-R20',
+        'apiVersion': '1.8.0',
+        'deviceUuid': '**REDACTED**',
+        'fn': '**REDACTED**',
+        'phy': 'WLAN',
+      }),
+      'all_program_ids': list([
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        88,
+        94,
+        89,
+        93,
+        87,
+        95,
+        92,
+        91,
+        90,
+      ]),
+      'api_version_ai': None,
+      'api_version_hh': None,
+      'check_for_updates': None,
+      'device_info': dict({
+        'apiVersion': '1.8.0',
+        'articleNumber': '**REDACTED**',
+        'description': 'AdoraDish V6000',
+        'model': 'AS6TDI',
+        'name': 'Adora SL',
+        'serialNumber': '**REDACTED**',
+        'type': 'GS',
+        'zhMode': 2,
+      }),
+      'device_status': dict({
+        'DeviceName': '**REDACTED**',
+        'Inactive': 'true',
+        'Program': '',
+        'ProgramEnd': dict({
+          'End': '',
+          'EndType': '0',
+        }),
+        'Serial': '**REDACTED**',
+        'Status': 'Bitte Glanzmittel nachfüllen',
+        'deviceUuid': '**REDACTED**',
+      }),
+      'eco_info': dict({
+        'energy': dict({
+          'average': 1.1,
+          'program': 0.8,
+          'total': 533,
+        }),
+        'water': dict({
+          'average': 17,
+          'program': 14,
+          'total': 10783,
+        }),
+      }),
+      'errors': list([
+      ]),
+      'hh_fw_version': dict({
+        'an': '**REDACTED**',
+        'device-type': 'KUNDE',
+        'fn': '**REDACTED**',
+        'v': '1056701-R28',
+        'v2': '1056700-R13',
+        'vh1': '1049255-R01',
+        'vh2': '1084164-R01',
+        'vp': '1090227-R17',
+        'vr01': '1069783-R01',
+        'vr0C': '1090228-R19',
+      }),
+      'installed_features': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'last_push_notifications': list([
+        dict({
+          'date': '2025-06-08T16:43:36Z',
+          'message': 'Glanzmittel nachfüllen!',
+        }),
+        dict({
+          'date': '2025-06-08T16:43:17Z',
+          'message': 'Programm Automatik beendet – Energie: 0,8 kWh, Wasser: 14 l',
+        }),
+        dict({
+          'date': '2025-06-05T13:17:53Z',
+          'message': 'Programm Automatik beendet – Energie: 1,1 kWh, Wasser: 17 l',
+        }),
+        dict({
+          'date': '2025-06-02T13:23:17Z',
+          'message': 'Programm Automatik beendet – Energie: 0,8 kWh, Wasser: 14 l',
+        }),
+        dict({
+          'date': '2025-05-31T16:20:50Z',
+          'message': 'Programm Automatik beendet – Energie: 0,7 kWh, Wasser: 11 l',
+        }),
+        dict({
+          'date': '2025-05-29T07:46:12Z',
+          'message': 'Programm Automatik beendet – Energie: 1,0 kWh, Wasser: 18 l',
+        }),
+        dict({
+          'date': '2025-05-26T14:17:21Z',
+          'message': 'Programm Automatik beendet – Energie: 0,9 kWh, Wasser: 14 l',
+        }),
+        dict({
+          'date': '2025-05-26T11:55:56Z',
+          'message': 'Programm Party beendet – Energie: <0,1 kWh, Wasser: 0 l',
+        }),
+        dict({
+          'date': '2025-05-26T10:59:37Z',
+          'message': 'Programm Party bereit',
+        }),
+        dict({
+          'date': '2025-05-22T13:09:16Z',
+          'message': 'Programm Automatik beendet – Energie: 0,9 kWh, Wasser: 14 l',
+        }),
+      ]),
+      'list_categories': list([
+        'CATEGORY_0',
+        'CATEGORY_1',
+        'CATEGORY_2',
+      ]),
+      'mac_address': '**REDACTED**',
+      'model_description': 'AdoraDish V6000 Emulator',
+      'program': list([
+        dict({
+          'info': dict({
+            'status': 'idle',
+          }),
+          'options': dict({
+          }),
+        }),
+      ]),
+      'update_status': dict({
+        'components': list([
+          dict({
+            'available': False,
+            'name': 'AI',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+          dict({
+            'available': False,
+            'name': 'HHG',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+        ]),
+        'isAIUpdateAvailable': False,
+        'isHHGUpdateAvailable': False,
+        'isSynced': True,
+        'status': 'idle',
+      }),
+      'zh_mode': 2,
+    }),
+    'coordinators': dict({
+      'config': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 3600.0,
+      }),
+      'programs': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 300.0,
+      }),
+      'state': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 60.0,
+      }),
+      'update': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 21600.0,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'vzug',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+    'meta': dict({
+      'ai_api_version': None,
+      'api_version': list([
+        1,
+        8,
+        0,
+      ]),
+      'device_name': '**REDACTED**',
+      'hh_api_version': list([
+        1,
+        8,
+        0,
+      ]),
+      'mac_address': '**REDACTED**',
+      'machine_type': 'GS',
+      'model_id': 'AS6TDI',
+      'model_name': 'AdoraDish V6000',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[adora_slq]
+  dict({
+    'api_sample': dict({
+      'aggregate_config': dict({
+        'settings': dict({
+          'commands': dict({
+            'aquaplus': dict({
+              'command': 'aquaplus',
+              'description': 'AquaPlus',
+              'options': list([
+                'Standard',
+                '+ Wasser',
+                '+ 1 Spülen',
+                '+ Wasser + 1 Spülen',
+                'Hautschutz',
+              ]),
+              'type': 'selection',
+              'value': 'Standard',
+            }),
+            'autoXdoorXopener': dict({
+              'command': 'autoXdoorXopener',
+              'description': 'Türöffnungsautomatik',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'backgroundXimage': dict({
+              'command': 'backgroundXimage',
+              'description': 'Hintergrundbild',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'brightness': dict({
+              'command': 'brightness',
+              'description': 'Helligkeit',
+              'minMax': list([
+                '1',
+                '4',
+              ]),
+              'type': 'range',
+              'value': '3',
+            }),
+            'buttonXtone': dict({
+              'command': 'buttonXtone',
+              'description': 'Tastenton',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'childproofXlock': dict({
+              'command': 'childproofXlock',
+              'description': 'Kindersicherung',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'ecom': dict({
+              'command': 'ecom',
+              'description': 'EcoManagement',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'ecomXstatXavarage': dict({
+              'command': 'ecomXstatXavarage',
+              'description': 'Statistik',
+              'type': 'status',
+              'value': '\ue301 0,5kWh, \ue300 33ℓ',
+            }),
+            'ecomXstatXavarageXclear': dict({
+              'command': 'ecomXstatXavarageXclear',
+              'description': '',
+              'type': 'action',
+              'value': 'Durchschnitt löschen',
+            }),
+            'ecomXstatXtotal': dict({
+              'command': 'ecomXstatXtotal',
+              'description': 'Statistik',
+              'type': 'status',
+              'value': '\ue301 97kWh, \ue300 6950ℓ',
+            }),
+            'ecomXstatXtotalXclear': dict({
+              'command': 'ecomXstatXtotalXclear',
+              'description': '',
+              'type': 'action',
+              'value': 'Total löschen',
+            }),
+            'hygieneXinformation': dict({
+              'command': 'hygieneXinformation',
+              'description': 'Hygieneinfo',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'loosenXup': dict({
+              'command': 'loosenXup',
+              'description': 'Auflockern',
+              'options': list([
+                '30 Sekunden',
+                '10 Minuten',
+                '30 Minuten',
+                '6 Stunden',
+              ]),
+              'type': 'selection',
+              'value': '30 Sekunden',
+            }),
+            'multiXcompXdetergent': dict({
+              'command': 'multiXcompXdetergent',
+              'description': 'Baukastenwaschmittel',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'silent': dict({
+              'command': 'silent',
+              'description': 'Silent',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'softXwater': dict({
+              'command': 'softXwater',
+              'description': 'Weichwasser',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'soiling': dict({
+              'command': 'soiling',
+              'description': 'Verschmutzung',
+              'options': list([
+                'Leicht',
+                'Mittel',
+                'Stark',
+              ]),
+              'type': 'selection',
+              'value': 'Leicht',
+            }),
+            'spinningXat': dict({
+              'command': 'spinningXat',
+              'description': 'Schleudern',
+              'options': list([
+                '1600',
+                '1400',
+                '1200',
+                '1000',
+                '800',
+                '600',
+                '400',
+              ]),
+              'type': 'selection',
+              'value': '1200',
+            }),
+            'startXdelay': dict({
+              'command': 'startXdelay',
+              'description': 'Startaufschub Uhrzeit',
+              'options': list([
+                'Programmende, OptiTime Ein',
+                'Programmende, OptiTime Aus',
+                'Programmstart',
+              ]),
+              'type': 'selection',
+              'value': 'Programmende, OptiTime Aus',
+            }),
+          }),
+          'description': 'Einstellungen',
+          'key': 'settings',
+        }),
+      }),
+      'ai_fw_version': dict({
+        'HW': '1065944-R02',
+        'SD': '1052633-R20',
+        'SW': '1052633-R20',
+        'apiVersion': '1.8.0',
+        'deviceUuid': '**REDACTED**',
+        'fn': '**REDACTED**',
+        'phy': 'WLAN',
+      }),
+      'all_program_ids': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getAllProgramIds&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getAllProgramIds&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'api_version_ai': None,
+      'api_version_hh': None,
+      'check_for_updates': None,
+      'device_info': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getDeviceInfo&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getDeviceInfo&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'device_status': dict({
+        'DeviceName': '',
+        'Inactive': 'true',
+        'Program': '',
+        'ProgramEnd': dict({
+          'End': '',
+          'EndType': '0',
+        }),
+        'Serial': '**REDACTED**',
+        'Status': '',
+        'deviceUuid': '**REDACTED**',
+      }),
+      'eco_info': dict({
+        'energy': dict({
+          'average': 0.5,
+          'program': 0.4,
+          'total': 96.3,
+        }),
+        'water': dict({
+          'average': 35,
+          'program': 45.1,
+          'total': 6893.8,
+        }),
+      }),
+      'errors': list([
+      ]),
+      'hh_fw_version': dict({
+        'an': '**REDACTED**',
+        'device-type': 'KUNDE',
+        'fn': '**REDACTED**',
+        'v': 'W4215911',
+        'v2': 'W421095 ',
+        'v3': 'W424921 ',
+        'vh1': 'W4215009',
+        'vh2': 'W4211304',
+        'vp': 'W422046 ',
+      }),
+      'installed_features': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'last_push_notifications': list([
+        dict({
+          'date': '2025-04-13T17:15:13Z',
+          'message': 'Programm 30°C Ecoprogramm beendet - Energie: 0,4kWh, Wasser: 45ℓ.',
+        }),
+        dict({
+          'date': '2025-04-13T15:14:50Z',
+          'message': 'Programm 40°C Dampfglätten beendet - Energie: 0,3kWh, Wasser: 1ℓ.',
+        }),
+        dict({
+          'date': '2025-04-13T11:34:07Z',
+          'message': 'Programm 30°C Ecoprogramm beendet - Energie: 0,5kWh, Wasser: 56ℓ.',
+        }),
+        dict({
+          'date': '2025-04-12T19:11:08Z',
+          'message': 'Programm 60°C Buntwäsche beendet - Energie: 0,8kWh, Wasser: 32ℓ.',
+        }),
+        dict({
+          'date': '2025-04-12T16:21:48Z',
+          'message': 'Programm 60°C Buntwäsche beendet - Energie: 1,6kWh, Wasser: 78ℓ.',
+        }),
+        dict({
+          'date': '2025-04-12T10:36:20Z',
+          'message': 'Programm 40°C Dampfglätten beendet - Energie: 0,3kWh, Wasser: 1ℓ.',
+        }),
+        dict({
+          'date': '2025-04-12T06:57:59Z',
+          'message': 'Programm 30°C Ecoprogramm beendet - Energie: 0,3kWh, Wasser: 39ℓ.',
+        }),
+        dict({
+          'date': '2025-04-12T05:17:17Z',
+          'message': 'Programm 30°C Ecoprogramm beendet - Energie: 0,3kWh, Wasser: 8ℓ.',
+        }),
+        dict({
+          'date': '2025-04-11T20:24:06Z',
+          'message': 'Programm 30°C Ecoprogramm beendet - Energie: 0,4kWh, Wasser: 46ℓ.',
+        }),
+        dict({
+          'date': '2025-04-11T17:14:34Z',
+          'message': 'Programm 40°C Dampfglätten beendet - Energie: 0,3kWh, Wasser: 1ℓ.',
+        }),
+      ]),
+      'list_categories': list([
+        'settings',
+      ]),
+      'mac_address': '**REDACTED**',
+      'model_description': 'Adora SLQ Emulator',
+      'program': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getProgram&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getProgram&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'update_status': dict({
+        'components': list([
+          dict({
+            'available': False,
+            'name': 'AI',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+          dict({
+            'available': False,
+            'name': 'HHG',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+        ]),
+        'isAIUpdateAvailable': False,
+        'isHHGUpdateAvailable': False,
+        'isSynced': True,
+        'status': 'idle',
+      }),
+      'zh_mode': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getZHMode&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getZHMode&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+    }),
+    'coordinators': dict({
+      'config': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 3600.0,
+      }),
+      'state': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 60.0,
+      }),
+      'update': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 21600.0,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'vzug',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+    'meta': dict({
+      'ai_api_version': None,
+      'api_version': list([
+        1,
+        8,
+        0,
+      ]),
+      'device_name': '',
+      'hh_api_version': list([
+        1,
+        0,
+        0,
+      ]),
+      'mac_address': '**REDACTED**',
+      'machine_type': '',
+      'model_id': '',
+      'model_name': 'Adora SLQ Emulator',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[adora_tslq_wp]
+  dict({
+    'api_sample': dict({
+      'aggregate_config': dict({
+        'EcoManagement': dict({
+          'commands': dict({
+            'AverageXperXcycle': dict({
+              'command': 'AverageXperXcycle',
+              'description': 'Durchschnitt pro Charge',
+              'type': 'status',
+              'value': ' 0,7 kWh',
+            }),
+            'AverageXperXcycleDEL': dict({
+              'command': 'AverageXperXcycleDEL',
+              'description': '',
+              'type': 'action',
+              'value': 'Löschen',
+            }),
+            'EcoManagement': dict({
+              'command': 'EcoManagement',
+              'description': 'EcoManagement',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'TotalXconsumption': dict({
+              'command': 'TotalXconsumption',
+              'description': 'Gesamtverbrauch',
+              'type': 'status',
+              'value': '4 kWh',
+            }),
+            'TotalXconsumptionDEL': dict({
+              'command': 'TotalXconsumptionDEL',
+              'description': '',
+              'type': 'action',
+              'value': 'Löschen',
+            }),
+          }),
+          'description': 'EcoManagement',
+          'key': 'EcoManagement',
+        }),
+        'UserXsettings': dict({
+          'commands': dict({
+            'Backgrounimage': dict({
+              'command': 'Backgrounimage',
+              'description': 'Hintergrundbild',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'Brightness': dict({
+              'command': 'Brightness',
+              'description': 'Helligkeit',
+              'minMax': list([
+                '1',
+                '4',
+              ]),
+              'type': 'range',
+              'value': '3',
+            }),
+            'ButtonXtone': dict({
+              'command': 'ButtonXtone',
+              'description': 'Tastenton',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'ChildproofXlock': dict({
+              'command': 'ChildproofXlock',
+              'description': 'Kindersicherung',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'LevelXofXdryness': dict({
+              'command': 'LevelXofXdryness',
+              'description': 'Trockengrad',
+              'minMax': list([
+                '1',
+                '5',
+              ]),
+              'type': 'range',
+              'value': '3',
+            }),
+            'ReversePlus': dict({
+              'command': 'ReversePlus',
+              'description': 'ReversierenPlus',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'StandardXmode': dict({
+              'command': 'StandardXmode',
+              'description': 'Standardmodus',
+              'options': list([
+                'keine Zusatzfunktion',
+                'SilentPlus',
+                'Sprint',
+                'Eco',
+              ]),
+              'type': 'selection',
+              'value': 'keine Zusatzfunktion',
+            }),
+            'ViewingXangle': dict({
+              'command': 'ViewingXangle',
+              'description': 'Blickwinkel',
+              'options': list([
+                'von oben auf Display',
+                'von unten auf Display',
+              ]),
+              'type': 'selection',
+              'value': 'von unten auf Display',
+            }),
+          }),
+          'description': 'Benutzereinstellungen',
+          'key': 'UserXsettings',
+        }),
+      }),
+      'ai_fw_version': dict({
+        'HW': '1065944-R02',
+        'SD': '1052633-R20',
+        'SW': '1052633-R20',
+        'apiVersion': '1.8.0',
+        'deviceUuid': '**REDACTED**',
+        'fn': '**REDACTED**',
+        'phy': 'WLAN',
+      }),
+      'all_program_ids': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getAllProgramIds&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getAllProgramIds&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'api_version_ai': None,
+      'api_version_hh': None,
+      'check_for_updates': None,
+      'device_info': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getDeviceInfo&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getDeviceInfo&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'device_status': dict({
+        'DeviceName': '',
+        'Inactive': 'true',
+        'Program': '',
+        'ProgramEnd': dict({
+          'End': '',
+          'EndType': '0',
+        }),
+        'Serial': '**REDACTED**',
+        'Status': '',
+        'deviceUuid': '**REDACTED**',
+      }),
+      'eco_info': dict({
+        'energy': dict({
+          'average': 0.737,
+          'program': 0.411,
+          'total': 4.424,
+        }),
+      }),
+      'errors': list([
+      ]),
+      'hh_fw_version': dict({
+        'an': '**REDACTED**',
+        'device-type': 'KUNDE',
+        'fn': '**REDACTED**',
+        'main-ressource': 'W5642905',
+        'v': 'W5640910',
+        'v2': 'W564197 ',
+        'vh1': 'W5640008',
+        'vh2': 'W56420R03',
+        'vp': 'W563844 ',
+        'vr01': 'W564083 ',
+      }),
+      'installed_features': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'last_push_notifications': list([
+        dict({
+          'date': '2025-02-16T10:09:32Z',
+          'message': 'Knitterschutz endet in 5 Minuten - bitte entnehmen Sie die Wäsche!',
+        }),
+        dict({
+          'date': '2025-02-16T09:43:33Z',
+          'message': 'Programm Korb beendet. - Energie:  0,4 kWh.',
+        }),
+        dict({
+          'date': '2025-02-05T00:13:41Z',
+          'message': 'Knitterschutz endet in 5 Minuten - bitte entnehmen Sie die Wäsche!',
+        }),
+        dict({
+          'date': '2025-02-04T23:47:43Z',
+          'message': 'Programm Daunen dick beendet. - Energie:  1,7 kWh.',
+        }),
+        dict({
+          'date': '2025-02-04T20:51:44Z',
+          'message': 'Programm Daunen dick beendet. - Energie:  1,7 kWh.',
+        }),
+        dict({
+          'date': '2025-01-25T21:12:31Z',
+          'message': 'Knitterschutz endet in 5 Minuten - bitte entnehmen Sie die Wäsche!',
+        }),
+        dict({
+          'date': '2025-01-25T20:46:33Z',
+          'message': 'Programm Normal trocken beendet. - Energie:  0,1 kWh.',
+        }),
+        dict({
+          'date': '2025-01-25T17:00:24Z',
+          'message': 'Knitterschutz endet in 5 Minuten - bitte entnehmen Sie die Wäsche!',
+        }),
+        dict({
+          'date': '2025-01-25T16:34:26Z',
+          'message': 'Programm Normal trocken beendet. - Energie:  0,1 kWh.',
+        }),
+        dict({
+          'date': '2025-01-18T12:24:50Z',
+          'message': 'Knitterschutz endet in 5 Minuten - bitte entnehmen Sie die Wäsche!',
+        }),
+      ]),
+      'list_categories': list([
+        'UserXsettings',
+        'EcoManagement',
+      ]),
+      'mac_address': '**REDACTED**',
+      'model_description': 'Adora TSLQ WP Emulator',
+      'program': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getProgram&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getProgram&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'update_status': dict({
+        'components': list([
+          dict({
+            'available': False,
+            'name': 'AI',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+          dict({
+            'available': False,
+            'name': 'HHG',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+        ]),
+        'isAIUpdateAvailable': False,
+        'isHHGUpdateAvailable': False,
+        'isSynced': True,
+        'status': 'idle',
+      }),
+      'zh_mode': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getZHMode&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getZHMode&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+    }),
+    'coordinators': dict({
+      'config': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 3600.0,
+      }),
+      'state': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 60.0,
+      }),
+      'update': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 21600.0,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'vzug',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+    'meta': dict({
+      'ai_api_version': None,
+      'api_version': list([
+        1,
+        8,
+        0,
+      ]),
+      'device_name': '',
+      'hh_api_version': list([
+        1,
+        0,
+        0,
+      ]),
+      'mac_address': '**REDACTED**',
+      'machine_type': '',
+      'model_id': '',
+      'model_name': 'Adora TSLQ WP Emulator',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[adora_wash_v6000]
+  dict({
+    'api_sample': dict({
+      'aggregate_config': dict({
+        'ecoManagement': dict({
+          'commands': dict({
+            'ecom': dict({
+              'command': 'ecom',
+              'description': 'EcoManagement',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'ecomXstatXavarage': dict({
+              'command': 'ecomXstatXavarage',
+              'description': 'Durchschnitt pro Charge',
+              'type': 'status',
+              'value': '\ue301 <0,1 kWh, \ue300 0ℓ',
+            }),
+            'ecomXstatXavarageXclear': dict({
+              'command': 'ecomXstatXavarageXclear',
+              'description': '',
+              'type': 'action',
+              'value': 'Löschen',
+            }),
+            'ecomXstatXtotal': dict({
+              'command': 'ecomXstatXtotal',
+              'description': 'Gesamtverbrauch',
+              'type': 'status',
+              'value': '\ue301 <0,1 kWh, \ue300 0ℓ ',
+            }),
+            'ecomXstatXtotalXclear': dict({
+              'command': 'ecomXstatXtotalXclear',
+              'description': '',
+              'type': 'action',
+              'value': 'Löschen',
+            }),
+          }),
+          'description': 'EcoManagement',
+          'key': 'ecoManagement',
+        }),
+        'settings': dict({
+          'commands': dict({
+            'aquaplus': dict({
+              'command': 'aquaplus',
+              'description': 'AquaPlus',
+              'options': list([
+                'Basis',
+                '+ Wasser',
+                '+ 1 Spülen',
+                '+ Wasser + 1 Spülen',
+                'Hautschutz',
+              ]),
+              'type': 'selection',
+              'value': 'Basis',
+            }),
+            'autoXdoorXopener': dict({
+              'command': 'autoXdoorXopener',
+              'description': 'Türöffnungsautomatik',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'backgroundXimage': dict({
+              'command': 'backgroundXimage',
+              'description': 'Hintergrundbild',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'brightness': dict({
+              'command': 'brightness',
+              'description': 'Helligkeit',
+              'minMax': list([
+                '1',
+                '4',
+              ]),
+              'type': 'range',
+              'value': '3',
+            }),
+            'buttonXtone': dict({
+              'command': 'buttonXtone',
+              'description': 'Tastenton',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'childproofXlock': dict({
+              'command': 'childproofXlock',
+              'description': 'Kindersicherung',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'ecoXhybrid': dict({
+              'command': 'ecoXhybrid',
+              'description': 'eHybrid',
+              'options': list([
+                'Energieeffizenz gut',
+                'Energieeffizenz sehr gut',
+                'Energieeffizienz optimal',
+              ]),
+              'type': 'selection',
+              'value': 'Energieeffizienz optimal',
+            }),
+            'hygieneXinformation': dict({
+              'command': 'hygieneXinformation',
+              'description': 'Hygieneinfo',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'loosenXup': dict({
+              'command': 'loosenXup',
+              'description': 'Auflockern',
+              'options': list([
+                '30 Sekunden',
+                '10 Minuten',
+                '30 Minuten',
+                '6 Stunden',
+              ]),
+              'type': 'selection',
+              'value': '30 Sekunden',
+            }),
+            'multiXcompXdetergent': dict({
+              'command': 'multiXcompXdetergent',
+              'description': 'Baukastenwaschmittel',
+              'type': 'boolean',
+              'value': 'false',
+            }),
+            'softXwater': dict({
+              'command': 'softXwater',
+              'description': 'Weichwasser',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'soiling': dict({
+              'command': 'soiling',
+              'description': 'Verschmutzung',
+              'options': list([
+                'Leicht',
+                'Mittel',
+                'Stark',
+              ]),
+              'type': 'selection',
+              'value': 'Leicht',
+            }),
+            'spinningXat': dict({
+              'command': 'spinningXat',
+              'description': 'Schleudern',
+              'options': list([
+                '1600',
+                '1400',
+                '1200',
+                '1000',
+                '800',
+                '600',
+                '400',
+              ]),
+              'type': 'selection',
+              'value': '1200',
+            }),
+            'startXdelay': dict({
+              'command': 'startXdelay',
+              'description': 'Startaufschub Uhrzeit',
+              'options': list([
+                'Programmende, OptiTime Ein',
+                'Programmende, OptiTime Aus',
+                'Programmstart',
+              ]),
+              'type': 'selection',
+              'value': 'Programmende, OptiTime Aus',
+            }),
+            'trommellicht': dict({
+              'command': 'trommellicht',
+              'description': 'Trommelbeleuchtung',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+          }),
+          'description': 'Einstellungen',
+          'key': 'settings',
+        }),
+      }),
+      'ai_fw_version': dict({
+        'HW': '1077219-R05',
+        'SD': '1052633-R20',
+        'SW': '1052633-R20',
+        'apiVersion': '1.8.0',
+        'deviceUuid': '**REDACTED**',
+        'fn': '**REDACTED**',
+        'phy': 'WLAN',
+      }),
+      'all_program_ids': list([
+        3021,
+        3016,
+        3015,
+        3020,
+        3017,
+        3018,
+        3019,
+        3000,
+        3008,
+        3009,
+        3002,
+        3007,
+        3003,
+        3011,
+        3004,
+        3006,
+        3005,
+        3014,
+        3012,
+        3001,
+        3010,
+        3013,
+      ]),
+      'api_version_ai': None,
+      'api_version_hh': None,
+      'check_for_updates': None,
+      'device_info': dict({
+        'apiVersion': '1.7.0',
+        'articleNumber': '**REDACTED**',
+        'description': 'AdoraWash V6000',
+        'model': 'AW6T',
+        'name': '',
+        'serialNumber': '**REDACTED**',
+        'type': 'WA',
+        'zhMode': 2,
+      }),
+      'device_status': dict({
+        'DeviceName': '',
+        'Inactive': 'true',
+        'Program': '',
+        'ProgramEnd': dict({
+          'End': '',
+          'EndType': '0',
+        }),
+        'Serial': '**REDACTED**',
+        'Status': '',
+        'deviceUuid': '**REDACTED**',
+      }),
+      'eco_info': dict({
+      }),
+      'errors': list([
+      ]),
+      'hh_fw_version': dict({
+        'MD': '???????-???',
+        'Mh': '???????-???',
+        'ZHSW': '1052633-R20',
+        'ZV': '???????-???',
+        'Zh': '???????-???',
+        'an': '**REDACTED**',
+        'device-type': 'KUNDE',
+        'fn': '**REDACTED**',
+        'v': '1032589-R18',
+        'v2': '1032591-R06',
+        'vh1': '1077219-R05',
+        'vh2': '1037281-R07',
+        'vi2': '1039144-R01',
+        'vp': '1064277-R21',
+        'vr01': '1032596-R03',
+        'vr0B': '1069346-R05',
+        'vr0C': '1069072-R01',
+        'vr0E': '1032590-R03',
+        'vr10': '1032592-R02',
+      }),
+      'installed_features': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'last_push_notifications': list([
+        dict({
+          'date': '2025-06-05T12:47:17Z',
+          'message': 'Programm 20°C WetClean beendet – Energie: 0,1kWh, Wasser: 38ℓ',
+        }),
+        dict({
+          'date': '2025-06-05T07:55:21Z',
+          'message': 'Programm 40°C Daunen beendet – Energie: 0,5kWh, Wasser: 99ℓ',
+        }),
+        dict({
+          'date': '2025-06-03T10:07:33Z',
+          'message': 'Programm 0 – Energie: 0,7kWh, Wasser: 57ℓ',
+        }),
+        dict({
+          'date': '2025-06-02T08:13:30Z',
+          'message': 'Programm 40°C Buntwäsche beendet – Energie: 0,4kWh, Wasser: 102ℓ',
+        }),
+        dict({
+          'date': '2025-05-28T09:22:09Z',
+          'message': 'Programm 60°C Buntwäsche beendet – Energie: 0,5kWh, Wasser: 75ℓ',
+        }),
+        dict({
+          'date': '2025-05-26T16:42:37Z',
+          'message': 'Programm 0 – Energie: 0,7kWh, Wasser: 57ℓ',
+        }),
+        dict({
+          'date': '2025-05-25T14:03:47Z',
+          'message': 'Programm 60°C Daunen beendet – Energie: 0,7kWh, Wasser: 91ℓ',
+        }),
+        dict({
+          'date': '2025-05-19T08:28:59Z',
+          'message': 'Programm 40°C Buntwäsche beendet – Energie: 0,4kWh, Wasser: 95ℓ',
+        }),
+        dict({
+          'date': '2025-05-17T13:41:13Z',
+          'message': 'Programm 40°C Buntwäsche beendet – Energie: 0,2kWh, Wasser: 65ℓ',
+        }),
+        dict({
+          'date': '2025-05-17T12:21:24Z',
+          'message': 'Programm 0 – Energie: 0,9kWh, Wasser: 60ℓ',
+        }),
+      ]),
+      'list_categories': list([
+        'settings',
+        'ecoManagement',
+      ]),
+      'mac_address': '**REDACTED**',
+      'model_description': 'AdoraWash V6000 Emulator',
+      'program': list([
+        dict({
+          'info': dict({
+            'status': 'idle',
+          }),
+          'options': dict({
+            'hygiene': dict({
+              'act': False,
+            }),
+          }),
+        }),
+      ]),
+      'update_status': dict({
+        'components': list([
+          dict({
+            'available': False,
+            'name': 'AI',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+          dict({
+            'available': False,
+            'name': 'HHG',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+        ]),
+        'isAIUpdateAvailable': False,
+        'isHHGUpdateAvailable': False,
+        'isSynced': True,
+        'status': 'idle',
+      }),
+      'zh_mode': 2,
+    }),
+    'coordinators': dict({
+      'config': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 3600.0,
+      }),
+      'programs': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 300.0,
+      }),
+      'state': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 60.0,
+      }),
+      'update': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 21600.0,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'vzug',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+    'meta': dict({
+      'ai_api_version': None,
+      'api_version': list([
+        1,
+        7,
+        0,
+      ]),
+      'device_name': '',
+      'hh_api_version': list([
+        1,
+        7,
+        0,
+      ]),
+      'mac_address': '**REDACTED**',
+      'machine_type': 'WA',
+      'model_id': 'AW6T',
+      'model_name': 'AdoraWash V6000',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[combair_steamer_v6000_76c]
+  dict({
+    'api_sample': dict({
+      'aggregate_config': dict({
+      }),
+      'ai_fw_version': dict({
+        'HW': '1022913-R08',
+        'SD': '1052633-R20',
+        'SW': '1052633-R20',
+        'apiVersion': '1.8.0',
+        'deviceUuid': '**REDACTED**',
+        'fn': '**REDACTED**',
+        'phy': 'WLAN',
+      }),
+      'all_program_ids': list([
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        21,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        42,
+        44,
+        48,
+        49,
+        101,
+        106,
+        107,
+        109,
+        113,
+        114,
+        116,
+        117,
+        118,
+        119,
+        120,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        136,
+        141,
+        142,
+        143,
+        146,
+        150,
+        158,
+        169,
+        170,
+        171,
+        174,
+        175,
+        177,
+        179,
+        180,
+        181,
+        182,
+        184,
+        186,
+        187,
+        189,
+        190,
+        192,
+      ]),
+      'api_version_ai': None,
+      'api_version_hh': None,
+      'check_for_updates': None,
+      'device_info': dict({
+        'apiVersion': '1.11.0',
+        'articleNumber': '**REDACTED**',
+        'description': 'CombairSteamer V6000 76C',
+        'model': 'CSB',
+        'name': '',
+        'serialNumber': '**REDACTED**',
+        'type': 'ST',
+        'zhMode': 2,
+      }),
+      'device_status': dict({
+        'DeviceName': '',
+        'Inactive': 'true',
+        'Program': '',
+        'ProgramEnd': dict({
+          'End': '',
+          'EndType': '0',
+        }),
+        'Serial': '**REDACTED**',
+        'Status': '',
+        'deviceUuid': '**REDACTED**',
+      }),
+      'eco_info': dict({
+        'energy': dict({
+          'average': 0.561,
+          'lastMonth': 20.284,
+          'lastYear': 192.178,
+          'program': 0.438,
+          'total': 277.709,
+        }),
+      }),
+      'errors': list([
+      ]),
+      'hh_fw_version': dict({
+        'ZHSW': '1052633-R20',
+        'an': '**REDACTED**',
+        'device-type': 'KUNDE',
+        'fn': '**REDACTED**',
+        'm': 'CSB',
+        'softwareModelId': 336,
+        'syv': '1088181-R44',
+        'v': '1044431-R34',
+        'v2': '1033359-R27',
+        'v3': '1031584-R05',
+        'vh1': '1022913-R08',
+        'vh2': '1067747-R04',
+        'vh3': '1086324-R05',
+        'vp': '1053702-R34',
+        'vr00': '1051665-R45',
+        'vr01': '1090215-R15',
+        'vr0A': '1053702-R34',
+        'vr0C': '1098361-R27',
+        'vr0D': '1098362-R07',
+        'vr0E': '1098360-R06',
+        'vr0F': '1098359-R11',
+        'vr10': '1033360-R04',
+        'vr13': '1098358-R29',
+        'vr21': '06000015FFF',
+      }),
+      'installed_features': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'last_push_notifications': list([
+        dict({
+          'date': '2025-06-08T01:03:03Z',
+          'message': 'Bitte schliessen Sie die Tür.',
+        }),
+        dict({
+          'date': '2025-06-08T01:01:26Z',
+          'message': 'Aufgeheizt',
+        }),
+        dict({
+          'date': '2025-06-07T12:10:33Z',
+          'message': 'Der Betrieb wurde beendet.',
+        }),
+        dict({
+          'date': '2025-06-07T12:04:54Z',
+          'message': 'Bitte schliessen Sie die Tür.',
+        }),
+        dict({
+          'date': '2025-06-07T12:01:18Z',
+          'message': 'Aufgeheizt',
+        }),
+        dict({
+          'date': '2025-06-06T09:29:12Z',
+          'message': 'Aufgeheizt',
+        }),
+        dict({
+          'date': '2025-06-05T18:03:29Z',
+          'message': 'Aufgeheizt',
+        }),
+        dict({
+          'date': '2025-06-05T18:01:59Z',
+          'message': 'Der Betrieb wurde beendet.',
+        }),
+        dict({
+          'date': '2025-06-05T18:01:05Z',
+          'message': 'Aufgeheizt',
+        }),
+        dict({
+          'date': '2025-06-05T10:04:18Z',
+          'message': 'Der Betrieb wurde beendet.',
+        }),
+      ]),
+      'list_categories': list([
+      ]),
+      'mac_address': '**REDACTED**',
+      'model_description': 'CombairSteamer V6000 76C Emulator',
+      'program': list([
+        dict({
+          'info': dict({
+            'status': 'idle',
+          }),
+          'options': dict({
+            'doorStatus': dict({
+              'act': 'closed',
+            }),
+            'light': dict({
+              'options': list([
+                False,
+                True,
+              ]),
+              'set': False,
+            }),
+            'preheatStatus': dict({
+              'act': 'inactive',
+            }),
+            'probeInserted': dict({
+              'act': False,
+            }),
+            'zone': 'cookingChamber1',
+          }),
+        }),
+        dict({
+          'info': dict({
+            'status': 'idle',
+          }),
+          'options': dict({
+            'duration': dict({
+              'max': 259200,
+              'min': 10,
+              'set': 300,
+              'step': 10,
+            }),
+            'zone': 'countdown1',
+          }),
+        }),
+        dict({
+          'info': dict({
+            'status': 'idle',
+          }),
+          'options': dict({
+            'duration': dict({
+              'act': 7200,
+              'max': 43200,
+              'min': 1800,
+              'set': 7200,
+              'step': 60,
+            }),
+            'endtime': dict({
+              'act': 7200,
+              'max': 93540,
+              'min': 7200,
+              'step': 60,
+            }),
+            'zone': 'warmingDrawer1',
+          }),
+        }),
+      ]),
+      'update_status': dict({
+        'components': list([
+          dict({
+            'available': False,
+            'name': 'AI',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+          dict({
+            'available': False,
+            'name': 'HHG',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+        ]),
+        'isAIUpdateAvailable': False,
+        'isHHGUpdateAvailable': False,
+        'isSynced': True,
+        'status': 'idle',
+      }),
+      'zh_mode': 2,
+    }),
+    'coordinators': dict({
+      'config': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 3600.0,
+      }),
+      'programs': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 300.0,
+      }),
+      'state': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 60.0,
+      }),
+      'update': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 21600.0,
+      }),
+      'zones': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 30.0,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'vzug',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+    'meta': dict({
+      'ai_api_version': None,
+      'api_version': list([
+        1,
+        11,
+        0,
+      ]),
+      'device_name': '',
+      'hh_api_version': list([
+        1,
+        11,
+        0,
+      ]),
+      'mac_address': '**REDACTED**',
+      'machine_type': 'ST',
+      'model_id': 'CSB',
+      'model_name': 'CombairSteamer V6000 76C',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---
+# name: test_diagnostics[combi_cooler_v4000]
+  dict({
+    'api_sample': dict({
+      'aggregate_config': dict({
+        'CATEGORY_0': dict({
+          'commands': dict({
+            'BRIGHTNESS': dict({
+              'alterable': True,
+              'command': 'BRIGHTNESS',
+              'description': 'Helligkeit',
+              'minMax': list([
+                '1',
+                '5',
+              ]),
+              'type': 'range',
+              'value': '3',
+            }),
+            'DOOR_ALARM': dict({
+              'alterable': True,
+              'command': 'DOOR_ALARM',
+              'description': 'Türalarm',
+              'type': 'boolean',
+              'value': 'true',
+            }),
+            'FILTER_STATE': dict({
+              'alterable': False,
+              'command': 'FILTER_STATE',
+              'description': 'Filterzustand',
+              'type': 'status',
+              'value': 'OK',
+            }),
+            'LANGUAGE': dict({
+              'alterable': True,
+              'command': 'LANGUAGE',
+              'description': 'Sprache',
+              'options': list([
+                'Deutsch',
+                'English',
+                'Français',
+              ]),
+              'type': 'selection',
+              'value': 'Deutsch',
+            }),
+            'RESET_FILTER': dict({
+              'alterable': True,
+              'command': 'RESET_FILTER',
+              'description': 'Filter zurücksetzen',
+              'type': 'action',
+            }),
+          }),
+          'description': 'Einstellungen',
+          'key': 'CATEGORY_0',
+        }),
+      }),
+      'ai_fw_version': dict({
+        'HW': '1065944-R02',
+        'SD': '1052633-R20',
+        'SW': '1052633-R20',
+        'apiVersion': '1.8.0',
+        'deviceUuid': '**REDACTED**',
+        'fn': '**REDACTED**',
+        'phy': 'WLAN',
+      }),
+      'all_program_ids': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getAllProgramIds&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getAllProgramIds&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'api_version_ai': list([
+        1,
+        6,
+        0,
+      ]),
+      'api_version_hh': list([
+        1,
+        12,
+        0,
+      ]),
+      'check_for_updates': None,
+      'device_info': dict({
+        'apiVersion': '1.12.0',
+        'articleNumber': '**REDACTED**',
+        'description': 'CombiCooler V4000',
+        'model': 'KS6TI',
+        'name': 'Kühlschrank',
+        'serialNumber': '**REDACTED**',
+        'type': 'KS',
+        'zhMode': 2,
+      }),
+      'device_status': dict({
+        'DeviceName': '',
+        'Inactive': 'false',
+        'Program': '',
+        'ProgramEnd': dict({
+          'End': '',
+          'EndType': '0',
+        }),
+        'Serial': '**REDACTED**',
+        'Status': '',
+        'deviceUuid': '**REDACTED**',
+      }),
+      'eco_info': dict({
+        'doorOpenings': list([
+          dict({
+            'sevenDayAverage': dict({
+              'amount': 9,
+              'duration': 40,
+            }),
+            'thirtyDayAverage': dict({
+              'amount': 8,
+              'duration': 38,
+            }),
+            'today': dict({
+              'amount': 3,
+              'duration': 12,
+            }),
+          }),
+        ]),
+      }),
+      'errors': list([
+      ]),
+      'hh_fw_version': dict({
+        'an': '**REDACTED**',
+        'device-type': 'KS',
+        'fn': '**REDACTED**',
+        'v': '1.0.0',
+      }),
+      'installed_features': dict({
+        'args': list([
+          '''
+            Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+            For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+          ''',
+        ]),
+        'message': '''
+          Client error '404 Not Found' for url 'http://**REDACTED**/hh?command=getInstalledFeatures&_=0'
+          For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+        ''',
+        'type': 'HTTPStatusError',
+      }),
+      'last_push_notifications': list([
+        dict({
+          'date': '2025-06-08T16:43:36Z',
+          'message': 'Tür offen',
+        }),
+      ]),
+      'list_categories': list([
+        'CATEGORY_0',
+      ]),
+      'mac_address': '**REDACTED**',
+      'model_description': 'CombiCooler V4000',
+      'program': list([
+        dict({
+          'info': dict({
+            'id': 2000,
+            'status': 'active',
+          }),
+          'options': dict({
+            'doorClosed': True,
+            'partyCooling': dict({
+              'max': 172800,
+              'min': 0,
+            }),
+            'superCool': dict({
+              'max': 86400,
+              'min': 0,
+            }),
+            'temp': dict({
+              'act': 6.0,
+              'max': 8.0,
+              'min': 3.0,
+              'set': 6.0,
+            }),
+            'zone': 'fridge1',
+          }),
+        }),
+        dict({
+          'info': dict({
+            'id': 2001,
+            'status': 'active',
+          }),
+          'options': dict({
+            'doorClosed': False,
+            'partyCooling': dict({
+              'max': 172800,
+              'min': 0,
+            }),
+            'superFreeze': dict({
+              'act': 3596,
+              'max': 194400,
+              'min': 0,
+              'set': 3600,
+            }),
+            'temp': dict({
+              'act': -18.0,
+              'max': -14.0,
+              'min': -22.0,
+              'set': -18.0,
+            }),
+            'zone': 'freezer1',
+          }),
+        }),
+        dict({
+          'info': dict({
+            'id': 9000,
+            'status': 'active',
+          }),
+          'options': dict({
+            'duration': dict({
+              'act': 597,
+              'max': 35700,
+              'min': 0,
+              'set': 600,
+            }),
+            'zone': 'countdown1',
+          }),
+        }),
+      ]),
+      'update_status': dict({
+        'components': list([
+          dict({
+            'available': False,
+            'name': 'AI',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+          dict({
+            'available': False,
+            'name': 'HHG',
+            'progress': dict({
+              'download': 0,
+              'installation': 0,
+            }),
+            'required': False,
+            'running': False,
+          }),
+        ]),
+        'isAIUpdateAvailable': False,
+        'isHHGUpdateAvailable': False,
+        'isSynced': True,
+        'status': 'idle',
+      }),
+      'zh_mode': 2,
+    }),
+    'coordinators': dict({
+      'config': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 3600.0,
+      }),
+      'state': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 30.0,
+      }),
+      'update': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 21600.0,
+      }),
+      'zones': dict({
+        'last_exception': None,
+        'last_update_success': True,
+        'update_interval': 30.0,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': '**REDACTED**',
+      'domain': 'vzug',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 2,
+    }),
+    'meta': dict({
+      'ai_api_version': list([
+        1,
+        6,
+        0,
+      ]),
+      'api_version': list([
+        1,
+        12,
+        0,
+      ]),
+      'device_name': '**REDACTED**',
+      'hh_api_version': list([
+        1,
+        12,
+        0,
+      ]),
+      'mac_address': '**REDACTED**',
+      'machine_type': 'KS',
+      'model_id': 'KS6TI',
+      'model_name': 'CombiCooler V4000',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---
