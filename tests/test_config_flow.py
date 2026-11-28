@@ -497,9 +497,6 @@ async def test_bluetooth_out_of_range(
     assert result["errors"] == {"base": "bluetooth_failed"}
 
 
-# reconfigure
-
-
 async def test_reconfigure(hass: HomeAssistant, appliances: ApplianceNetwork) -> None:
     appliance = appliances.add(DEVICE, username="admin", password="secret")
     entry = mock_entry(appliance, **{CONF_BASE_URL: "http://192.0.2.1"})
