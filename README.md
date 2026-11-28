@@ -63,57 +63,7 @@ Like in the V-ZUG app, a selected program is only sent to the appliance; you sta
 
 "Start program (experimental)" is disabled by default. It asks the appliance to start the selected program remotely, which the V-ZUG app never does, and the appliance may refuse. Only enable it if you accept an appliance starting with nobody there. Hobs never get it.
 
-Some entities are disabled by default. Enable them under **Settings > Devices & services > V-ZUG > Entities**: the raw program end, the cloud connection, and the 7- and 30-day door opening averages.
-
 [^2]: New and not yet confirmed on real appliances. Please report how it works with yours in an issue or a discussion.
-
-## How the data is updated
-
-The integration polls the appliance's local HTTP API. Nothing goes through the V-ZUG cloud.
-
-- **State** (program, status, end, notifications): every 30 seconds while a program runs. Asking for the state wakes the appliance, so in standby only the notifications are read every minute. The full state is read every 5 minutes and when a new notification arrives.
-- **Settings**: every hour, when a program starts or ends, and after every change from Home Assistant.
-- **Programs**: every 5 minutes, and after every change from Home Assistant.
-- **Zones** (refrigerators, ovens, hobs): every 30 seconds.
-- **Firmware**: every 6 hours, and every 5 seconds during an update.
-
-**Refresh now** reads everything at once and wakes the appliance. Use it after you change something on the appliance's panel.
-
-An appliance that doesn't answer becomes unavailable until it answers again.
-
-## Automation example
-
-Notify when the dishwasher is done:
-
-```yaml
-automation:
-  - alias: "Dishwasher done"
-    triggers:
-      - trigger: state
-        entity_id: sensor.dishwasher_program
-        not_from: ["standby", "active", "unavailable", "unknown"]
-        to: ["standby", "active"]
-    actions:
-      - action: notify.mobile_app_phone
-        data:
-          message: "The dishwasher is done"
-```
-
-The entity IDs depend on the name of your appliance.
-
-## Known limitations
-
-- The appliance only accepts changes while V-ZUG-Home is set to "operate and display" in its user settings. Home Assistant shows a repair issue when it isn't.
-- In standby the program, status and settings can be up to 5 minutes old.
-- The names of the settings come from the appliance, in its language.
-- Refrigerators report the set temperature only, not the measured one.
-- Firmware updates only tell that a newer version exists, not which one.
-
-## Troubleshooting
-
-- **The appliance isn't found:** discovery only reaches appliances in the same network as Home Assistant. Add it by its IP address, and check that V-ZUG-Home is on in its user settings.
-- **The entities are unavailable:** open `http://<ip address>/ai?command=getDeviceStatus` in a browser. If that doesn't answer either, the appliance is off the network. Some appliances switch off completely after a program. If the address changed, update it with **Reconfigure** in the menu (⋮) of the appliance.
-- **Anything else:** enable debug logging on the integration's page, reproduce the problem, and open an [issue](https://github.com/siku2/hass-vzug/issues) with the log and the diagnostics. The diagnostics contain no passwords, serial numbers or addresses.
 
 ## Removal
 
