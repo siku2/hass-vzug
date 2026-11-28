@@ -43,7 +43,7 @@ jobs:
         id: git-cliff
         with:
           config: ""
-          args: --verbose --unreleased --strip=header --config-url=https://raw.githubusercontent.com/orhun/git-cliff/refs/heads/main/examples/github.toml
+          args: --verbose ${{ github.event_name == 'push' && '--latest' || '--unreleased' }} --strip=header --config-url=https://raw.githubusercontent.com/orhun/git-cliff/refs/heads/main/examples/github.toml
         env:
           GITHUB_REPO: ${{ github.repository }}
           GIT_CLIFF_TAG: ${{ steps.info.outputs.tag_name }}
