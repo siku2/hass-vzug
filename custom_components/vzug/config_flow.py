@@ -6,7 +6,7 @@ from collections.abc import Iterator, Mapping
 from ipaddress import IPv4Interface
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from homeassistant import config_entries
 from homeassistant.components.network import async_get_adapters
 from homeassistant.components.network.models import Adapter
@@ -107,9 +107,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    probatio.Required(CONF_HOST): str,
                 }
             ),
             errors=errors,
@@ -147,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_HOST): str}),
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
                 {CONF_HOST: user_input[CONF_HOST] if user_input else _host_of(entry)},
             ),
             description_placeholders={"name": entry.title},
@@ -312,10 +312,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="wifi",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SSID): str,
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_SSID): str,
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -395,13 +395,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=self._auth_schema(), errors=errors
         )
 
-    def _auth_schema(self) -> vol.Schema:
-        return vol.Schema(
+    def _auth_schema(self) -> probatio.Schema:
+        return probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=self._username): TextSelector(
+                probatio.Required(CONF_USERNAME, default=self._username): TextSelector(
                     TextSelectorConfig(autocomplete="username")
                 ),
-                vol.Required(CONF_PASSWORD): TextSelector(
+                probatio.Required(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                         autocomplete="current-password",
