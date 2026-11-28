@@ -5,7 +5,7 @@
             "false_discovery": "False-positive Discovery",
             "discovery_finished": "Discovered {count} device(s)",
             "reauth_successful": "Re-authentication was successful",
-            "wrong_device": "These credentials belong to another appliance. Use the ones of the appliance you set up.",
+            "wrong_device": "Another appliance answers at this address. Check the address of the appliance you set up.",
             "reconfigure_successful": "The appliance was reconfigured successfully"
         },
         "error": {

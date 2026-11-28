@@ -5,7 +5,7 @@
       "false_discovery": "Falsch positive Entdeckung",
       "discovery_finished": "{count} Gerät(e) entdeckt",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
-      "wrong_device": "Diese Anmeldedaten gehören zu einem anderen Gerät. Verwende die des eingerichteten Geräts.",
+      "wrong_device": "Unter dieser Adresse antwortet ein anderes Gerät. Prüfe die Adresse des eingerichteten Geräts.",
       "reconfigure_successful": "Das Gerät wurde erfolgreich neu konfiguriert"
     },
     "error": {

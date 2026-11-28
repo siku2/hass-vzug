@@ -5,7 +5,7 @@
             "false_discovery": "Découverte fausse positive",
             "discovery_finished": "{count} appareil(s) découvert(s)",
             "reauth_successful": "La ré-authentification a réussi",
-            "wrong_device": "Ces identifiants appartiennent à un autre appareil. Utilise ceux de l'appareil configuré.",
+            "wrong_device": "Un autre appareil répond à cette adresse. Vérifie l'adresse de l'appareil configuré.",
             "reconfigure_successful": "L'appareil a été reconfiguré avec succès"
         },
         "error": {
