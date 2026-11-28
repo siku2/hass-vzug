@@ -10,6 +10,7 @@ from httpcore._backends.mock import AsyncMockBackend
 from custom_components.vzug.api import (
     ZH_MODE_WARMUP_MAX_FAILURES,
     AggCategory,
+    EcoInfo,
     VZugApi,
 )
 
@@ -46,7 +47,7 @@ async def test_get_eco_info_with_data(vzug_api):
 
         # Verify the command was called correctly
         mock_command.assert_called_once_with(
-            "hh", command="getEcoInfo", expected_type=dict, value_on_err=None
+            "hh", command="getEcoInfo", response=EcoInfo, value_on_err=None
         )
 
         # Verify the result is as expected
@@ -105,7 +106,9 @@ async def test_json_repair_with_valid_json(vzug_api):
     with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_response
 
-        result = await vzug_api._command("ai", command="getDeviceStatus")
+        result = await vzug_api._command(
+            "ai", command="getDeviceStatus", response=object
+        )
 
         assert result == valid_json
         mock_response.json.assert_called_once()
@@ -132,7 +135,7 @@ async def test_json_repair_with_real_broken_device_status():
         mock_get.return_value = mock_response
 
         # This will use the REAL json_repair library
-        result = await vzug_api._command("hh", command="getProgram")
+        result = await vzug_api._command("hh", command="getProgram", response=list)
 
         assert result is not None
         assert len(result) == 8
@@ -324,7 +327,11 @@ async def test_transport_error_counts_as_attempt(vzug_api):
 
         with pytest.raises(httpx.ReadTimeout):
             await vzug_api._command(
-                "hh", command="getEcoInfo", attempts=3, retry_delay=0.0
+                "hh",
+                command="getEcoInfo",
+                response=dict,
+                attempts=3,
+                retry_delay=0.0,
             )
 
         # without the fix this loops forever because 'continue' skips 'attempt_idx += 1'
@@ -415,7 +422,7 @@ async def test_json_error_body_is_retried(vzug_api):
         ]
 
         result = await vzug_api._command(
-            "hh", command="getZHMode", expected_type=dict, retry_delay=0.0
+            "hh", command="getZHMode", response=dict, retry_delay=0.0
         )
 
         assert result == {"value": 2}
@@ -431,7 +438,7 @@ async def test_json_error_body_falls_back_to_default(vzug_api):
         result = await vzug_api._command(
             "hh",
             command="getZHMode",
-            expected_type=dict,
+            response=dict,
             attempts=2,
             retry_delay=0.0,
             value_on_err=lambda: {"value": -1},
