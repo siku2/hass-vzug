@@ -198,7 +198,6 @@ class ZoneEntity(VZugEntity[ZoneCoordinator]):
 
     @property
     def zone_data(self) -> zones.Zone | None:
-        # None while the zones were never fetched (unit tests build entities so)
         data: zones.ZoneState | None = self.coordinator.data
         if data is None:
             return None
