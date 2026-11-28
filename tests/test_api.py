@@ -10,6 +10,8 @@ from httpcore._backends.mock import AsyncMockBackend
 from custom_components.vzug.api import (
     ZH_MODE_WARMUP_MAX_FAILURES,
     AggCategory,
+    EcoInfo,
+    InvalidResponse,
     VZugApi,
 )
 
@@ -46,7 +48,7 @@ async def test_get_eco_info_with_data(vzug_api):
 
         # Verify the command was called correctly
         mock_command.assert_called_once_with(
-            "hh", command="getEcoInfo", expected_type=dict, value_on_err=None
+            "hh", command="getEcoInfo", response=EcoInfo, value_on_err=None
         )
 
         # Verify the result is as expected
@@ -105,7 +107,9 @@ async def test_json_repair_with_valid_json(vzug_api):
     with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_response
 
-        result = await vzug_api._command("ai", command="getDeviceStatus")
+        result = await vzug_api._command(
+            "ai", command="getDeviceStatus", response=object
+        )
 
         assert result == valid_json
         mock_response.json.assert_called_once()
@@ -132,7 +136,7 @@ async def test_json_repair_with_real_broken_device_status():
         mock_get.return_value = mock_response
 
         # This will use the REAL json_repair library
-        result = await vzug_api._command("hh", command="getProgram")
+        result = await vzug_api._command("hh", command="getProgram", response=list)
 
         assert result is not None
         assert len(result) == 8
@@ -149,7 +153,7 @@ async def test_zh_mode_warmup_gives_up_after_repeated_failures(vzug_api):
         ) as notifications,
         patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
     ):
-        zh_mode.side_effect = ValueError("device returned an error response")
+        zh_mode.side_effect = InvalidResponse("device returned an error")
         notifications.return_value = []
         eco_info.return_value = {}
 
@@ -324,7 +328,11 @@ async def test_transport_error_counts_as_attempt(vzug_api):
 
         with pytest.raises(httpx.ReadTimeout):
             await vzug_api._command(
-                "hh", command="getEcoInfo", attempts=3, retry_delay=0.0
+                "hh",
+                command="getEcoInfo",
+                response=dict,
+                attempts=3,
+                retry_delay=0.0,
             )
 
         # without the fix this loops forever because 'continue' skips 'attempt_idx += 1'
@@ -415,7 +423,7 @@ async def test_json_error_body_is_retried(vzug_api):
         ]
 
         result = await vzug_api._command(
-            "hh", command="getZHMode", expected_type=dict, retry_delay=0.0
+            "hh", command="getZHMode", response=dict, retry_delay=0.0
         )
 
         assert result == {"value": 2}
@@ -431,7 +439,7 @@ async def test_json_error_body_falls_back_to_default(vzug_api):
         result = await vzug_api._command(
             "hh",
             command="getZHMode",
-            expected_type=dict,
+            response=dict,
             attempts=2,
             retry_delay=0.0,
             value_on_err=lambda: {"value": -1},
@@ -699,3 +707,44 @@ async def test_aggregate_meta_without_device_info_is_an_old_appliance(vzug_api):
         meta = await vzug_api.aggregate_meta()
     assert meta.hh_api_version == (1, 0, 0)
     assert not vzug_api.hh_supports((1, 3, 0))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("payload", "response", "reject_empty"),
+    [
+        ({"value": 1}, list, False),
+        ([], list, True),
+    ],
+)
+async def test_unusable_answer_is_an_invalid_response(
+    vzug_api, payload, response, reject_empty
+):
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _json_response(payload)
+        with pytest.raises(InvalidResponse):
+            await vzug_api._command(
+                "hh",
+                command="getCategories",
+                response=response,
+                reject_empty=reject_empty,
+                attempts=1,
+            )
+
+
+@pytest.mark.asyncio
+async def test_unrepairable_json_is_an_invalid_response(vzug_api):
+    broken = MagicMock()
+    broken.json.side_effect = ValueError("not json")
+    broken.content = b"{"
+    broken.text = "{"
+    broken.raise_for_status.return_value = None
+    with (
+        patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get,
+        patch("json_repair.repair_json", side_effect=ValueError("unrepairable")),
+    ):
+        mock_get.return_value = broken
+        with pytest.raises(InvalidResponse):
+            await vzug_api._command(
+                "hh", command="getProgram", response=list, attempts=1
+            )

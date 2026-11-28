@@ -23,7 +23,7 @@ class _DiscoveryProtocol(asyncio.DatagramProtocol):
     def __init__(self) -> None:
         self.discoveries: asyncio.Queue[DiscoveryInfo | None] = asyncio.Queue()
 
-    def connection_made(self, transport: asyncio.DatagramTransport) -> None:
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
         _LOGGER.debug("connection made")
 
     def connection_lost(self, exc: Exception | None) -> None:
@@ -54,7 +54,9 @@ async def _make_iter(protocol: _DiscoveryProtocol) -> AsyncIterator[DiscoveryInf
 
 
 @contextlib.asynccontextmanager
-async def create_discovery_stream(interface: IPv4Interface, timeout: float | None):
+async def create_discovery_stream(
+    interface: IPv4Interface, timeout: float | None
+) -> AsyncIterator[AsyncIterator[DiscoveryInfo]]:
     loop = asyncio.get_running_loop()
     transport, protocol = await loop.create_datagram_endpoint(
         _DiscoveryProtocol,

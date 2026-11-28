@@ -14,8 +14,10 @@ import json
 import pathlib
 import re
 from collections.abc import Iterable, Mapping
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
+
+from homeassistant.util import dt as dt_util
 
 # functions that run for a while and then switch themselves off. The value is the
 # duration in seconds, "0" stops them early.
@@ -56,7 +58,7 @@ class ZoneState:
     """'getProgram' entries keyed by their zone name"""
     modes: Mapping[str, str]
     """raw answers to 'getcmd<name>' for the modes this appliance supports"""
-    fetched_at: datetime = dataclasses.field(default_factory=lambda: datetime.now(UTC))
+    fetched_at: datetime = dataclasses.field(default_factory=dt_util.utcnow)
     """times in 'getProgram' are seconds from this moment"""
 
 
@@ -219,7 +221,7 @@ def _seconds(zone: Zone | None, key: str, field: str) -> float | None:
     value = value_field(zone, key, field)
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
         return None
-    return value
+    return float(value)
 
 
 def end_time(zone: Zone | None, fetched_at: datetime) -> datetime | None:
@@ -249,7 +251,7 @@ class ProgramState:
     """program id -> name, in the order the appliance lists them"""
     current: Mapping[str, Any] | None
     """the selected or running program, None while idle"""
-    fetched_at: datetime = dataclasses.field(default_factory=lambda: datetime.now(UTC))
+    fetched_at: datetime = dataclasses.field(default_factory=dt_util.utcnow)
     """times in 'getProgram' are seconds from this moment"""
 
 

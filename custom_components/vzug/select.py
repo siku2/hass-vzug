@@ -2,7 +2,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import zones
 from .const import DOMAIN
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VZugConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     shared = config_entry.runtime_data
 
@@ -72,7 +72,10 @@ class ProgramSelect(VZugEntity[ProgramCoordinator], SelectEntity):
         current = self.coordinator.data.current
         if current is None:
             return None
-        name = self.coordinator.data.names.get(current.get("id"))
+        program_id = current.get("id")
+        if not isinstance(program_id, int):
+            return None
+        name = self.coordinator.data.names.get(program_id)
         return zones.program_key(name) if name else None
 
     @property

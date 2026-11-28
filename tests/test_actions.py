@@ -419,3 +419,17 @@ async def test_steamer_actions(
 ) -> None:
     await _call(hass, domain, service, entity_id, **data)
     assert _writes(steamer) == expected
+
+
+async def test_update_progress(hass: HomeAssistant, dishwasher: FakeAppliance) -> None:
+    status = dishwasher.response_json("ai_get_updatestatus.json")
+    status.update(status="downloading", isAIUpdateAvailable=True)
+    status["components"][0].update(
+        available=True, running=True, progress={"download": 100, "installation": 20}
+    )
+    dishwasher.set_json("ai", "getUpdateStatus", status)
+    await _call(hass, "button", SERVICE_PRESS, "button.adora_sl_check_for_updates")
+
+    state = hass.states.get("update.adora_sl_update")
+    assert state.attributes["in_progress"] is True
+    assert state.attributes["update_percentage"] == 60

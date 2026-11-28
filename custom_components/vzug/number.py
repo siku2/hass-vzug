@@ -6,7 +6,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import zones
 from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
@@ -29,7 +29,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VZugConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     shared = config_entry.runtime_data
 

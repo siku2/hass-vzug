@@ -73,11 +73,12 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Use a Consistent Coding Style
 
-Format the code and sort the imports with [ruff](https://docs.astral.sh/ruff/):
+Format, lint and type check the code with [ruff](https://docs.astral.sh/ruff/) and [mypy](https://mypy-lang.org/):
 
 ```shell
 uv run ruff format .
 uv run ruff check --fix .
+uv run mypy
 ```
 
 ## License

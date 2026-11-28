@@ -1,6 +1,7 @@
 import contextlib
 import logging
-from datetime import UTC, datetime, timedelta
+from collections.abc import AsyncIterator
+from datetime import datetime, timedelta
 
 import yarl
 from homeassistant.config_entries import ConfigEntry
@@ -8,8 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from . import api, zones
 from .const import DOMAIN
@@ -331,7 +333,7 @@ class Shared:
         mac_addr = dr.format_mac(self.meta.mac_address)
         self.unique_id_prefix = mac_addr
         if not self.unique_id_prefix:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 "unable to determine unique id from device data: %s", self.meta
             )
 
@@ -377,12 +379,12 @@ class Shared:
                 state = await self.client.aggregate_state(
                     default_on_error=self._first_refresh_done
                 )
-                self.hass.async_create_task(self.config_coord.async_request_refresh())
+                self._refresh_config_later()
 
         if not probe:
             return self._carry_over(state, previous)
 
-        self._last_device_probe = datetime.now(UTC)
+        self._last_device_probe = dt_util.utcnow()
 
         # an all-zero 'getEcoInfo' response is mapped to an empty EcoInfo, which would
         # put every eco sensor to 'unknown'. Keep the previous values for a while
@@ -429,7 +431,7 @@ class Shared:
             return True
         if self._last_device_probe is None:
             return True
-        age = datetime.now(UTC) - self._last_device_probe
+        age = dt_util.utcnow() - self._last_device_probe
         return age >= STATE_COORD_IDLE_PROBE_INTERVAL
 
     def _note_notifications(self, notifications: list[api.PushNotification]) -> bool:
@@ -441,6 +443,14 @@ class Shared:
 
         previous, self._last_notification = self._last_notification, latest
         return previous is not None and previous != latest
+
+    def _refresh_config_later(self) -> None:
+        """Refresh the config tree without holding up the current update."""
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.config_coord.async_request_refresh(),
+            "vzug config refresh",
+        )
 
     def _carry_over(
         self, state: api.AggState, previous: api.AggState | None
@@ -495,7 +505,7 @@ class Shared:
             # are updated when a program completes, and someone standing at the
             # appliance may have changed settings on its panel
             _LOGGER.debug("device activity changed to %s, refreshing config", active)
-            self.hass.async_create_task(self.config_coord.async_request_refresh())
+            self._refresh_config_later()
         self._device_active = active
 
     async def _fetch_update(self) -> api.AggUpdateStatus:
@@ -532,13 +542,13 @@ class Shared:
 
     def note_update_activity(self) -> None:
         """Remember that an update is running, or has just been requested."""
-        self._last_update_activity = datetime.now(UTC)
+        self._last_update_activity = dt_util.utcnow()
 
     def _update_window_open(self) -> bool:
         """Whether an update was running or requested within the settle period."""
         if self._last_update_activity is None:
             return False
-        age = datetime.now(UTC) - self._last_update_activity
+        age = dt_util.utcnow() - self._last_update_activity
         return age < UPDATE_COORD_SETTLE_PERIOD
 
     @staticmethod
@@ -600,7 +610,8 @@ class Shared:
 
 
 @contextlib.asynccontextmanager
-async def detect_auth_failed():
+async def detect_auth_failed() -> AsyncIterator[None]:
+    """Turn the API's authentication error into the one Home Assistant knows."""
     try:
         yield
     except api.AuthenticationFailed as err:

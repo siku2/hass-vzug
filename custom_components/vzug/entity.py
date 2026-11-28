@@ -1,8 +1,8 @@
 """Base entities of the V-ZUG integration."""
 
 import functools
-from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate
+from collections.abc import Callable, Coroutine
+from typing import Any, cast
 
 import httpx
 from homeassistant.const import EntityCategory
@@ -22,13 +22,11 @@ from .coordinator import ConfigCoordinator, Shared, ZoneCoordinator
 from .helpers import name_from_command_key
 
 
-def vzug_action[EntityT: "VZugBaseEntity", **P, R](
-    func: Callable[Concatenate[EntityT, P], Awaitable[R]],
-) -> Callable[Concatenate[EntityT, P], Coroutine[Any, Any, R]]:
+def vzug_action[FuncT: Callable[..., Coroutine[Any, Any, Any]]](func: FuncT) -> FuncT:
     """Raise a failed request to the appliance as an error the user sees."""
 
     @functools.wraps(func)
-    async def wrapper(self: EntityT, *args: P.args, **kwargs: P.kwargs) -> R:
+    async def wrapper(self: VZugBaseEntity, *args: Any, **kwargs: Any) -> Any:
         try:
             return await func(self, *args, **kwargs)
         except api.AuthenticationFailed as err:
@@ -45,14 +43,14 @@ def vzug_action[EntityT: "VZugBaseEntity", **P, R](
                     "response": err.response.text.strip(),
                 },
             ) from err
-        except (httpx.HTTPError, ValueError) as err:
+        except (httpx.HTTPError, api.InvalidResponse) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-    return wrapper
+    return cast(FuncT, wrapper)
 
 
 class VZugBaseEntity(Entity):
@@ -200,9 +198,10 @@ class ZoneEntity(VZugEntity[ZoneCoordinator]):
 
     @property
     def zone_data(self) -> zones.Zone | None:
-        if self.coordinator.data is None:
+        data: zones.ZoneState | None = self.coordinator.data
+        if data is None:
             return None
-        return self.coordinator.data.zones.get(self.vzug_zone)
+        return data.zones.get(self.vzug_zone)
 
     @property
     def available(self) -> bool:

@@ -6,13 +6,13 @@ from collections.abc import Iterator, Mapping
 from ipaddress import IPv4Interface
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 from homeassistant import config_entries
-from homeassistant.components.network import Adapter, async_get_adapters
+from homeassistant.components.network import async_get_adapters
+from homeassistant.components.network.models import Adapter
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import discovery_flow as df
 from homeassistant.helpers.selector import (
@@ -86,14 +86,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         return self.async_show_menu(
             step_id="user", menu_options=["manual", "start_discovery"]
         )
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             if (base_url := _parse_host(user_input[CONF_HOST])) is None:
@@ -107,9 +107,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    probatio.Required(CONF_HOST): str,
                 }
             ),
             errors=errors,
@@ -117,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Change the address of an appliance that is set up already."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
@@ -147,14 +147,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_HOST): str}),
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
                 {CONF_HOST: user_input[CONF_HOST] if user_input else _host_of(entry)},
             ),
             description_placeholders={"name": entry.title},
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """The appliance refused the stored credentials."""
         self._base_url = URL(entry_data[CONF_BASE_URL])
         self._username = entry_data.get(CONF_USERNAME)
@@ -162,7 +164,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             self._username = user_input[CONF_USERNAME]
@@ -193,7 +195,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         _LOGGER.debug("dhcp discovery: %s", discovery_info)
         self._base_url = URL(f"http://{discovery_info.ip}")
 
@@ -208,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_start_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         adapters = await async_get_adapters(self.hass)
         results = await asyncio.gather(
             *(
@@ -218,7 +222,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return_exceptions=True,
         )
         discoveries: set[api.discovery.DiscoveryInfo] = {
-            d for group in results if not isinstance(group, Exception) for d in group
+            d
+            for group in results
+            if not isinstance(group, BaseException)
+            for d in group
         }
         for discovery in discoveries:
             df.async_create_flow(
@@ -232,7 +239,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"count": str(len(discoveries))},
         )
 
-    async def async_step_discovery(self, discovery_info: Any) -> FlowResult:
+    async def async_step_discovery(self, discovery_info: Any) -> ConfigFlowResult:
         discovery_info = cast(api.discovery.DiscoveryInfo, discovery_info)
         _LOGGER.debug("setting up manually discovered device: %s", discovery_info)
         self._base_url = URL(f"http://{discovery_info.host}")
@@ -241,7 +248,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return res
         return self.async_abort(reason=ABORT_FALSE_DISCOVERY)
 
-    async def async_step_bluetooth(self, discovery_info: Any) -> FlowResult:
+    async def async_step_bluetooth(self, discovery_info: Any) -> ConfigFlowResult:
         """An appliance in V-ZUG-Home mode advertising over Bluetooth.
 
         Configured appliances keep advertising, so those are recognised by their
@@ -283,7 +290,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_wifi(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Put the appliance on Wi-Fi over Bluetooth, then set it up as usual."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -305,10 +312,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="wifi",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SSID): str,
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_SSID): str,
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -341,7 +348,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _check_device(
         self, *, needs_confirmation: bool, errors: dict[str, str]
-    ) -> FlowResult | None:
+    ) -> ConfigFlowResult | None:
         self._set_client()
         assert self._client
 
@@ -368,7 +375,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             self._username = user_input[CONF_USERNAME]
@@ -388,13 +395,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=self._auth_schema(), errors=errors
         )
 
-    def _auth_schema(self) -> vol.Schema:
-        return vol.Schema(
+    def _auth_schema(self) -> probatio.Schema:
+        return probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=self._username): TextSelector(
+                probatio.Required(CONF_USERNAME, default=self._username): TextSelector(
                     TextSelectorConfig(autocomplete="username")
                 ),
-                vol.Required(CONF_PASSWORD): TextSelector(
+                probatio.Required(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                         autocomplete="current-password",
@@ -407,13 +414,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         if user_input is not None:
             return await self._create_entry()
 
         return self.async_show_form(step_id="confirm")
 
-    async def _create_entry(self) -> FlowResult:
+    async def _create_entry(self) -> ConfigFlowResult:
         assert self._base_url
         assert self._meta
 
@@ -432,10 +439,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("creating entry")
         return self.async_create_entry(title=self._meta.create_unique_name(), data=data)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 def _parse_host(host: str) -> URL | None:

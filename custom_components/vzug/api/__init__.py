@@ -6,13 +6,13 @@ import time
 import urllib.parse
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast, get_origin, is_typeddict
 
 import httpx
 import json_repair
 from yarl import URL
 
-from . import discovery  # noqa: F401 # type: ignore
+from . import discovery  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -339,20 +339,28 @@ class VZugApi:
                 await old_client.aclose()
                 raise
 
-    async def _command(
+    async def _command[T](
         self,
         component: str,
         *,
         command: str,
+        response: type[T],
         params: dict[str, str] | None = None,
-        raw: bool = False,
-        expected_type: Any = None,
         reject_empty: bool = False,
         attempts: int = 5,
         retry_delay: float | None = None,
-        value_on_err: Callable[[], Any] | None = None,
-        value_on_client_err: Callable[[], Any] | None = None,
-    ) -> Any:
+        value_on_err: Callable[[], T] | None = None,
+        value_on_client_err: Callable[[], T] | None = None,
+    ) -> T:
+        """Run 'command' and return its answer as 'response'.
+
+        'str' returns the body as text. Other types parse it as JSON and check
+        only the outer type: 'dict' for a TypedDict, 'list' for 'list[int]'.
+        'object' accepts any JSON.
+        """
+        expected_type = (
+            dict if is_typeddict(response) else get_origin(response) or response
+        )
         if params is None:
             params = {}
 
@@ -366,7 +374,7 @@ class VZugApi:
         url = str(self._base_url / component)
         request_url = f"{url}?{query}"
 
-        async def once() -> Any:
+        async def once() -> T:
             _LOGGER.debug(
                 "running command %s %s on %s @ %s",
                 command,
@@ -377,10 +385,9 @@ class VZugApi:
             resp = await self._get(request_url)
             resp.raise_for_status()
 
-            if raw:
-                content = resp.text
-                _LOGGER.debug("raw response: %s", content)
-                return content
+            if response is str:
+                _LOGGER.debug("raw response: %s", resp.text)
+                return cast(T, resp.text)
 
             try:
                 data = resp.json()
@@ -393,8 +400,9 @@ class VZugApi:
                         data = json.loads(repaired_json)
                         _LOGGER.debug("successfully repaired json: %s", data)
                     except Exception as repair_error:
-                        _LOGGER.debug("json repair failed: %s", repair_error)
-                        raise  # Re-raise the original ValueError
+                        raise InvalidResponse(
+                            f"invalid JSON: {resp.text!r}"
+                        ) from repair_error
                 else:
                     # we got an empty response, we just treat this as 'None'
                     data = None
@@ -404,25 +412,21 @@ class VZugApi:
                 # some appliances report unsupported commands and transient failures
                 # with a json error body and HTTP 200. Without this the body would
                 # satisfy the type check below and get stored as if it were valid.
-                raise ValueError(f"device returned an error response: {data['error']}")
+                raise InvalidResponse(f"device returned an error: {data['error']}")
 
             if expected_type is list and data is None:
                 # if we want a list and the response is null, we just treat that as an empty list
-                data: Any = []
+                data = []
 
-            if expected_type is not None:
-                if not isinstance(data, expected_type):
-                    raise ValueError(
-                        f"data type mismatch ({type(data)} != {expected_type})"
-                    )
-            if reject_empty:
-                if not data:
-                    raise ValueError("empty response rejected")
-            return data
+            if not isinstance(data, expected_type):
+                raise InvalidResponse(f"expected {expected_type}, got {type(data)}")
+            if reject_empty and not data:
+                raise InvalidResponse("empty response")
+            return cast(T, data)
 
         if retry_delay is None:
             retry_delay = RETRY_DELAY
-        last_exc = ValueError("no attempts made")
+        last_exc: Exception = ValueError("no attempts made")
         attempt_idx = 0
         while attempt_idx < attempts:
             # starts with 0s, then retry_delay
@@ -555,7 +559,7 @@ class VZugApi:
             return await self._command(
                 "ai",
                 command="getCloudStatus",
-                expected_type=dict,
+                response=dict[str, Any],
                 attempts=2,
                 value_on_err=dict,
             )
@@ -748,8 +752,8 @@ class VZugApi:
         return await self._command(
             "hh",
             command="getCommand",
+            response=dict[str, Any],
             params={"value": name},
-            expected_type=dict,
             attempts=2,
             value_on_err=dict,
         )
@@ -758,8 +762,8 @@ class VZugApi:
         data = await self._command(
             "hh",
             command="getUserSettings",
+            response=dict[str, Any],
             params={"value": _compact_json({"id": setting_id})},
-            expected_type=dict,
             attempts=2,
             value_on_err=dict,
         )
@@ -769,7 +773,7 @@ class VZugApi:
     async def get_installed_features(self) -> list[str]:
         """Paid V-ZUG Upgrades installed on the appliance (hh 1.7)."""
         return await self._command(
-            "hh", command="getInstalledFeatures", expected_type=list, attempts=2
+            "hh", command="getInstalledFeatures", response=list[str], attempts=2
         )
 
     async def get_api_version(self, component: str) -> tuple[int, ...] | None:
@@ -781,7 +785,7 @@ class VZugApi:
         data = await self._command(
             component,
             command="getAPIVersion",
-            expected_type=dict,
+            response=dict[str, Any],
             attempts=1,
             value_on_err=dict,
         )
@@ -793,7 +797,7 @@ class VZugApi:
         return await self._command(
             "ai",
             command="getMacAddress",
-            raw=True,
+            response=str,
             attempts=attempts,
             value_on_err=(lambda: "") if default_on_error else None,
         )
@@ -804,7 +808,7 @@ class VZugApi:
         return await self._command(
             "ai",
             command="getModelDescription",
-            raw=True,
+            response=str,
             attempts=attempts,
             value_on_err=(lambda: "") if default_on_error else None,
         )
@@ -815,7 +819,7 @@ class VZugApi:
         return await self._command(
             "ai",
             command="getDeviceStatus",
-            expected_type=dict,
+            response=DeviceStatus,
             attempts=attempts,
             value_on_err=(lambda: DeviceStatus()) if default_on_error else None,
         )
@@ -829,7 +833,7 @@ class VZugApi:
         data = await self._command(
             "hh",
             command="getDeviceStatus",
-            expected_type=dict,
+            response=dict[str, Any],
             attempts=2,
             value_on_err=dict,
         )
@@ -842,7 +846,7 @@ class VZugApi:
         return await self._command(
             "ai",
             command="getUpdateStatus",
-            expected_type=dict,
+            response=UpdateStatus,
             value_on_err=(lambda: UpdateStatus()) if default_on_error else None,
         )
 
@@ -850,15 +854,15 @@ class VZugApi:
         await self._command(
             "ai",
             command="checkUpdate",
-            raw=True,
+            response=str,
             attempts=2,
         )
 
     async def do_ai_update(self) -> None:
-        await self._command("ai", command="doAIUpdate")
+        await self._command("ai", command="doAIUpdate", response=object)
 
     async def do_hhg_update(self) -> None:
-        await self._command("ai", command="doHHGUpdate")
+        await self._command("ai", command="doHHGUpdate", response=object)
 
     async def get_last_push_notifications(
         self, *, default_on_error: bool = False
@@ -866,7 +870,7 @@ class VZugApi:
         return await self._command(
             "ai",
             command="getLastPUSHNotifications",
-            expected_type=list,
+            response=list[PushNotification],
             value_on_err=list if default_on_error else None,
             # ex. CombairSteamer V6000 60 answers 404 since a firmware update
             value_on_client_err=list,
@@ -876,32 +880,32 @@ class VZugApi:
         return await self._command(
             "hh",
             command="getCategories",
-            expected_type=list,
+            response=list[str],
             # the API sometimes wrongly returns an empty list, but there are also appliances (ex. AdoraWash V4000) which don't have any categories
             reject_empty=False,
         )
 
     async def get_category(self, value: str) -> Category:
         return await self._command(
-            "hh", command="getCategory", params={"value": value}, expected_type=dict
+            "hh", command="getCategory", response=Category, params={"value": value}
         )
 
     async def list_commands(self, value: str) -> list[str]:
         return await self._command(
-            "hh", command="getCommands", params={"value": value}, expected_type=list
+            "hh", command="getCommands", response=list[str], params={"value": value}
         )
 
     async def get_command(self, value: str) -> Command:
         return await self._command(
-            "hh", command="getCommand", params={"value": value}, expected_type=dict
+            "hh", command="getCommand", response=Command, params={"value": value}
         )
 
     async def set_command(self, command: str, value: str) -> None:
         await self._command(
             "hh",
             command=f"set{command}",
+            response=str,
             params={"value": value},
-            raw=True,
             attempts=2,
         )
 
@@ -909,7 +913,7 @@ class VZugApi:
         await self._command(
             "hh",
             command=f"do{command}",
-            raw=True,
+            response=str,
             attempts=2,
         )
 
@@ -917,7 +921,7 @@ class VZugApi:
         return await self._command(
             "hh",
             command="getFWVersion",
-            expected_type=dict,
+            response=HhFwVersion,
             value_on_err=(lambda: HhFwVersion()) if default_on_error else None,
         )
 
@@ -927,7 +931,7 @@ class VZugApi:
         return await self._command(
             "ai",
             command="getFWVersion",
-            expected_type=dict,
+            response=AiFwVersion,
             attempts=attempts,
             value_on_err=(lambda: AiFwVersion()) if default_on_error else None,
         )
@@ -938,17 +942,18 @@ class VZugApi:
         data = await self._command(
             "hh",
             command="getZHMode",
-            expected_type=dict,
+            response=dict[str, Any],
             attempts=attempts,
             value_on_err=(lambda: {"value": -1}) if default_on_error else None,
         )
-        return data.get("value", -1)
+        value = data.get("value", -1)
+        return value if isinstance(value, int) else -1
 
     async def get_eco_info(self, *, default_on_error: bool = False) -> EcoInfo:
         result = await self._command(
             "hh",
             command="getEcoInfo",
-            expected_type=dict,
+            response=EcoInfo,
             value_on_err=(lambda: EcoInfo()) if default_on_error else None,
         )
 
@@ -969,7 +974,7 @@ class VZugApi:
         return await self._command(
             "hh",
             command="getDeviceInfo",
-            expected_type=dict,
+            response=DeviceInfo,
             value_on_err=(lambda: DeviceInfo()) if default_on_error else None,
         )
 
@@ -977,16 +982,16 @@ class VZugApi:
         # TODO: this is interesting but what can we do with it??
         # [{"id":52,"name":"Alltag Kurz","status":"selected","starttime":{"min":0,"max":86400,"step":600},"duration":{"set":2460}, "energySaving":{"set":false,"options":[true,false]},"optiStart":{"set":false},"steamfinish":{"set":false,"options":[true,false]},"partialload":{"set":false,"options":[true,false]},"rinsePlus":{"set":false,"options":[true,false]},"dryPlus":{"set":false,"options":[true,false]},"stepIds":[82,81,82,79,78,76,73,74,75,72,71,70]}]
         # [{"id":50,"name":"Eco",        "status":"selected","starttime":{"min":0,"max":86400,"step":600},"duration":{"set":22440},"energySaving":{"set":false,"options":[true,false]},"optiStart":{"set":false},"steamfinish":{"set":true, "options":[true,false]},"partialload":{"set":false,"options":[true,false]},"rinsePlus":{"set":false,"options":[true,false]},"dryPlus":{"set":false,"options":[true,false]},"stepIds":[79,81,79,78,74,75,72,70]}]
-        raw_programs: list[dict[str, Any]] = await self._command(
+        raw_programs = await self._command(
             "hh",
             command="getProgram",
-            expected_type=list,
+            response=list[dict[str, Any]],
         )
         return [Program.build(raw) for raw in raw_programs]
 
     async def set_program(
         self, program_id: int, options: dict[str, Any] | None = None
-    ) -> list[Any]:
+    ) -> str | None:
         # example options: {"id":50,"dryPlus":false,"energySaving":false,"partialload":false,"rinsePlus":false,"steamfinish":true}
         # also seen with just the "id" key
         if not options:
@@ -994,7 +999,7 @@ class VZugApi:
         options["id"] = program_id
         return await self.set_program_dto(options)
 
-    async def set_program_dto(self, dto: dict[str, Any]) -> Any:
+    async def set_program_dto(self, dto: dict[str, Any]) -> str | None:
         """'setProgram' with typed values, ex. {"zone":"cookingChamber1","light":true}.
 
         hh 1.5 and newer take the whole object at once. Older appliances take one
@@ -1004,13 +1009,13 @@ class VZugApi:
             dtos = [dto]
         else:
             dtos = [{key: dto[key]} for key in _LEGACY_PROGRAM_KEYS if dto.get(key)]
-        result = None
+        result: str | None = None
         for value in dtos:
             result = await self._command(
                 "hh",
                 command="setProgram",
+                response=str,
                 params={"value": _compact_json(value)},
-                raw=True,
                 attempts=2,
             )
         return result
@@ -1023,7 +1028,7 @@ class VZugApi:
         Ovens stop one zone at a time. Before hh 1.3 the app sends 'doTurnOff'.
         """
         if not self.hh_supports((1, 3, 0)):
-            await self._command("hh", command="doTurnOff", raw=True, attempts=2)
+            await self._command("hh", command="doTurnOff", response=str, attempts=2)
             return
         dto = {"status": "idle"}
         if zone:
@@ -1035,7 +1040,7 @@ class VZugApi:
         return await self._command(
             "hh",
             command="getAllProgramIds",
-            expected_type=list,
+            response=list[int],
         )
 
     async def get_raw_programs(self, *, attempts: int = 5) -> list[dict[str, Any]]:
@@ -1050,7 +1055,7 @@ class VZugApi:
         return await self._command(
             "hh",
             command="getProgram",
-            expected_type=list,
+            response=list[dict[str, Any]],
             attempts=attempts,
         )
 
@@ -1060,11 +1065,11 @@ class VZugApi:
         This is how the V-ZUG app learns the program names, ex.
         {"id":51,"name":"Automatic","status":"idle","starttime":{...},...}
         """
-        raw: list[dict[str, Any]] = await self._command(
+        raw = await self._command(
             "hh",
             command="getProgram",
+            response=list[dict[str, Any]],
             params={"value": _compact_json({"id": program_id})},
-            expected_type=list,
             attempts=2,
         )
         return raw[0] if raw else {}
@@ -1080,17 +1085,17 @@ class VZugApi:
         await self._command(
             "hh",
             command="setProgram",
+            response=str,
             params={"value": _compact_json({"zone": zone, key: value})},
-            raw=True,
             attempts=2,
         )
 
     async def get_cmd_value(self, name: str, *, attempts: int = 2) -> str:
         """Read a 'cmd' setting outside the category tree, ex. 'HolidayMode'."""
-        content: str = await self._command(
+        content = await self._command(
             "hh",
             command=f"getcmd{name}",
-            raw=True,
+            response=str,
             attempts=attempts,
         )
         return content.strip()
@@ -1100,6 +1105,10 @@ class VZugApi:
 
 
 class AuthenticationFailed(Exception): ...
+
+
+class InvalidResponse(Exception):
+    """The appliance answered, but not with what the command returns."""
 
 
 OPTIDOS_CATEGORY = "optidos"

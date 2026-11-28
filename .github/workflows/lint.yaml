@@ -32,3 +32,21 @@ jobs:
 
       - name: "Check formatting"
         run: uv run --locked ruff format --check .
+
+  mypy:
+    name: "Mypy"
+    runs-on: "ubuntu-26.04"
+    steps:
+      - name: "Checkout the repository"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: "Set up uv"
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          enable-cache: true
+
+      - name: "Install requirements"
+        run: uv sync --locked
+
+      - name: "Run"
+        run: uv run --locked mypy

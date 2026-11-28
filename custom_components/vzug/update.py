@@ -7,7 +7,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import api
 from .const import DOMAIN
@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: VZugConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     shared = config_entry.runtime_data
 
@@ -54,10 +54,15 @@ class VZugUpdate(UpdateEntity, VZugEntity[UpdateCoordinator]):
         return api.UpdateComponent()
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        return bool(self.get_update_component().get("running", False))
+
+    @property
+    def update_percentage(self) -> int | None:
+        """Downloading is the first half, installing the second."""
         component = self.get_update_component()
         if not component.get("running", False):
-            return False
+            return None
 
         try:
             progress = component["progress"]

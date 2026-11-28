@@ -11,6 +11,7 @@ dependencies = [
 dev = [
     "coloredlogs",
     "flask",
+    "mypy",
     # pins pytest and its plugins to the versions of the Home Assistant release
     "pytest-homeassistant==2026.11.3",
     "pytest-cov",
@@ -31,6 +32,15 @@ addopts = "-p no:respx"
 pythonpath = ["."]
 
 # Based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_unreachable = true
+follow_imports = "silent"
+local_partial_types = true
+enable_error_code = ["deprecated", "ignore-without-code", "redundant-self", "truthy-iterable"]
+files = ["custom_components/vzug"]
+
 [tool.ruff]
 target-version = "py314"
 
