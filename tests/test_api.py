@@ -11,6 +11,7 @@ from custom_components.vzug.api import (
     ZH_MODE_WARMUP_MAX_FAILURES,
     AggCategory,
     EcoInfo,
+    InvalidResponse,
     VZugApi,
 )
 
@@ -152,7 +153,7 @@ async def test_zh_mode_warmup_gives_up_after_repeated_failures(vzug_api):
         ) as notifications,
         patch.object(vzug_api, "get_eco_info", new_callable=AsyncMock) as eco_info,
     ):
-        zh_mode.side_effect = ValueError("device returned an error response")
+        zh_mode.side_effect = InvalidResponse("device returned an error")
         notifications.return_value = []
         eco_info.return_value = {}
 
@@ -706,3 +707,44 @@ async def test_aggregate_meta_without_device_info_is_an_old_appliance(vzug_api):
         meta = await vzug_api.aggregate_meta()
     assert meta.hh_api_version == (1, 0, 0)
     assert not vzug_api.hh_supports((1, 3, 0))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("payload", "response", "reject_empty"),
+    [
+        ({"value": 1}, list, False),
+        ([], list, True),
+    ],
+)
+async def test_unusable_answer_is_an_invalid_response(
+    vzug_api, payload, response, reject_empty
+):
+    with patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = _json_response(payload)
+        with pytest.raises(InvalidResponse):
+            await vzug_api._command(
+                "hh",
+                command="getCategories",
+                response=response,
+                reject_empty=reject_empty,
+                attempts=1,
+            )
+
+
+@pytest.mark.asyncio
+async def test_unrepairable_json_is_an_invalid_response(vzug_api):
+    broken = MagicMock()
+    broken.json.side_effect = ValueError("not json")
+    broken.content = b"{"
+    broken.text = "{"
+    broken.raise_for_status.return_value = None
+    with (
+        patch.object(vzug_api._client, "get", new_callable=AsyncMock) as mock_get,
+        patch("json_repair.repair_json", side_effect=ValueError("unrepairable")),
+    ):
+        mock_get.return_value = broken
+        with pytest.raises(InvalidResponse):
+            await vzug_api._command(
+                "hh", command="getProgram", response=list, attempts=1
+            )

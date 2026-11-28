@@ -400,8 +400,9 @@ class VZugApi:
                         data = json.loads(repaired_json)
                         _LOGGER.debug("successfully repaired json: %s", data)
                     except Exception as repair_error:
-                        _LOGGER.debug("json repair failed: %s", repair_error)
-                        raise  # Re-raise the original ValueError
+                        raise InvalidResponse(
+                            f"invalid JSON: {resp.text!r}"
+                        ) from repair_error
                 else:
                     # we got an empty response, we just treat this as 'None'
                     data = None
@@ -411,18 +412,16 @@ class VZugApi:
                 # some appliances report unsupported commands and transient failures
                 # with a json error body and HTTP 200. Without this the body would
                 # satisfy the type check below and get stored as if it were valid.
-                raise ValueError(f"device returned an error response: {data['error']}")
+                raise InvalidResponse(f"device returned an error: {data['error']}")
 
             if expected_type is list and data is None:
                 # if we want a list and the response is null, we just treat that as an empty list
                 data = []
 
             if not isinstance(data, expected_type):
-                raise ValueError(  # noqa: TRY004
-                    f"data type mismatch ({type(data)} != {expected_type})"
-                )
+                raise InvalidResponse(f"expected {expected_type}, got {type(data)}")
             if reject_empty and not data:
-                raise ValueError("empty response rejected")
+                raise InvalidResponse("empty response")
             return cast(T, data)
 
         if retry_delay is None:
@@ -1106,6 +1105,10 @@ class VZugApi:
 
 
 class AuthenticationFailed(Exception): ...
+
+
+class InvalidResponse(Exception):
+    """The appliance answered, but not with what the command returns."""
 
 
 OPTIDOS_CATEGORY = "optidos"

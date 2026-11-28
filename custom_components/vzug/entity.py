@@ -43,7 +43,7 @@ def vzug_action[FuncT: Callable[..., Coroutine[Any, Any, Any]]](func: FuncT) -> 
                     "response": err.response.text.strip(),
                 },
             ) from err
-        except (httpx.HTTPError, ValueError) as err:
+        except (httpx.HTTPError, api.InvalidResponse) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
