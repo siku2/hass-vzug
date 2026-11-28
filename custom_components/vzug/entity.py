@@ -23,19 +23,12 @@ from .helpers import name_from_command_key
 
 
 def vzug_action[FuncT: Callable[..., Coroutine[Any, Any, Any]]](func: FuncT) -> FuncT:
-    """Turn a failed request to the appliance into an error the user sees.
-
-    Without this an action (pressing a button, switching a switch) that fails
-    shows up as an unexpected exception with a traceback in the log instead of
-    as a message in the frontend.
-    """
+    """Raise a failed request to the appliance as an error the user sees."""
 
     @functools.wraps(func)
     async def wrapper(self: VZugBaseEntity, *args: Any, **kwargs: Any) -> Any:
         try:
             return await func(self, *args, **kwargs)
-        except HomeAssistantError:
-            raise
         except api.AuthenticationFailed as err:
             self.shared.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -50,7 +43,7 @@ def vzug_action[FuncT: Callable[..., Coroutine[Any, Any, Any]]](func: FuncT) -> 
                     "response": err.response.text.strip(),
                 },
             ) from err
-        except (httpx.HTTPError, ValueError, AssertionError) as err:
+        except (httpx.HTTPError, ValueError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
@@ -73,6 +66,25 @@ class VZugBaseEntity(Entity):
         self.shared = shared
         self._attr_unique_id = f"{shared.unique_id_prefix}-{unique_id_suffix}"
         self._attr_device_info = shared.device_info
+        self._reachable = True
+
+    @property
+    def available(self) -> bool:
+        return self.shared.state_coord.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if getattr(self, "coordinator", None) is not self.shared.state_coord:
+            self.async_on_remove(
+                self.shared.state_coord.async_add_listener(self._handle_reachability)
+            )
+
+    @callback
+    def _handle_reachability(self) -> None:
+        reachable = self.shared.state_coord.last_update_success
+        if reachable != self._reachable:
+            self._reachable = reachable
+            self.async_write_ha_state()
 
 
 class VZugEntity[CoordinatorT: DataUpdateCoordinator[Any]](
@@ -85,6 +97,10 @@ class VZugEntity[CoordinatorT: DataUpdateCoordinator[Any]](
     ) -> None:
         CoordinatorEntity.__init__(self, coordinator)
         VZugBaseEntity.__init__(self, shared, unique_id_suffix=unique_id_suffix)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.shared.state_coord.last_update_success
 
 
 class UserConfigEntity(VZugEntity[ConfigCoordinator]):

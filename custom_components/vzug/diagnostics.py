@@ -12,14 +12,13 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_BASE_URL
 from .coordinator import Shared, VZugConfigEntry
 
-# everything that identifies the appliance or where it is
 TO_REDACT: set[str] = {
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_BASE_URL,
     "unique_id",
     "title",
-    # the appliance's answers
+    "discovery_keys",
     "mac_address",
     "deviceUuid",
     "Serial",
@@ -69,7 +68,6 @@ async def gather_full_api_sample(shared: Shared) -> dict[str, Any]:
         do_one("api_version_hh", shared.client.get_api_version("hh")),
         do_one("errors", shared.client.get_errors()),
         do_one("installed_features", shared.client.get_installed_features()),
-        # config aggregate
         do_one("aggregate_config", shared.client.aggregate_config()),
     )
 
@@ -136,7 +134,7 @@ async def async_get_config_entry_diagnostics(
         "api_sample": api_sample,
     }
     secrets = [
-        secret
+        str(secret)
         for secret in (
             shared.client.base_url.host,
             shared.meta.mac_address,

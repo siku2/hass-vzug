@@ -35,14 +35,14 @@ async def test_bluetooth_address_is_added_to_the_configured_appliance():
     """The appliance shows up once, with its Bluetooth address as a connection."""
     device = SimpleNamespace(id="device-1", connections=set())
     registry = MagicMock()
-    registry.async_get_device.return_value = device
+    registry.async_get_devices.return_value = [device]
 
     with patch.object(dr, "async_get", return_value=registry):
         result = await _flow().async_step_bluetooth(_discovery())
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    registry.async_get_device.assert_called_once_with(identifiers={(DOMAIN, SERIAL)})
+    registry.async_get_devices.assert_called_once_with(identifiers={(DOMAIN, SERIAL)})
     registry.async_update_device.assert_called_once_with(
         "device-1",
         merge_connections={(dr.CONNECTION_BLUETOOTH, "fc:1b:ff:08:90:27")},
@@ -56,7 +56,7 @@ async def test_known_bluetooth_address_is_left_alone():
         connections={(dr.CONNECTION_BLUETOOTH, "fc:1b:ff:08:90:27")},
     )
     registry = MagicMock()
-    registry.async_get_device.return_value = device
+    registry.async_get_devices.return_value = [device]
 
     with patch.object(dr, "async_get", return_value=registry):
         result = await _flow().async_step_bluetooth(_discovery())
@@ -70,7 +70,7 @@ async def test_bluetooth_address_of_another_device_still_aborts():
     """If another device already has the address, the discovery still ends."""
     device = SimpleNamespace(id="device-1", connections=set())
     registry = MagicMock()
-    registry.async_get_device.return_value = device
+    registry.async_get_devices.return_value = [device]
     registry.async_update_device.side_effect = dr.DeviceConnectionCollisionError(
         {(dr.CONNECTION_BLUETOOTH, "fc:1b:ff:08:90:27")}, MagicMock()
     )

@@ -16,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import api, zones
-from .entity import user_config_entities, UserConfigEntity, VZugEntity, ZoneEntity
-from .helpers import snake, zone_translation
 from .coordinator import (
     ProgramCoordinator,
     Shared,
@@ -25,6 +23,8 @@ from .coordinator import (
     UpdateCoordinator,
     VZugConfigEntry,
 )
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity, user_config_entities
+from .helpers import snake, zone_translation
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -100,7 +100,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
 ]
 
 
-# read only, the coordinators do the polling
 PARALLEL_UPDATES = 0
 
 
@@ -349,10 +348,9 @@ class Program(StateBase):
         device = self.coordinator.data.device
         if program := device.get("Program"):
             return program
-        elif device.get("Inactive") == "true":
+        if device.get("Inactive") == "true":
             return "standby"
-        else:
-            return "active"
+        return "active"
 
 
 class ProgramEndRaw(StateBase):
@@ -487,14 +485,6 @@ class LastNotification(StateBase):
 
 
 class UserConfigSensor(SensorEntity, UserConfigEntity):
-    """A read-only value from the settings, ex. 'Consumption last programme'.
-
-    Disabled by default: most repeat a dedicated sensor (the eco values), as
-    text the appliance formats for its display.
-    """
-
-    _attr_entity_registry_enabled_default = False
-
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         return self.vzug_command.get("value")
@@ -563,7 +553,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return _state(entry[self.vzug_period]["amount"])
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
     @property
@@ -571,7 +561,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return {"duration": entry[self.vzug_period]["duration"]}
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
 

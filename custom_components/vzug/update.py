@@ -11,11 +11,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import api
 from .const import DOMAIN
-from .entity import vzug_action, VZugEntity
 from .coordinator import Shared, UpdateCoordinator, VZugConfigEntry
+from .entity import VZugEntity, vzug_action
 
-
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
@@ -90,7 +88,7 @@ class VZugUpdate(UpdateEntity, VZugEntity[UpdateCoordinator]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_update_component",
-                translation_placeholders={"name": name},
+                translation_placeholders={"component": str(name)},
             )
         # the status may still read 'idle' right after the request, which would
         # put the coordinator back on its idle interval before the run even starts

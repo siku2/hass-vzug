@@ -8,9 +8,9 @@ from typing import Any, cast
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.components.network import async_get_adapters
 from homeassistant.components.network.models import Adapter
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -262,7 +262,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"ble-{serial}")
         self._abort_if_unique_id_configured()
         device_reg = dr.async_get(self.hass)
-        if device := device_reg.async_get_device(identifiers={(DOMAIN, serial)}):
+        devices = device_reg.async_get_devices(identifiers={(DOMAIN, serial)})
+        for device in devices:
             # the Bluetooth address differs from the Wi-Fi one. Without it, HA shows
             # the appliance as a second device.
             connection = (
@@ -279,6 +280,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "Bluetooth address %s already belongs to another device",
                         discovery_info.address,
                     )
+        if devices:
             return self.async_abort(reason="already_configured")
 
         self._ble_address = discovery_info.address
@@ -357,6 +359,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:
             errors[CONF_BASE] = ERR_CANNOT_CONNECT
             return None
+
+        await self.async_set_unique_id(
+            dr.format_mac(self._meta.mac_address), raise_on_progress=needs_confirmation
+        )
+        self._abort_if_unique_id_configured(
+            updates={CONF_BASE_URL: str(self._base_url)}
+        )
 
         if needs_confirmation:
             return await self.async_step_confirm()

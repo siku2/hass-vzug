@@ -46,20 +46,10 @@ def _clear(appliance: FakeAppliance) -> None:
     appliance.calls.clear()
 
 
-# refrigerator
-
-
 @pytest.fixture
 async def cooler(hass: HomeAssistant, appliances: ApplianceNetwork) -> FakeAppliance:
     appliance = appliances.add(COOLER)
-    entry = await setup_appliance(hass, appliance)
-    # the settings' actions are disabled by default
-    registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if entity.disabled_by is not None:
-            registry.async_update_entity(entity.entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_appliance(hass, appliance)
     _clear(appliance)
     return appliance
 
@@ -200,9 +190,6 @@ async def test_refresh_now_wakes_the_appliance(
     assert "getCategories" in cooler.commands("hh")
 
 
-# errors
-
-
 @pytest.mark.parametrize(
     ("response", "message"),
     [
@@ -227,14 +214,11 @@ async def test_refused_credentials_start_reauth(
     hass: HomeAssistant, cooler: FakeAppliance
 ) -> None:
     cooler.set_response("hh", "setcmdHolidayMode", httpx.Response(401))
-    with pytest.raises(HomeAssistantError, match="re-authenticate"):
+    with pytest.raises(HomeAssistantError, match="Re-authenticate"):
         await _call(hass, "switch", SERVICE_TURN_ON, "switch.kuhlschrank_holiday_mode")
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert [flow["context"]["source"] for flow in flows] == ["reauth"]
-
-
-# dishwasher
 
 
 ECO_SELECTED = [
@@ -354,9 +338,6 @@ async def test_install_update(hass: HomeAssistant, dishwasher: FakeAppliance) ->
     _clear(dishwasher)
     await _call(hass, "update", SERVICE_INSTALL, "update.adora_sl_update")
     assert ("doAIUpdate", None) in _writes(dishwasher)
-
-
-# oven
 
 
 @pytest.fixture

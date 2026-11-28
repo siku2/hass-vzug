@@ -566,8 +566,7 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'vzug',
       'minor_version': 2,
       'options': dict({
@@ -977,8 +976,7 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'vzug',
       'minor_version': 2,
       'options': dict({
@@ -1337,8 +1335,7 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'vzug',
       'minor_version': 2,
       'options': dict({
@@ -1766,8 +1763,7 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'vzug',
       'minor_version': 2,
       'options': dict({
@@ -2135,8 +2131,7 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'vzug',
       'minor_version': 2,
       'options': dict({
@@ -2456,8 +2451,7 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': dict({
-      }),
+      'discovery_keys': '**REDACTED**',
       'domain': 'vzug',
       'minor_version': 2,
       'options': dict({

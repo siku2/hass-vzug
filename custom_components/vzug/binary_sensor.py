@@ -7,12 +7,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import zones
+from .coordinator import ProgramCoordinator, Shared, StateCoordinator, VZugConfigEntry
 from .entity import VZugEntity, ZoneEntity
 from .helpers import snake, zone_translation
-from .coordinator import ProgramCoordinator, Shared, StateCoordinator, VZugConfigEntry
 
-
-# read only, the coordinators do the polling
 PARALLEL_UPDATES = 0
 
 

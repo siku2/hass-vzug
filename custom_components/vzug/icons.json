@@ -41,7 +41,7 @@
         },
         "select": {
             "program_select": {
-                "default": "mdi:dishwasher",
+                "default": "mdi:format-list-bulleted",
                 "state": {
                     "eco": "mdi:alpha-e-circle-outline",
                     "automatic": "mdi:alpha-a-circle-outline",

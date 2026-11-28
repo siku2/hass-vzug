@@ -5,16 +5,17 @@ import re
 
 import httpx
 import pytest
+from homeassistant.config_entries import DiscoveryKey
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.components.diagnostics import (
+from pytest_homeassistant.components.diagnostics import (
     get_diagnostics_for_config_entry,
 )
-from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from .appliance import DEVICES, ApplianceNetwork
-from .common import setup_appliance
+from .common import mock_entry, setup_appliance
 
 
 @pytest.mark.parametrize("device", DEVICES)
@@ -58,3 +59,24 @@ async def test_diagnostics_with_failing_commands(
     assert "**REDACTED**" in error["message"]
     assert appliance.host not in json.dumps(diagnostics)
     assert diagnostics["coordinators"]["state"]["last_update_success"] is True
+
+
+async def test_diagnostics_redact_the_discovery_keys(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    appliances: ApplianceNetwork,
+) -> None:
+    appliance = appliances.add("adora_dish_v6000")
+    mac = appliance.mac_address.replace(":", "").lower()
+    entry = mock_entry(appliance)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry,
+        discovery_keys={"dhcp": (DiscoveryKey(domain="dhcp", key=mac, version=1),)},
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    diagnostics = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert mac not in json.dumps(diagnostics)

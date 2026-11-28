@@ -5,7 +5,7 @@
             "false_discovery": "False-positive Discovery",
             "discovery_finished": "Discovered {count} device(s)",
             "reauth_successful": "Re-authentication was successful",
-            "wrong_device": "These credentials belong to another appliance. Use the ones of the appliance you set up.",
+            "wrong_device": "Another appliance answers at this address. Check the address of the appliance you set up.",
             "reconfigure_successful": "The appliance was reconfigured successfully"
         },
         "error": {
@@ -805,7 +805,7 @@
     },
     "exceptions": {
         "auth_failed": {
-            "message": "The appliance refused the credentials, please re-authenticate"
+            "message": "The appliance refused the credentials. Re-authenticate the integration."
         },
         "request_refused": {
             "message": "The appliance refused the request: {status} {response}"
@@ -820,19 +820,16 @@
             "message": "Stop the running program first"
         },
         "unknown_program": {
-            "message": "Unknown program {option}"
+            "message": "Unknown program {program}"
         },
         "unknown_update_component": {
-            "message": "Unknown update component {name}"
+            "message": "Unknown update component {component}"
         },
         "cannot_reach": {
             "message": "Unable to reach the appliance at {url}: {error}"
         },
         "setup_failed": {
             "message": "Setting up the appliance failed: {error}"
-        },
-        "no_answer": {
-            "message": "No answer from the appliance at {url}"
         },
         "update_failed": {
             "message": "Updating the {data} data failed: {error}"

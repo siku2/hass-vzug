@@ -328,6 +328,23 @@ async def test_start_discovery(
     _assert_entry(result, appliance)
 
 
+async def test_discovery_of_configured_appliance_updates_address(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    appliance = appliances.add(DEVICE)
+    entry = mock_entry(appliance, **{CONF_BASE_URL: "http://192.0.2.1"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DISCOVERY},
+        data=api.discovery.DiscoveryInfo(host=appliance.host),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_BASE_URL] == appliance.base_url
+
+
 async def test_discovery_not_an_appliance(
     hass: HomeAssistant, appliances: ApplianceNetwork
 ) -> None:
@@ -429,7 +446,7 @@ async def test_bluetooth_configured_appliance_gets_its_address(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, SERIAL)})
+    [device] = dr.async_get(hass).async_get_devices(identifiers={(DOMAIN, SERIAL)})
     assert (dr.CONNECTION_BLUETOOTH, "fc:1b:ff:08:90:27") in device.connections
 
 
@@ -478,9 +495,6 @@ async def test_bluetooth_out_of_range(
         result["flow_id"], {"ssid": "home", CONF_PASSWORD: "wifi-secret"}
     )
     assert result["errors"] == {"base": "bluetooth_failed"}
-
-
-# reconfigure
 
 
 async def test_reconfigure(hass: HomeAssistant, appliances: ApplianceNetwork) -> None:

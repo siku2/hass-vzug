@@ -2,6 +2,7 @@
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -22,14 +23,21 @@ async def test_setup_and_unload(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    device_entry = dr.async_get(hass).async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(appliance.mac_address))}
+    device_entry = dr.async_get(hass).async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(appliance.mac_address)),
+        entry.entry_id,
     )
     assert device_entry is not None
     entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
     assert entities
     assert all(e.device_id == device_entry.id for e in entities)
     assert len({e.unique_id for e in entities}) == len(entities)
+    unavailable = [
+        e.entity_id
+        for e in entities
+        if (state := hass.states.get(e.entity_id)) and state.state == STATE_UNAVAILABLE
+    ]
+    assert not unavailable
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -73,3 +81,17 @@ async def test_digest_credentials_work(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_entry_without_unique_id_gets_one(
+    hass: HomeAssistant, appliances: ApplianceNetwork
+) -> None:
+    """Entries from before the config flow set a unique id, reauth needs one."""
+    appliance = appliances.add("adora_dish_v6000")
+    entry = mock_entry(appliance)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, unique_id=None)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.unique_id == dr.format_mac(appliance.mac_address)

@@ -8,18 +8,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import zones
 from .const import DOMAIN
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import (
     UserConfigEntity,
-    user_config_entities,
-    vzug_action,
     VZugBaseEntity,
     VZugEntity,
     ZoneEntity,
+    user_config_entities,
+    vzug_action,
 )
-from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
-
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
@@ -173,8 +171,6 @@ class StartProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         dto: dict[str, Any] = {"status": "active"}
         if zone := getattr(self.shared, "program_zone", None):
             dto["zone"] = zone
-        # an appliance that won't start remotely answers with an error, which
-        # 'vzug_action' passes on to the user
         await self.shared.client.set_program_dto(dto)
         await self.coordinator.async_request_refresh()
 
@@ -216,14 +212,6 @@ class CheckUpdate(VZugBaseEntity, ButtonEntity):
 
 
 class UserConfig(ButtonEntity, UserConfigEntity):
-    """An action from the settings, ex. resetting the consumption statistics.
-
-    Disabled by default: these change the appliance for good with a single
-    press, nobody should find one on a dashboard by accident.
-    """
-
-    _attr_entity_registry_enabled_default = False
-
     @vzug_action
     async def async_press(self) -> None:
         await self.shared.client.do_command_action(self.vzug_command_key)

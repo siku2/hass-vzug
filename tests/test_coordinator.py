@@ -1,6 +1,5 @@
-import itertools
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, PropertyMock
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
@@ -29,8 +28,6 @@ def shared():
     instance.hass = MagicMock()
     instance.config_entry = MagicMock()
     instance.client = MagicMock()
-    # every poll gets an answer from the appliance
-    type(instance.client).responses = PropertyMock(side_effect=itertools.count())
     instance.config_coord = MagicMock()
     instance.state_coord = MagicMock()
     instance.state_coord.data = None

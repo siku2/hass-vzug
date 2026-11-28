@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.request import parse_http_list, parse_keqv_list
 
 import httpx
 
@@ -191,7 +191,7 @@ class FakeAppliance:
         header = request.headers.get("Authorization", "")
         if not header.startswith("Digest "):
             return False
-        parts = dict(re.findall(r'(\w+)="?([^",]+)"?', header[len("Digest ") :]))
+        parts = parse_keqv_list(parse_http_list(header[len("Digest ") :]))
         if parts.get("username") != self.username:
             return False
         ha1 = _md5(f"{self.username}:{REALM}:{self.password}")
@@ -204,7 +204,7 @@ class FakeAppliance:
 
 
 def _md5(value: str) -> str:
-    return hashlib.md5(value.encode()).hexdigest()  # noqa: S324
+    return hashlib.md5(value.encode()).hexdigest()
 
 
 class ApplianceNetwork:

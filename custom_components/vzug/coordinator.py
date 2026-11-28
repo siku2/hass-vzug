@@ -1,6 +1,6 @@
 import contextlib
-from collections.abc import AsyncIterator
 import logging
+from collections.abc import AsyncIterator
 from datetime import datetime, timedelta
 
 import yarl
@@ -354,14 +354,22 @@ class Shared:
     async def _fetch_state(self) -> api.AggState:
         previous = self.state_coord.data
         probe = self._device_probe_due()
-        responses = self.client.responses
 
         async with detect_auth_failed():
-            state = await self.client.aggregate_state(
-                default_on_error=self._first_refresh_done,
-                include_device=probe,
-                include_eco=probe,
-            )
+            try:
+                state = await self.client.aggregate_state(
+                    default_on_error=self._first_refresh_done,
+                    include_device=probe,
+                    include_eco=probe,
+                )
+            except api.AuthenticationFailed:
+                raise
+            except Exception as exc:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"data": "state", "error": repr(exc)},
+                ) from exc
 
             if self._note_notifications(state.notifications) and not probe:
                 # something happened at the appliance: a program finished, or a
@@ -372,15 +380,6 @@ class Shared:
                     default_on_error=self._first_refresh_done
                 )
                 self._refresh_config_later()
-
-        if self.client.responses == responses:
-            # every request failed without an answer, so the values are only the
-            # defaults: the appliance is switched off or off the network
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_answer",
-                translation_placeholders={"url": str(self.client.base_url)},
-            )
 
         if not probe:
             return self._carry_over(state, previous)
