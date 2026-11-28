@@ -8,18 +8,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
 from .const import DOMAIN
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import (
     UserConfigEntity,
-    user_config_entities,
-    vzug_action,
     VZugBaseEntity,
     VZugEntity,
     ZoneEntity,
+    user_config_entities,
+    vzug_action,
 )
-from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
-
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
@@ -173,8 +171,6 @@ class StartProgram(VZugEntity[ProgramCoordinator], ButtonEntity):
         dto: dict[str, Any] = {"status": "active"}
         if zone := getattr(self.shared, "program_zone", None):
             dto["zone"] = zone
-        # an appliance that won't start remotely answers with an error, which
-        # 'vzug_action' passes on to the user
         await self.shared.client.set_program_dto(dto)
         await self.coordinator.async_request_refresh()
 

@@ -797,7 +797,7 @@
     },
     "exceptions": {
         "auth_failed": {
-            "message": "The appliance refused the credentials, please re-authenticate"
+            "message": "The appliance refused the credentials. Re-authenticate the integration."
         },
         "request_refused": {
             "message": "The appliance refused the request: {status} {response}"
@@ -812,19 +812,16 @@
             "message": "Stop the running program first"
         },
         "unknown_program": {
-            "message": "Unknown program {option}"
+            "message": "Unknown program {program}"
         },
         "unknown_update_component": {
-            "message": "Unknown update component {name}"
+            "message": "Unknown update component {component}"
         },
         "cannot_reach": {
             "message": "Unable to reach the appliance at {url}: {error}"
         },
         "setup_failed": {
             "message": "Setting up the appliance failed: {error}"
-        },
-        "no_answer": {
-            "message": "No answer from the appliance at {url}"
         },
         "update_failed": {
             "message": "Updating the {data} data failed: {error}"

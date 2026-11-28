@@ -5,11 +5,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
-from .entity import user_config_entities, UserConfigEntity, vzug_action, ZoneEntity
-from .helpers import snake
 from .coordinator import Shared, VZugConfigEntry
+from .entity import UserConfigEntity, ZoneEntity, user_config_entities, vzug_action
+from .helpers import snake
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 

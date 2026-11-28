@@ -9,21 +9,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import (
-    user_config_entities,
     UserConfigEntity,
-    vzug_action,
     VZugEntity,
     ZoneEntity,
+    user_config_entities,
+    vzug_action,
 )
 from .helpers import snake, zone_translation
-from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
 # what the V-ZUG app offers first when a timed function is switched on
 DEFAULT_BOOST_HOURS = 12.0
 
 
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
@@ -81,7 +80,7 @@ class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     def _field(self, field: str) -> float | None:
         data = self.coordinator.data
@@ -109,7 +108,6 @@ class ProgramSetting(VZugEntity[ProgramCoordinator], NumberEntity):
             return self._field("set")
         return wanted / 60 if self.vzug_key == "duration" else wanted
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.program_settings[self.vzug_key] = (
             value * 60 if self.vzug_key == "duration" else value
@@ -137,7 +135,7 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_max_value(self) -> float:
@@ -148,7 +146,6 @@ class StartDelay(VZugEntity[ProgramCoordinator], NumberEntity):
     def native_value(self) -> float:
         return self.shared.start_delay_hours
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.start_delay_hours = value
         self.async_write_ha_state()
@@ -235,7 +232,7 @@ class WarmingDrawerDuration(ZoneEntity, NumberEntity):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_min_value(self) -> float:
@@ -253,7 +250,6 @@ class WarmingDrawerDuration(ZoneEntity, NumberEntity):
     def native_value(self) -> float:
         return self.shared.warming_drawer_minutes[self.vzug_zone]
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.warming_drawer_minutes[self.vzug_zone] = value
         self.async_write_ha_state()
@@ -319,7 +315,7 @@ class BoostDuration(ZoneEntity, RestoreNumber):
 
     @property
     def available(self) -> bool:
-        return True
+        return self.shared.state_coord.last_update_success
 
     @property
     def native_max_value(self) -> float:
@@ -335,7 +331,6 @@ class BoostDuration(ZoneEntity, RestoreNumber):
         if (last := await self.async_get_last_number_data()) and last.native_value:
             self.shared.boost_hours[self.vzug_key] = last.native_value
 
-    @vzug_action
     async def async_set_native_value(self, value: float) -> None:
         self.shared.boost_hours[self.vzug_key] = value
         self.async_write_ha_state()
@@ -396,14 +391,14 @@ class UserConfig(NumberEntity, UserConfigEntity):
     def native_min_value(self) -> float:
         try:
             return float(self.vzug_command["minMax"][0])
-        except (ValueError, LookupError, TypeError):
+        except ValueError, LookupError, TypeError:
             return 0.0
 
     @property
     def native_max_value(self) -> float:
         try:
             return float(self.vzug_command["minMax"][1])
-        except (ValueError, LookupError, TypeError):
+        except ValueError, LookupError, TypeError:
             return 0.0
 
     @property

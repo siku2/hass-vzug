@@ -7,9 +7,9 @@ import urllib.parse
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Literal, TypedDict, cast
-import json_repair
 
 import httpx
+import json_repair
 from yarl import URL
 
 from . import discovery  # noqa: F401 # type: ignore
@@ -186,7 +186,7 @@ class Program:
     options: dict[str, ProgramOption]
 
     @classmethod
-    def build(cls, raw: dict[str, Any]) -> "Program":
+    def build(cls, raw: dict[str, Any]) -> Program:
         info = {}
         options = raw.copy()
         for key in ProgramInfo.__required_keys__ | ProgramInfo.__optional_keys__:
@@ -300,18 +300,6 @@ class VZugApi:
         self.hh_api_version: tuple[int, ...] | None = None
         # 'getDeviceInfo' type, learned in 'aggregate_meta'
         self.machine_type = ""
-        # how many requests got an answer (whatever the status), see 'responses'
-        self._responses = 0
-
-    @property
-    def responses(self) -> int:
-        """How many requests the appliance answered so far, errors included.
-
-        Most reads fall back to a default when they fail, so a poll of an
-        appliance that is gone looks like a poll of an idle one. Comparing this
-        before and after a poll tells the two apart.
-        """
-        return self._responses
 
     def hh_supports(self, version: tuple[int, ...]) -> bool:
         """Whether the hh API is at least 'version' (or unknown)."""
@@ -342,7 +330,7 @@ class VZugApi:
         # happen. It costs nothing since we only allow one connection anyway.
         async with self._request_lock:
             try:
-                response = await self._client.get(url)
+                return await self._client.get(url)
             except httpx.PoolTimeout:
                 # nobody else is in the pool, so it is broken. Start over with a
                 # fresh client instead of failing until Home Assistant restarts.
@@ -350,8 +338,6 @@ class VZugApi:
                 old_client, self._client = self._client, self._create_client()
                 await old_client.aclose()
                 raise
-            self._responses += 1
-            return response
 
     async def _command(
         self,
@@ -425,11 +411,13 @@ class VZugApi:
                 data: Any = []
 
             if expected_type is not None:
-                assert isinstance(data, expected_type), (
-                    f"data type mismatch ({type(data)} != {expected_type})"
-                )
+                if not isinstance(data, expected_type):
+                    raise ValueError(
+                        f"data type mismatch ({type(data)} != {expected_type})"
+                    )
             if reject_empty:
-                assert len(data) > 0, "empty response rejected"
+                if not data:
+                    raise ValueError("empty response rejected")
             return data
 
         if retry_delay is None:
@@ -463,9 +451,6 @@ class VZugApi:
             except httpx.TransportError as err:
                 last_exc = err
                 _LOGGER.debug("transport error: %r", err)
-            except AssertionError as exc:
-                last_exc = exc
-                _LOGGER.debug("response data assertion failed: %s", exc)
             except Exception as exc:
                 last_exc = exc
                 _LOGGER.debug("unknown error: %r", exc)
@@ -473,7 +458,7 @@ class VZugApi:
             attempt_idx += 1
 
         if value_on_err:
-            _LOGGER.exception("command error, using default", exc_info=last_exc)
+            _LOGGER.debug("%s failed, using default: %r", command, last_exc)
             return value_on_err()
 
         raise last_exc
@@ -537,7 +522,8 @@ class VZugApi:
             errors,
         ) = await asyncio.gather(
             _device(),
-            self.get_last_push_notifications(default_on_error=default_on_error),
+            # never defaulted, so an appliance that is gone fails the poll
+            self.get_last_push_notifications(),
             _eco(),
             _errors(),
         )
@@ -797,7 +783,7 @@ class VZugApi:
             command="getAPIVersion",
             expected_type=dict,
             attempts=1,
-            value_on_err=lambda: {},
+            value_on_err=dict,
         )
         return parse_version(data.get("value"))
 
@@ -881,7 +867,7 @@ class VZugApi:
             "ai",
             command="getLastPUSHNotifications",
             expected_type=list,
-            value_on_err=(lambda: []) if default_on_error else None,
+            value_on_err=list if default_on_error else None,
             # ex. CombairSteamer V6000 60 answers 404 since a firmware update
             value_on_client_err=list,
         )

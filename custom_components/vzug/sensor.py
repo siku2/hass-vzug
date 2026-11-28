@@ -16,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import api, zones
-from .entity import user_config_entities, UserConfigEntity, VZugEntity, ZoneEntity
-from .helpers import snake, zone_translation
 from .coordinator import (
     ProgramCoordinator,
     Shared,
@@ -25,6 +23,8 @@ from .coordinator import (
     UpdateCoordinator,
     VZugConfigEntry,
 )
+from .entity import UserConfigEntity, VZugEntity, ZoneEntity, user_config_entities
+from .helpers import snake, zone_translation
 
 # https://developers.home-assistant.io/docs/core/entity/sensor/
 
@@ -100,7 +100,6 @@ _ECO_SENSORS: list[SensorEntityDescription] = [
 ]
 
 
-# read only, the coordinators do the polling
 PARALLEL_UPDATES = 0
 
 
@@ -347,10 +346,9 @@ class Program(StateBase):
         device = self.coordinator.data.device
         if program := device.get("Program"):
             return program
-        elif device.get("Inactive") == "true":
+        if device.get("Inactive") == "true":
             return "standby"
-        else:
-            return "active"
+        return "active"
 
 
 class ProgramEndRaw(StateBase):
@@ -562,7 +560,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return entry[self.vzug_period]["amount"]
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
     @property
@@ -570,7 +568,7 @@ class DoorOpenings(StateBase):
         try:
             entry = self.coordinator.data.eco_info["doorOpenings"][self.vzug_index]
             return {"duration": entry[self.vzug_period]["duration"]}
-        except (LookupError, TypeError):
+        except LookupError, TypeError:
             return None
 
 

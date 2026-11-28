@@ -8,11 +8,11 @@ import pytest
 
 from custom_components.vzug import zones
 from custom_components.vzug.binary_sensor import Door
+from custom_components.vzug.coordinator import Shared
 from custom_components.vzug.number import BoostDuration, Timer, ZoneTemperature
 from custom_components.vzug.number import _zone_entities as number_entities
 from custom_components.vzug.sensor import ModeSensor, TimeLeft
 from custom_components.vzug.sensor import _zone_entities as sensor_entities
-from custom_components.vzug.coordinator import Shared
 from custom_components.vzug.switch import Mode, TimedFunction
 from custom_components.vzug.switch import _zone_entities as switch_entities
 
@@ -31,14 +31,14 @@ def _shared(raw=COMBI_COOLER, modes=MODES):
     coord.data = zones.ZoneState(zones=zones.index_zones(raw), modes=dict(modes))
     coord.async_request_refresh = AsyncMock()
     coord.last_update_success = True
-    shared = SimpleNamespace(
+    return SimpleNamespace(
         zone_coord=coord,
+        state_coord=MagicMock(last_update_success=True),
         client=MagicMock(set_zone_value=AsyncMock(), set_cmd_value=AsyncMock()),
         unique_id_prefix="fc:1b:ff:06:6e:8e",
         device_info={},
         boost_hours={},
     )
-    return shared
 
 
 def test_entities_created_for_a_combi_cooler():

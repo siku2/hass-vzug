@@ -797,7 +797,7 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Das Gerät hat die Anmeldedaten abgelehnt, bitte melde dich erneut an"
+      "message": "Das Gerät hat die Anmeldedaten abgelehnt. Melde die Integration erneut an."
     },
     "request_refused": {
       "message": "Das Gerät hat die Anfrage abgelehnt: {status} {response}"
@@ -812,19 +812,16 @@
       "message": "Stoppe zuerst das laufende Programm"
     },
     "unknown_program": {
-      "message": "Unbekanntes Programm {option}"
+      "message": "Unbekanntes Programm {program}"
     },
     "unknown_update_component": {
-      "message": "Unbekannte Update-Komponente {name}"
+      "message": "Unbekannte Update-Komponente {component}"
     },
     "cannot_reach": {
       "message": "Das Gerät unter {url} ist nicht erreichbar: {error}"
     },
     "setup_failed": {
       "message": "Die Einrichtung des Geräts ist fehlgeschlagen: {error}"
-    },
-    "no_answer": {
-      "message": "Keine Antwort vom Gerät unter {url}"
     },
     "update_failed": {
       "message": "Die Aktualisierung der Daten ({data}) ist fehlgeschlagen: {error}"

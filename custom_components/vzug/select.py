@@ -6,17 +6,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import zones
 from .const import DOMAIN
+from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 from .entity import (
-    user_config_entities,
     UserConfigEntity,
-    vzug_action,
     VZugEntity,
     ZoneEntity,
+    user_config_entities,
+    vzug_action,
 )
-from .coordinator import ProgramCoordinator, Shared, VZugConfigEntry
 
-
-# the appliance handles one request at a time, so do the actions
 PARALLEL_UPDATES = 1
 
 
@@ -96,7 +94,7 @@ class ProgramSelect(VZugEntity[ProgramCoordinator], SelectEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_program",
-                translation_placeholders={"option": option},
+                translation_placeholders={"program": option},
             )
         # ovens pick the program for their cooking chamber
         if zone := getattr(self.shared, "program_zone", None):
